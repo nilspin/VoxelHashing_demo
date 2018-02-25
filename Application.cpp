@@ -11,7 +11,7 @@ Application::Application() {
 	texCoords.resize(640*480);
 	image1 = stbi_load("assets/depth1.png", &DepthWidth, &DepthHeight, &channels, 0);
 	image2 = stbi_load("assets/depth2.png", &DepthWidth, &DepthHeight, &channels, 0);
-	if(image1 == nullptr) {cout<<"could not read file!"<<endl;}
+	if(image1 == nullptr) {cout<<"could not read image file!"<<endl;}
 	cam.SetPosition(glm::vec3(0,0,10));
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	SetupShaders();

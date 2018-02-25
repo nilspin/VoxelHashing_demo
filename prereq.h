@@ -1,4 +1,5 @@
-#pragma once
+#ifndef PREREQ_H
+#define PREREQ_H
 
 //std shit
 #include<iostream>
@@ -24,5 +25,6 @@
 #include<glm/gtc/matrix_transform.hpp>
 #include<glm/gtc/type_ptr.hpp>
 
-
 static SDL_Event event;
+#endif //PREREQ_H
+
