@@ -2,23 +2,23 @@
 
 #include "Application.h"
 #include "stb_image.h"
+#include<fstream>
 
 SDL_Event event;
 
 Application::Application() {
-	//cam(event);
 	positionBuffer.resize(640*480);
 	texCoords.resize(640*480);
-	image1 = stbi_load("assets/depth1.png", &DepthWidth, &DepthHeight, &channels, 0);
+	image1 = stbi_load("assets/depth1.png", &DepthWidth, &DepthHeight, &channels, 2);
 	image2 = stbi_load("assets/depth2.png", &DepthWidth, &DepthHeight, &channels, 0);
 	if(image1 == nullptr) {cout<<"could not read image file!"<<endl; exit(0);}
-	cam.SetPosition(glm::vec3(0,0,10));
+	cam.SetPosition(glm::vec3(10,-10,10));
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	SetupShaders();
 	SetupBuffers();
 	SetupDepthTextures();
 	UploadDepthToTexture(image1, depthTexture1, 0);
-	UploadDepthToTexture(image2, depthTexture2, 1);
+	//UploadDepthToTexture(image2, depthTexture2, 1);
 }
 
 void Application::run() {
@@ -173,32 +173,10 @@ void Application::SetupBuffers() {
 }
 
 void Application::UploadDepthToTexture(uint8_t* image, int texID, int texUnit) {
-	uint16_t *buffer = reinterpret_cast<uint16_t*>(image);//((uint16_t)image[0] << 8) | (uint16_t)image[1];//image;
-	//HRESULT getInternalBuffer = IR_Frame->AccessUnderlyingBuffer(&bufferSize, &buffer);
-	const uint16_t* pBufferEnd = buffer + (DepthWidth * DepthHeight);
-	uint8_t* dataArrayPointer = tempDataArray;
-
-	while (buffer < pBufferEnd)
-	{
-		uint16_t depth = *buffer;
-		//BYTE intensity = static_cast<BYTE>((depth >= 500) && (depth <= 65535) ? (depth % 256) : 0);
-		char lo = depth & 0xFF;
-		char hi = depth >> 8;
-		*dataArrayPointer = hi;
-		*(dataArrayPointer + 1) = lo;
-		*(dataArrayPointer + 2) = 0;
-
-		dataArrayPointer = (dataArrayPointer + 3);
-		++buffer;
-
-	}
-//	const void* dataArrayPointer = tempDataArray;
-	//now write this to a texture for sanity
-	//					int result = stbi_write_bmp("depthmap.png", DepthWidth, DepthHeight, 3, dataArrayPointer);
-	//LOAD TEXTURE HERE
+	
 	glActiveTexture(GL_TEXTURE0 + texUnit);
 	glBindTexture(GL_TEXTURE_2D, texID);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, DepthWidth, DepthHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, tempDataArray/*dataArrayPointer*/);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, 640, 480, 0, GL_RG, GL_UNSIGNED_BYTE, image);
 
 }
 

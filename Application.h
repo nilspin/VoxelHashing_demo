@@ -22,7 +22,7 @@ private:
 	int DepthWidth = 0;
 	int DepthHeight = 0;
 	int channels = 0;
-	float wide = 0.09;
+	float wide = 0.1;
 
 	//Window and events
 	Window window;
