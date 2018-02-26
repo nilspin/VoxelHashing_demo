@@ -3,7 +3,7 @@
 #include "Application.h"
 #include "stb_image.h"
 
-extern SDL_Event event;
+SDL_Event event;
 
 Application::Application() {
 	//cam(event);
@@ -11,7 +11,7 @@ Application::Application() {
 	texCoords.resize(640*480);
 	image1 = stbi_load("assets/depth1.png", &DepthWidth, &DepthHeight, &channels, 0);
 	image2 = stbi_load("assets/depth2.png", &DepthWidth, &DepthHeight, &channels, 0);
-	if(image1 == nullptr) {cout<<"could not read image file!"<<endl;}
+	if(image1 == nullptr) {cout<<"could not read image file!"<<endl; exit(0);}
 	cam.SetPosition(glm::vec3(0,0,10));
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	SetupShaders();
@@ -126,7 +126,7 @@ void Application::SetupDepthTextures() {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-	//Texture2 
+	//Texture2
 	glGenTextures(1, &depthTexture2);
 	glBindTexture(GL_TEXTURE_2D, depthTexture2);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, DepthWidth, DepthHeight, 0, GL_RED, GL_FLOAT, 0);
@@ -162,7 +162,7 @@ void Application::SetupBuffers() {
 	//Assign attribs
 	glEnableVertexAttribArray(drawVertexMap->attribute("position"));
 	glVertexAttribPointer(drawVertexMap->attribute("position"), 2, GL_FLOAT, GL_FALSE, 0, 0);
-	
+
 	glGenBuffers(1, &texCoordBuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, texCoordBuffer);
 	glBufferData(GL_ARRAY_BUFFER, DepthWidth * DepthHeight * sizeof(glm::ivec2), texCoords.data(), GL_STATIC_DRAW);
@@ -190,10 +190,10 @@ void Application::UploadDepthToTexture(uint8_t* image, int texID, int texUnit) {
 
 		dataArrayPointer = (dataArrayPointer + 3);
 		++buffer;
-		
+
 	}
 //	const void* dataArrayPointer = tempDataArray;
-	//now write this to a texture for sanity 
+	//now write this to a texture for sanity
 	//					int result = stbi_write_bmp("depthmap.png", DepthWidth, DepthHeight, 3, dataArrayPointer);
 	//LOAD TEXTURE HERE
 	glActiveTexture(GL_TEXTURE0 + texUnit);

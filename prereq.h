@@ -25,6 +25,6 @@
 #include<glm/gtc/matrix_transform.hpp>
 #include<glm/gtc/type_ptr.hpp>
 
-static SDL_Event event;
+extern SDL_Event event;
 #endif //PREREQ_H
 

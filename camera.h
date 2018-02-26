@@ -14,7 +14,7 @@ OpenGL Camera Code
 */
 
 //extern SDL_Window* window;
-extern SDL_Event event;
+//SDL_Event event;
 
 using namespace std;
 
