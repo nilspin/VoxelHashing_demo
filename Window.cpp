@@ -26,7 +26,7 @@ bool Window::Initialize()
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
 
-	window = SDL_CreateWindow("KinectVis", 0, 0, 1280, 720, SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+	window = SDL_CreateWindow("KinectVis", 0, 0, 1280, 960, SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
 	context = SDL_GL_CreateContext(window);
 
 	GLenum err = glewInit();

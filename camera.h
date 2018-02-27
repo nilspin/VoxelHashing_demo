@@ -25,8 +25,9 @@ enum CameraDirection {
 class Camera {
 private :
 
-	glm::mat4 ViewMatrix;
-	glm::mat4 ProjectionMatrix;
+	glm::mat4 ViewMatrix = glm::lookAt(position, glm::vec3(0,0,-1), up);
+	// Projection matrix : 45° Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
+	glm::mat4 ProjectionMatrix = glm::perspective(initialFoV, 4.0f / 3.0f, 0.1f, 100.0f);
 
 	// Initial position : on +Z
 	glm::vec3 position,InitialPos;
@@ -41,7 +42,7 @@ private :
 	// Right vector
 	glm::vec3 right;
 	// Up
-	glm::vec3 up;
+	glm::vec3 up = glm::vec3(0,1,0);
 	// LookAt
 //	glm::vec3 lookAt = glm::vec3(0, 0, -10);
 	// Time difference
@@ -62,12 +63,13 @@ public:
 	glm::vec3 getDirection(){ return direction; }	//return current direction we're looking at
 	
 	void setViewMat(glm::mat4 mat){ ViewMatrix = mat; }
-	void SetPosition(glm::vec3);
+	void setPosition(glm::vec3);
 	void move(CameraDirection);
 	void computeMatricesFromInputs();
+	void setProjectionMatrix(glm::mat4);
 	glm::mat4 getViewMatrix();
 	glm::mat4 getProjectionMatrix();
-	void Reset();
+	void reset();
 	void rotate();
 	void calcMatrices();
 	void s(int i){ temp += i; }

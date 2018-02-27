@@ -9,10 +9,11 @@ SDL_Event event;
 Application::Application() {
 	positionBuffer.resize(640*480);
 	texCoords.resize(640*480);
-	image1 = stbi_load("assets/depth1.png", &DepthWidth, &DepthHeight, &channels, 2);
-	image2 = stbi_load("assets/depth2.png", &DepthWidth, &DepthHeight, &channels, 0);
+	image1 = stbi_load("assets/d6.png", &DepthWidth, &DepthHeight, &channels, 2);
+	image2 = stbi_load("assets/depth2.png", &DepthWidth, &DepthHeight, &channels, 2);
 	if(image1 == nullptr) {cout<<"could not read image file!"<<endl; exit(0);}
-	cam.SetPosition(glm::vec3(10,-10,10));
+	cam.setPosition(glm::vec3(0, 0, -0));
+	cam.setProjectionMatrix(proj);
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	SetupShaders();
 	SetupBuffers();
@@ -73,7 +74,7 @@ void Application::run() {
 
 
 				case SDLK_r:
-					cam.Reset();
+					cam.reset();
 					std::cout << "Reset button pressed \n";
 					break;
 
@@ -108,7 +109,7 @@ void Application::run() {
 void Application::SetupShaders() {
 	drawVertexMap = (make_unique<ShaderProgram>());
 	drawVertexMap->initFromFiles("shaders/MainShader.vert", "shaders/MainShader.frag");
-	drawVertexMap->addAttribute("position");
+	//drawVertexMap->addAttribute("position");
 	drawVertexMap->addAttribute("texCoords");
 	drawVertexMap->addUniform("depthTexture");
 	drawVertexMap->addUniform("MVP");
@@ -160,8 +161,8 @@ void Application::SetupBuffers() {
 	glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
 	glBufferData(GL_ARRAY_BUFFER, (DepthWidth * DepthHeight) * sizeof(glm::vec2), positionBuffer.data(), GL_STATIC_DRAW);
 	//Assign attribs
-	glEnableVertexAttribArray(drawVertexMap->attribute("position"));
-	glVertexAttribPointer(drawVertexMap->attribute("position"), 2, GL_FLOAT, GL_FALSE, 0, 0);
+	//glEnableVertexAttribArray(drawVertexMap->attribute("position"));
+	//glVertexAttribPointer(drawVertexMap->attribute("position"), 2, GL_FLOAT, GL_FALSE, 0, 0);
 
 	glGenBuffers(1, &texCoordBuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, texCoordBuffer);

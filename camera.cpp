@@ -68,11 +68,15 @@ void Camera::move(CameraDirection dir)
 
 }
 
-void Camera::SetPosition(glm::vec3 pos)
+void Camera::setPosition(glm::vec3 pos)
 {
 	position = InitialPos = pos;
 }
 
+void Camera::setProjectionMatrix(glm::mat4 proj)
+{
+	ProjectionMatrix = proj;
+}
 void Camera::calcMatrices()
 {
 	// Direction : Spherical coordinates to Cartesian coordinates conversion
@@ -94,8 +98,6 @@ void Camera::calcMatrices()
 
 	float FoV = initialFoV;
 
-	// Projection matrix : 45° Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
-	ProjectionMatrix = glm::perspective(FoV, 16.0f / 9.0f, 0.1f, 100.0f);
 	// Camera matrix
 	ViewMatrix = glm::lookAt(
 		position,           // Camera is here
@@ -104,7 +106,7 @@ void Camera::calcMatrices()
 		);
 }
 
-void Camera::Reset()
+void Camera::reset()
 {
 	position = InitialPos;
 	horizontalAngle = 3.14f;
