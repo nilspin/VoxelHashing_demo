@@ -8,8 +8,8 @@ SDL_Event event;
 
 Application::Application() {
 	texCoords.resize(640*480);
-	image1 = stbi_load("assets/d6.png", &DepthWidth, &DepthHeight, &channels, 2);
-	image2 = stbi_load("assets/depth2.png", &DepthWidth, &DepthHeight, &channels, 2);
+	image1 = stbi_load("assets/d1.png", &DepthWidth, &DepthHeight, &channels, 2);
+	image2 = stbi_load("assets/d2.png", &DepthWidth, &DepthHeight, &channels, 2);
 	if(image1 == nullptr) {cout<<"could not read image file!"<<endl; exit(0);}
 	cam.setPosition(glm::vec3(0, 0, -0));
 	cam.setProjectionMatrix(proj);
@@ -18,7 +18,7 @@ Application::Application() {
 	SetupBuffers();
 	SetupDepthTextures();
 	UploadDepthToTexture(image1, depthTexture1, 0);
-	//UploadDepthToTexture(image2, depthTexture2, 1);
+	UploadDepthToTexture(image2, depthTexture2, 1);
 }
 
 void Application::run() {
@@ -99,7 +99,13 @@ void Application::run() {
 		drawVertexMap->use();
 		//inputSource.UploadDepthToTexture();
 
+		//first depthMap
 		glUniform1i(drawVertexMap->uniform("depthTexture"), 0);
+		glUniform3f(drawVertexMap->uniform("shadeColor"), 1, 0, 0);
+		glDrawArrays(GL_POINTS, 0, 640*480);
+		//second depthMap
+		glUniform1i(drawVertexMap->uniform("depthTexture"), 1);
+		glUniform3f(drawVertexMap->uniform("shadeColor"), 0, 1, 0);
 		glDrawArrays(GL_POINTS, 0, 640*480);
 		window.swap();
 	}
@@ -111,6 +117,7 @@ void Application::SetupShaders() {
 	drawVertexMap->addAttribute("texCoords");
 	drawVertexMap->addUniform("depthTexture");
 	drawVertexMap->addUniform("MVP");
+	drawVertexMap->addUniform("shadeColor");
 }
 
 void Application::SetupDepthTextures() {
