@@ -1,12 +1,9 @@
 #version 430
 
 uniform sampler2D depthTexture;
-//in vec2 position;
 in ivec2 texCoords;
-//out vec2 pos;//texturecoords in 0..1
-//out float depth;
-
 uniform mat4 MVP;
+
 
 float fx = 525.0;  // focal length x
 float fy = 525.0;  // focal length y
@@ -29,6 +26,4 @@ void main()
 
 	gl_Position = MVP*vec4(x, -y, -depth, 1.0);
 	
-	//pos = gl_Position.xyz;	
-	//pos = (position.xy + vec2(1,1))/2.0;
 }

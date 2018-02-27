@@ -47,7 +47,6 @@ private:
 	uint8_t *image2=nullptr;
 	
 	//OpenGL Buffer objects
-	vector<glm::vec2> positionBuffer;
 	vector<glm::ivec2>	texCoords;
 	GLuint vertexBuffer;
 	GLuint texCoordBuffer;

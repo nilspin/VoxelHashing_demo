@@ -7,7 +7,6 @@
 SDL_Event event;
 
 Application::Application() {
-	positionBuffer.resize(640*480);
 	texCoords.resize(640*480);
 	image1 = stbi_load("assets/d6.png", &DepthWidth, &DepthHeight, &channels, 2);
 	image2 = stbi_load("assets/depth2.png", &DepthWidth, &DepthHeight, &channels, 2);
@@ -109,7 +108,6 @@ void Application::run() {
 void Application::SetupShaders() {
 	drawVertexMap = (make_unique<ShaderProgram>());
 	drawVertexMap->initFromFiles("shaders/MainShader.vert", "shaders/MainShader.frag");
-	//drawVertexMap->addAttribute("position");
 	drawVertexMap->addAttribute("texCoords");
 	drawVertexMap->addUniform("depthTexture");
 	drawVertexMap->addUniform("MVP");
@@ -118,7 +116,7 @@ void Application::SetupShaders() {
 void Application::SetupDepthTextures() {
 	glGenTextures(1, &depthTexture1);
 	glBindTexture(GL_TEXTURE_2D, depthTexture1);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, DepthWidth, DepthHeight, 0, GL_RED, GL_FLOAT, 0);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, DepthWidth, DepthHeight, 0, GL_RG, GL_UNSIGNED_BYTE, 0);
 	//filtering
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -130,7 +128,7 @@ void Application::SetupDepthTextures() {
 	//Texture2
 	glGenTextures(1, &depthTexture2);
 	glBindTexture(GL_TEXTURE_2D, depthTexture2);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, DepthWidth, DepthHeight, 0, GL_RED, GL_FLOAT, 0);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, DepthWidth, DepthHeight, 0, GL_RG, GL_UNSIGNED_BYTE, 0);
 	//filtering
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -149,20 +147,11 @@ void Application::SetupBuffers() {
 		for (int j = 0; j < DepthHeight; ++j)
 		{
 			texCoords[i * DepthHeight + j] = (glm::vec2(i, j));
-			positionBuffer[i * DepthHeight + j] = (glm::vec2(((GLfloat)i*wide), ((GLfloat)j*wide)));
 		}
 	}
 	//Create Vertex Array Object
 	glGenVertexArrays(1, &vertexArray);
 	glBindVertexArray(vertexArray);
-
-	//VBOs
-	glGenBuffers(1, &vertexBuffer);
-	glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-	glBufferData(GL_ARRAY_BUFFER, (DepthWidth * DepthHeight) * sizeof(glm::vec2), positionBuffer.data(), GL_STATIC_DRAW);
-	//Assign attribs
-	//glEnableVertexAttribArray(drawVertexMap->attribute("position"));
-	//glVertexAttribPointer(drawVertexMap->attribute("position"), 2, GL_FLOAT, GL_FALSE, 0, 0);
 
 	glGenBuffers(1, &texCoordBuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, texCoordBuffer);
