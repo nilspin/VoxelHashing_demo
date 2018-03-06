@@ -7,6 +7,7 @@
 SDL_Event event;
 
 Application::Application() {
+    frustum.setFromVectors(vec3(0,0,-1), vec3(0,0,0), vec3(1,0,0), vec3(0,1,0), 1.0, 100.0, 45, 1.3333);
 	texCoords.resize(640*480);
 	image1 = stbi_load("assets/d1.png", &DepthWidth, &DepthHeight, &channels, 2);
 	image2 = stbi_load("assets/d2.png", &DepthWidth, &DepthHeight, &channels, 2);
@@ -91,22 +92,29 @@ void Application::run() {
 		GLfloat time = SDL_GetTicks();
 		view = cam.getViewMatrix();
 		MVP = proj*view*model;
-
+    
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	
 		glUniformMatrix4fv(drawVertexMap->uniform("MVP"), 1, false, glm::value_ptr(MVP));
 
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glBindVertexArray(vertexArray);
 		drawVertexMap->use();
 		//inputSource.UploadDepthToTexture();
 
+        
 		//first depthMap
 		glUniform1i(drawVertexMap->uniform("depthTexture"), 0);
 		glUniform3f(drawVertexMap->uniform("shadeColor"), 1, 0, 0);
 		glDrawArrays(GL_POINTS, 0, 640*480);
 		//second depthMap
-		glUniform1i(drawVertexMap->uniform("depthTexture"), 1);
-		glUniform3f(drawVertexMap->uniform("shadeColor"), 0, 1, 0);
-		glDrawArrays(GL_POINTS, 0, 640*480);
+//		glUniform1i(drawVertexMap->uniform("depthTexture"), 1);
+//		glUniform3f(drawVertexMap->uniform("shadeColor"), 0, 1, 0);
+//		glDrawArrays(GL_POINTS, 0, 640*480);
+//
+        //Draw frustum
+        //frustum.draw();
+
+        
 		window.swap();
 	}
 }
