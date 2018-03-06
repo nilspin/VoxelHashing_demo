@@ -5,6 +5,7 @@
 #include "Window.h"
 #include "ShaderProgram.hpp"
 #include "camera.h"
+#include "Frustum.h"
 
 using namespace std;
 using namespace glm;
@@ -36,6 +37,9 @@ private:
 	glm::mat4 view = glm::mat4(1);
 	glm::mat4 proj = glm::perspective(45.0f, 1.3333f, 5.0f, 500.0f);
 	glm::mat4 MVP = glm::mat4(1);
+
+    //Frustum
+    Frustum frustum;
 
 	//Shader
 	unique_ptr<ShaderProgram> drawVertexMap;

@@ -23,7 +23,8 @@ set(LIBS ${LIBS} ${OPENGL_LIBRARY} ${SDL2_LIBRARIES} ${GLEW_LIBRARIES})
 include_directories(${CMAKE_SOURCE_DIR})
 include_directories(INCLUDE_DIRS ${INCLUDE_DIRS} )
 
-set(SOURCES DepthMain.cpp camera.cpp Window.cpp Application.cpp prereq.h ShaderProgram.hpp camera.h Window.h Application.h)
+set(SOURCES DepthMain.cpp camera.cpp Window.cpp Application.cpp prereq.h ShaderProgram.hpp Frustum.cpp camera.h Window.h
+    Application.h Frustum.h)
 add_executable(${PROJECT_NAME} ${SOURCES})
 
 target_link_libraries(${PROJECT_NAME} ${LIBS})
