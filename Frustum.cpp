@@ -103,13 +103,14 @@ void Frustum::uploadBuffer() {
     glBindVertexArray(0);
 }
 
-void Frustum::draw(){
-    mat4 VP = proj*view;
+void Frustum::draw(glm::mat4& transform){
+    mat4& VP = transform;
+    //mat4 VP = proj*view;
     glBindVertexArray(frustum);
     drawFrustum->use();
     glUniformMatrix4fv(drawFrustum->uniform("VP"), 1, false, glm::value_ptr(VP));
-    glUniform3f(drawFrustum->uniform("frustumColor"), frustumColor.r, frustumColor.g, frustumColor.b);
-    glDrawArrays(GL_LINES, 0, 24);
+    glUniform3f(drawFrustum->uniform("frustumColor"), 1,1,1);
+    glDrawArrays(GL_POINTS, 0, 24);
     glBindVertexArray(0);
 
 }
