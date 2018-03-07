@@ -35,7 +35,7 @@ private:
 	Camera cam;
 	glm::mat4 model = glm::mat4(1);
 	glm::mat4 view = glm::mat4(1);
-	glm::mat4 proj = glm::perspective(45.0f, 1.3333f, 5.0f, 500.0f);
+	glm::mat4 proj = glm::perspective(45.0f, 1.3333f, 0.1f, 5000.0f);
 	glm::mat4 MVP = glm::mat4(1);
 
     //Frustum

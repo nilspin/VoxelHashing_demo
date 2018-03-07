@@ -1,5 +1,6 @@
 #define STB_IMAGE_IMPLEMENTATION
 
+#include<glm/gtx/transform.hpp>
 #include "Application.h"
 #include "stb_image.h"
 #include<fstream>
@@ -7,7 +8,7 @@
 SDL_Event event;
 
 Application::Application() {
-    frustum.setFromVectors(vec3(0,0,-1), vec3(0,0,0), vec3(1,0,0), vec3(0,1,0), 1.0, 100.0, 45, 1.3333);
+    frustum.setFromVectors(vec3(0,0,-1), vec3(0,0,0), vec3(1,0,0), vec3(0,1,0), 5.0, 700.0, 45, 1.3333);
 	texCoords.resize(640*480);
 	image1 = stbi_load("assets/d1.png", &DepthWidth, &DepthHeight, &channels, 2);
 	image2 = stbi_load("assets/d2.png", &DepthWidth, &DepthHeight, &channels, 2);
@@ -94,12 +95,13 @@ void Application::run() {
 		MVP = proj*view*model;
     
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        
+        drawVertexMap->use();
 	
 		glUniformMatrix4fv(drawVertexMap->uniform("MVP"), 1, false, glm::value_ptr(MVP));
 
 		glBindVertexArray(vertexArray);
-		drawVertexMap->use();
-		//inputSource.UploadDepthToTexture();
+    	//inputSource.UploadDepthToTexture();
 
         
 		//first depthMap
@@ -111,8 +113,10 @@ void Application::run() {
 //		glUniform3f(drawVertexMap->uniform("shadeColor"), 0, 1, 0);
 //		glDrawArrays(GL_POINTS, 0, 640*480);
 //
+        mat4 scaleMat =  glm::scale(vec3(1000));
+        mat4 newMVP = proj*view*scaleMat;
         //Draw frustum
-        //frustum.draw();
+        frustum.draw(MVP);
 
         
 		window.swap();
