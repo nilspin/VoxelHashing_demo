@@ -221,7 +221,7 @@ private:
 	// Private method to return the current shader program info log as a string
 	std::string getInfoLog(ObjectType type, int id)
 	{
-		GLint infoLogLength=0;
+		GLint infoLogLength;
 		if (type == ObjectType::SHADER)
 		{
 			glGetShaderiv(id, GL_INFO_LOG_LENGTH, &infoLogLength);

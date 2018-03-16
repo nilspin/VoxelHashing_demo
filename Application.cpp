@@ -114,7 +114,7 @@ void Application::run() {
 //		glDrawArrays(GL_POINTS, 0, 640*480);
 //
         mat4 scaleMat =  glm::scale(vec3(1000));
-        mat4 newMVP = proj*view*scaleMat;
+        mat4 newMVP = proj*view;//*scaleMat
         //Draw frustum
         frustum.draw(MVP);
 

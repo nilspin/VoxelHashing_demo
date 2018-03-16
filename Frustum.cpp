@@ -1,10 +1,12 @@
 #include<glm/gtc/matrix_access.hpp>
+#include<glm/gtx/transform.hpp>
 #include "Frustum.h"
 //#include "Plane.h"
 
 Frustum::Frustum(){
     lines.reserve(24);
     glGenVertexArrays(1,&frustum);
+    glBindVertexArray(frustum);
     glGenBuffers(1,&frustumBuffer);
 
     drawFrustum = (std::make_unique<ShaderProgram>());
@@ -12,7 +14,7 @@ Frustum::Frustum(){
     drawFrustum->addUniform("VP");
     drawFrustum->addUniform("frustumColor");
     drawFrustum->addAttribute("position");
-    
+    glBindVertexArray(0);
 }
 
 
@@ -51,6 +53,7 @@ void Frustum::setFromVectors(const vec3& dir, const vec3& pos, const vec3& right
     bottom = Plane(nearBotRight, farBotLeft, nearBotLeft);
     */
 
+/*
     corners[0] = farTopLeft;
     corners[1] = farTopRight; 
     corners[2] = farBotLeft; 
@@ -59,6 +62,15 @@ void Frustum::setFromVectors(const vec3& dir, const vec3& pos, const vec3& right
     corners[5] = nearTopLeft; 
     corners[6] = nearTopRight; 
     corners[7] = nearBotLeft; 
+*/
+    corners[0] = vec3(-1,1,1);
+    corners[1] = vec3(1,1,1); 
+    corners[2] = vec3(-1,-1,1); 
+    corners[3] = vec3(1,-1,1); 
+    corners[4] = vec3(1,-1,-1); 
+    corners[5] = vec3(-1,1,-1);
+    corners[6] = vec3(1,1,-1); 
+    corners[7] = vec3(-1,-1,-1); 
 
     // Far face lines.
     lines[0] = corners[0];
@@ -96,7 +108,7 @@ void Frustum::setFromVectors(const vec3& dir, const vec3& pos, const vec3& right
 void Frustum::uploadBuffer() {
     glBindVertexArray(frustum);
     glBindBuffer(GL_ARRAY_BUFFER, frustumBuffer);
-    glBufferData(GL_ARRAY_BUFFER, lines.size(), lines.data(), GL_STATIC_DRAW );
+    glBufferData(GL_ARRAY_BUFFER, 24*sizeof(glm::vec3), lines.data(), GL_DYNAMIC_DRAW );
 
     glEnableVertexAttribArray(drawFrustum->attribute("position"));
     glVertexAttribPointer(drawFrustum->attribute("position"), 3, GL_FLOAT, GL_FALSE, 0, 0);
@@ -104,13 +116,14 @@ void Frustum::uploadBuffer() {
 }
 
 void Frustum::draw(glm::mat4& transform){
-    mat4& VP = transform;
+    mat4 VP = glm::inverse(transform);//mat4(1);//transform;//
     //mat4 VP = proj*view;
-    glBindVertexArray(frustum);
     drawFrustum->use();
+    glBindVertexArray(frustum);
     glUniformMatrix4fv(drawFrustum->uniform("VP"), 1, false, glm::value_ptr(VP));
     glUniform3f(drawFrustum->uniform("frustumColor"), 1,1,1);
-    glDrawArrays(GL_POINTS, 0, 24);
+    glDrawArrays(GL_LINES, 0, 24);
+    //glDrawArrays(GL_POINTS, 0, 24);
     glBindVertexArray(0);
 
 }
