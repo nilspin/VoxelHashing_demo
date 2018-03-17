@@ -10,6 +10,12 @@ Attributes and uniforms are stored in <string, int> maps and can be added
 via calls to addAttribute(<name-of-attribute>) and then the attribute
 index can be obtained via myProgram.attribute(<name-of-attribute>) - Uniforms
 work in the exact same way.
+
+Edit: Extended support for tess, geometry and compute shaders.
+Shader text files with extensions ".vert" ".frag" ".geom" ".eval"(tess eval) ".cont"(tess control)
+and ".comp"(compute shader) will be loaded accordingly.
+
+Edited by nilspin - 19/3/2018.
 ***/
 
 #ifndef SHADER_PROGRAM_HPP
@@ -19,14 +25,21 @@ work in the exact same way.
 #include<GL/glu.h>
 #include<GL/gl.h>
 
+#include<boost/filesystem.hpp>
+
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <map>
+#include <vector>
+
 
 class ShaderProgram
 {
 private:
+	//For use with templates
+	std::vector<std::string> fileNameContainer;
+
 	// static DEBUG flag - if set to false then, errors aside, we'll run completely silent
 	static const bool DEBUG = true;
 
@@ -38,8 +51,16 @@ private:
 
 	// Shader program and individual shader Ids
 	GLuint programId;
-	GLuint vertexShaderId;
-	GLuint fragmentShaderId;
+	
+	std::map<std::string, GLenum> shaderEnumMap
+	{
+		{".vert", GL_VERTEX_SHADER},
+		{".frag", GL_FRAGMENT_SHADER},
+		{".geom", GL_GEOMETRY_SHADER},
+		{".eval", GL_TESS_EVALUATION_SHADER},
+		{".cont", GL_TESS_CONTROL_SHADER},
+		{".comp", GL_COMPUTE_SHADER}
+	};
 
 	// How many shaders are attached to the shader program
 	GLuint shaderCount;
@@ -55,26 +76,58 @@ private:
 
 	// ---------- PRIVATE METHODS ----------
 
+	// Private method to compile/attach/link/verify the shaders.
+	// Note: Rather than returning a boolean as a success/fail status we'll just consider
+	// a failure here to be an unrecoverable error and throw a runtime_error.
+	void initialise(std::vector<std::string> fileList)
+	{
+		std::vector<GLuint> loadedShaders;
+		for(auto fileName:fileList)
+		{
+			/*We need boost for just this one line.
+			TODO: Replace with std::filesystem when compiler support is available*/
+			boost::filesystem::path fname{fileName};
+			std::string extension = fname.extension().string();
+			GLenum shaderType = shaderEnumMap.find(extension)->second;
+
+			std::string shaderSource = loadShaderFromFile(fileName);
+
+			// Compile the shaders and return their id values
+			GLuint shaderId = compileShader(shaderSource, shaderType);
+			
+			// Attach the compiled shader to the shader program
+			glAttachShader(programId, shaderId);
+
+			loadedShaders.push_back(shaderId);
+			
+		}
+		
+		// Link the shader program - details are placed in the program info log
+		glLinkProgram(programId);
+		
+		// Once the shader program has the shaders attached and linked, the shaders are no longer required.
+		// If the linking failed, then we're going to abort anyway so we still detach the shaders.
+		for(auto shader:loadedShaders)
+		{
+			glDetachShader(programId, shader);
+		}
+		
+		checkProgramLinkStatus();
+		
+		// Validate the shader program
+		glValidateProgram(programId);
+
+		checkProgramValidationStatus();
+		
+		// Finally, the shader program is initialised
+		initialised=true;
+	}
+
 	// Private method to compile a shader of a given type
 	GLuint compileShader(std::string shaderSource, GLenum shaderType)
 	{
-		std::string shaderTypeString;
-		switch (shaderType)
-		{
-		case GL_VERTEX_SHADER:
-			shaderTypeString = "GL_VERTEX_SHADER";
-			break;
-		case GL_FRAGMENT_SHADER:
-			shaderTypeString = "GL_FRAGMENT_SHADER";
-			break;
-		case GL_GEOMETRY_SHADER:
-			throw std::runtime_error("Geometry shaders are unsupported at this time.");
-			break;
-		default:
-			throw std::runtime_error("Bad shader type enum in compileShader.");
-			break;
-		}
-
+		std::string shaderTypeString = std::to_string(shaderType);
+		
 		// Generate a shader id
 		// Note: Shader id will be non-zero if successfully created.
 		GLuint shaderId = glCreateShader(shaderType);
@@ -95,7 +148,15 @@ private:
 		// Compile the shader
 		glCompileShader(shaderId);
 
-		// Check the compilation status and throw a runtime_error if shader compilation failed
+		checkCompileStatus(shaderId, shaderTypeString);
+
+		// If everything went well, return the shader id
+		return shaderId;
+	}
+	
+	// Check the compilation status and throw a runtime_error if shader compilation failed
+	void checkCompileStatus(GLint shaderId, std::string shaderTypeString)
+	{
 		GLint shaderStatus;
 		glGetShaderiv(shaderId, GL_COMPILE_STATUS, &shaderStatus);
 		if (shaderStatus == GL_FALSE)
@@ -119,32 +180,28 @@ private:
 				std::cout << shaderTypeString << " shader compilation successful." << std::endl;
 			}
 		}
-
-		// If everything went well, return the shader id
-		return shaderId;
 	}
 
-	// Private method to compile/attach/link/verify the shaders.
-	// Note: Rather than returning a boolean as a success/fail status we'll just consider
-	// a failure here to be an unrecoverable error and throw a runtime_error.
-	void initialise(std::string vertexShaderSource, std::string fragmentShaderSource)
+	// Check the validation status and throw a runtime_error if program validation failed
+	void checkProgramValidationStatus()
 	{
-		// Compile the shaders and return their id values
-		vertexShaderId = compileShader(vertexShaderSource, GL_VERTEX_SHADER);
-		fragmentShaderId = compileShader(fragmentShaderSource, GL_FRAGMENT_SHADER);
+		GLint programValidatationStatus;
+		glGetProgramiv(programId, GL_VALIDATE_STATUS, &programValidatationStatus);
+		if (programValidatationStatus == GL_TRUE)
+		{
+			if (DEBUG)
+			{
+				std::cout << "Shader program validation successful." << std::endl;
+			}
+		}
+		else
+		{
+			throw std::runtime_error("Shader program validation failed: " + getInfoLog(ObjectType::PROGRAM, programId));
+		}
+	}
 
-		// Attach the compiled shaders to the shader program
-		glAttachShader(programId, vertexShaderId);
-		glAttachShader(programId, fragmentShaderId);
-
-		// Link the shader program - details are placed in the program info log
-		glLinkProgram(programId);
-
-		// Once the shader program has the shaders attached and linked, the shaders are no longer required.
-		// If the linking failed, then we're going to abort anyway so we still detach the shaders.
-		glDetachShader(programId, vertexShaderId);
-		glDetachShader(programId, fragmentShaderId);
-
+	void checkProgramLinkStatus()
+	{
 		// Check the program link status and throw a runtime_error if program linkage failed.
 		GLint programLinkSuccess = GL_FALSE;
 		glGetProgramiv(programId, GL_LINK_STATUS, &programLinkSuccess);
@@ -170,29 +227,7 @@ private:
 
 			throw std::runtime_error("Shader program link failed: " + getInfoLog(ObjectType::PROGRAM, programId));
 		}
-
-		// Validate the shader program
-		glValidateProgram(programId);
-
-		// Check the validation status and throw a runtime_error if program validation failed
-		GLint programValidatationStatus;
-		glGetProgramiv(programId, GL_VALIDATE_STATUS, &programValidatationStatus);
-		if (programValidatationStatus == GL_TRUE)
-		{
-			if (DEBUG)
-			{
-				std::cout << "Shader program validation successful." << std::endl;
-			}
-		}
-		else
-		{
-			throw std::runtime_error("Shader program validation failed: " + getInfoLog(ObjectType::PROGRAM, programId));
-		}
-
-		// Finally, the shader program is initialised
-		initialised = true;
 	}
-
 	// Private method to load the shader source code from a file
 	std::string loadShaderFromFile(const std::string filename)
 	{
@@ -252,6 +287,30 @@ private:
 	}
 
 public:
+	/*--------------------TEMPLATE CODE--------------------------------*/
+	//Simple initializer for string
+	template<typename T>
+	std::string to_string(const T t)
+	{
+		return t;
+	}
+
+	/*
+	Converts arguments into vector of string.
+	Converted args are put into initializer list
+	(which compiler resolves by itself) and initialised 
+	into a vector.
+	*/
+	template<typename ... Params>
+	void initFromFiles(const Params& ... args)
+	{
+		std::vector<std::string> temp {to_string(args)...};
+		fileNameContainer = temp;
+		initialise(fileNameContainer);
+	}
+	/*-----------------------------------------------------------------*/
+
+
 	// Constructor
 	ShaderProgram()
 	{
@@ -274,22 +333,6 @@ public:
 		// Delete the shader program from the graphics card memory to
 		// free all the resources it's been using
 		glDeleteProgram(programId);
-	}
-
-	// Method to initialise a shader program from shaders provided as files
-	void initFromFiles(std::string vertexShaderFilename, std::string fragmentShaderFilename)
-	{
-		// Get the shader file contents as strings
-		std::string vertexShaderSource = loadShaderFromFile(vertexShaderFilename);
-		std::string fragmentShaderSource = loadShaderFromFile(fragmentShaderFilename);
-
-		initialise(vertexShaderSource, fragmentShaderSource);
-	}
-
-	// Method to initialise a shader program from shaders provided as strings
-	void initFromStrings(std::string vertexShaderSource, std::string fragmentShaderSource)
-	{
-		initialise(vertexShaderSource, fragmentShaderSource);
 	}
 
 	// Method to enable the shader program - we'll suggest this for inlining
