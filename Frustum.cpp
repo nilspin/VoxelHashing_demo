@@ -1,5 +1,4 @@
 #include<glm/gtc/matrix_access.hpp>
-#include<glm/gtx/transform.hpp>
 #include "Frustum.h"
 //#include "Plane.h"
 
@@ -115,9 +114,9 @@ void Frustum::uploadBuffer() {
     glBindVertexArray(0);
 }
 
-void Frustum::draw(glm::mat4& transform){
+void Frustum::draw(const glm::mat4& transform){
     mat4 VP = glm::inverse(transform);//mat4(1);//transform;//
-    //mat4 VP = proj*view;
+    //mat4 &VP = transform;
     drawFrustum->use();
     glBindVertexArray(frustum);
     glUniformMatrix4fv(drawFrustum->uniform("VP"), 1, false, glm::value_ptr(VP));

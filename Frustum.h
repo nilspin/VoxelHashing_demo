@@ -40,7 +40,7 @@ class Frustum{
         // Projection matrix : 45° Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
         glm::mat4 proj = glm::perspective(fov, 4.0f / 3.0f, 0.1f, 100.0f);
 
-        void draw(glm::mat4& transform);
+        void draw(const glm::mat4& transform);
         Frustum();
         ~Frustum();
         void uploadBuffer();   //setup vert buffers, shaders

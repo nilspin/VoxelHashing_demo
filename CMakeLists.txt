@@ -7,7 +7,7 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_CXX_FLAGS "-std=c++0x -g")
 set (CMAKE_CXX_FLAGS "-fpermissive")
-#cmake_policy(SET CMP0004 OLD)
+set(OpenGL_GL_PREFERENCE "GLVND")
 
 # Search desired Qt packages
 find_package(OpenGL REQUIRED)
@@ -28,7 +28,7 @@ set(SOURCES DepthMain.cpp camera.cpp Window.cpp Application.cpp prereq.h ShaderP
     Application.h Frustum.h)
 add_executable(${PROJECT_NAME} ${SOURCES})
 
-target_link_libraries(${PROJECT_NAME} ${LIBS})
+target_link_libraries(${PROJECT_NAME} ${LIBS} SDL2::SDL2)
 
 #Now copy shaders to build directory
 

@@ -17,7 +17,7 @@ void main()
     float Y = position.y;
     float Z = position.z;
     vec4 tempPos = VP*vec4(X,Y,Z,1.0);
-    tempPos = tempPos*1.0/tempPos.w; 
+    //tempPos = tempPos*1.0/tempPos.w; 
     gl_Position = tempPos;
 
     //gl_Position = VP*vec4(position.x, -position.y, position.z, 1.0);    
