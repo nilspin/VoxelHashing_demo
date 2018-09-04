@@ -61,6 +61,7 @@ private:
 	void SetupShaders();
 	void SetupBuffers();
 	void SetupDepthTextures();
+  void processEvents();
 
 };
 

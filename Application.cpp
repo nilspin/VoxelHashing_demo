@@ -10,8 +10,8 @@ SDL_Event event;
 Application::Application() {
   frustum.setFromVectors(vec3(0,0,-1), vec3(0,0,0), vec3(1,0,0), vec3(0,1,0), 5.0, 700.0, 45, 1.3333);
   texCoords.resize(640*480);
-  image1 = stbi_load("assets/d1.png", &DepthWidth, &DepthHeight, &channels, 2);
-  image2 = stbi_load("assets/d2.png", &DepthWidth, &DepthHeight, &channels, 2);
+  image1 = stbi_load("assets/T0.png", &DepthWidth, &DepthHeight, &channels, 2);
+  image2 = stbi_load("assets/T5.png", &DepthWidth, &DepthHeight, &channels, 2);
   if(image1 == nullptr) {cout<<"could not read image file!"<<endl; exit(0);}
   cam.setPosition(glm::vec3(0, 0, 0));
   cam.setProjectionMatrix(proj);
@@ -26,67 +26,7 @@ Application::Application() {
 void Application::run() {
   while (!quit)
   {
-    while (SDL_PollEvent(&event) != 0)
-    {
-      switch (event.type)
-      {
-        case SDL_QUIT:	//if X windowkey is pressed then quit
-          quit = true;
-
-        case SDL_KEYDOWN:	//if ESC is pressed then quit
-
-          switch (event.key.keysym.sym)
-          {
-            case SDLK_q:
-              quit = true;
-              break;
-
-            case SDLK_w:
-              cam.move(FORWARD);
-              break;
-
-            case SDLK_s:
-              cam.move(BACK);
-              break;
-
-            case SDLK_a:
-              cam.move(LEFT);
-              break;
-
-            case SDLK_d:
-              cam.move(RIGHT);
-              break;
-
-            case SDLK_UP:
-              cam.move(UP);
-              break;
-
-            case SDLK_DOWN:
-              cam.move(DOWN);
-              break;
-
-            case SDLK_LEFT:
-              cam.move(ROT_LEFT);
-              break;
-
-            case SDLK_RIGHT:
-              cam.move(ROT_RIGHT);
-              break;
-
-
-            case SDLK_r:
-              cam.reset();
-              std::cout << "Reset button pressed \n";
-              break;
-
-          }
-          break;
-
-        case SDL_MOUSEMOTION:
-          cam.rotate();
-          break;
-      }
-    }
+    processEvents();  //Event loop
 
     //First things first
     cam.calcMatrices();
@@ -191,4 +131,68 @@ void Application::UploadDepthToTexture(uint8_t* image, int texID, int texUnit) {
 Application::~Application() {
   stbi_image_free(image1);
   stbi_image_free(image2);
+}
+
+void Application::processEvents() {
+  while (SDL_PollEvent(&event) != 0)
+    {
+      switch (event.type)
+      {
+        case SDL_QUIT:	//if X windowkey is pressed then quit
+          quit = true;
+
+        case SDL_KEYDOWN:	//if ESC is pressed then quit
+
+          switch (event.key.keysym.sym)
+          {
+            case SDLK_q:
+              quit = true;
+              break;
+
+            case SDLK_w:
+              cam.move(FORWARD);
+              break;
+
+            case SDLK_s:
+              cam.move(BACK);
+              break;
+
+            case SDLK_a:
+              cam.move(LEFT);
+              break;
+
+            case SDLK_d:
+              cam.move(RIGHT);
+              break;
+
+            case SDLK_UP:
+              cam.move(UP);
+              break;
+
+            case SDLK_DOWN:
+              cam.move(DOWN);
+              break;
+
+            case SDLK_LEFT:
+              cam.move(ROT_LEFT);
+              break;
+
+            case SDLK_RIGHT:
+              cam.move(ROT_RIGHT);
+              break;
+
+
+            case SDLK_r:
+              cam.reset();
+              std::cout << "Reset button pressed \n";
+              break;
+
+          }
+          break;
+
+        case SDL_MOUSEMOTION:
+          cam.rotate();
+          break;
+      }
+    }
 }
