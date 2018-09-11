@@ -1,0 +1,13 @@
+/Literature
+/build
+/assets
+/temp
+tags
+stb_voxel_render.h
+key_terms
+.ycm_extra_conf.py
+.vscode/
+imageData.txt
+VScode_workspace.code-workspace
+Rendordoc_settings
+ShaderProgram.hpp.bkup
