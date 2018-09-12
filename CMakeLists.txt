@@ -1,12 +1,11 @@
 #====================
-cmake_minimum_required (VERSION 2.8)
-PROJECT(ICP_Demo)
+cmake_minimum_required (VERSION 3.9)
+PROJECT(ICP_Demo LANGUAGES CXX CUDA)
 
-# Useful CMake options for Qt projects
+# Useful CMake options
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOMOC ON)
-set(CMAKE_CXX_FLAGS "-std=c++0x -g")
-set (CMAKE_CXX_FLAGS "-fpermissive -fPIC")
+set(CMAKE_CXX_FLAGS "-std=c++0x -fpermissive")
 set(OpenGL_GL_PREFERENCE "GLVND")
 
 # Search desired Qt packages
@@ -15,10 +14,10 @@ find_package(OpenGL REQUIRED)
 find_package(SDL2 REQUIRED)
 find_package(GLEW REQUIRED)
 find_package(glm REQUIRED)
-find_package(Boost COMPONENTS filesystem REQUIRED)
+find_package(Boost COMPONENTS filesystem REQUIRED)  #only need this till nvcc starts supporting c++17 compiler
 
-set(INCLUDE_DIRS  ${INCLUDE_DIRS} ${CUDA_INCLUDE_DIRECTORIES} ${OPENGL_INCLUDE_DIRS} ${SDL2_INCLUDE_DIRS} ${GLEW_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS})
-set(LIBS ${LIBS} ${OPENGL_LIBRARY} ${SDL2_LIBRARIES} ${GLEW_LIBRARIES} ${Boost_LIBRARIES})
+set(INCLUDE_DIRS  ${INCLUDE_DIRS} ${CUDA_INCLUDE_DIRS} ${OPENGL_INCLUDE_DIRS} ${SDL2_INCLUDE_DIRS} ${GLEW_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS})
+set(LIBS ${LIBS} ${OPENGL_LIBRARY} ${CUDA_LIBRARIES} ${SDL2_LIBRARIES} ${GLEW_LIBRARIES} ${Boost_LIBRARIES})
 
 if(CUDA_FOUND)
   # compared to class settings, we let NVidia's FindCUDA CMake detect 
@@ -40,7 +39,6 @@ if(CUDA_FOUND)
   # add debugging to CUDA NVCC flags.  For NVidia's NSight tools.
   set(CUDA_NVCC_FLAGS_DEBUG ${CUDA_NVCC_FLAGS_DEBUG} "-G")
 
-  CUDA_ADD_EXECUTABLE(testCUDA testCUDA.cu)
 else(CUDA_FOUND)
   message("CUDA is not installed on this system.")
 endif()
@@ -48,16 +46,20 @@ endif()
 #specify include directory
 #include_directories(/usr/include)
 include_directories(${CMAKE_SOURCE_DIR})
-include_directories(INCLUDE_DIRS ${INCLUDE_DIRS} )
+include_directories(INCLUDE_DIRS ${INCLUDE_DIRS})
 
 set(SOURCES DepthMain.cpp camera.cpp Window.cpp Application.cpp prereq.h ShaderProgram.hpp Frustum.cpp camera.h Window.h
-    Application.h Frustum.h)
+    Application.h Frustum.h cudaHelper.h CameraTracking.h)
 
 #Compile
+add_library(CameraTracking STATIC CameraTracking.cu )
+set_target_properties(CameraTracking PROPERTIES POSITION_INDEPENDENT_CODE ON)
+set_target_properties(CameraTracking PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+
 add_executable(${PROJECT_NAME} ${SOURCES})
 
 #Link all obj files
-target_link_libraries(${PROJECT_NAME} ${LIBS} SDL2::SDL2)
+target_link_libraries(${PROJECT_NAME} ${LIBS} SDL2::SDL2 CameraTracking)
 
 #Now copy shaders to build directory
 

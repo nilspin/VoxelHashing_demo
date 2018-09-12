@@ -1,10 +1,9 @@
 #version 430
 
-uniform sampler2D depthTexture;
-in ivec2 texCoords;
+in vec4 positions;
 uniform mat4 MVP;
 
-
+//TODO: All this from cuda kernel
 float fx = 525.0;  // focal length x
 float fy = 525.0;  // focal length y
 float cx = 319.5;  // optical center x
@@ -13,17 +12,6 @@ float factor = 5000; //for freiburg1 dataset (look here-https://vision.in.tum.de
 
 void main()
 {
-	float X = texCoords.x;
-	float Y = texCoords.y;
-
-	float hi = texelFetch(depthTexture, texCoords, 0).x;
-	float lo = texelFetch(depthTexture, texCoords, 0).y;
-	float depth = hi*512+lo;
-	//depth = depth/factor;
-
-	float x = (X - cx) * depth/fx;
-	float y = (Y - cy) * depth/fy;
-
-	gl_Position = MVP*vec4(x, -y, -depth, 1.0);
-	
+	//gl_Position = MVP*vec4(x, -y, -depth, 1.0);
+	gl_Position = MVP*positions;  //or ve4(positions.xyz,1.0)?
 }

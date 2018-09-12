@@ -1,7 +1,7 @@
 #ifndef PREREQ_H
 #define PREREQ_H
 
-//std shit
+//std stuff
 #include<iostream>
 #include<cstring>
 #include<string>
@@ -20,7 +20,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_opengl.h>
 
-//GLM shit
+//GLM stuff
 #define GLM_ENABLE_EXPERIMENTAL
 #include<glm/glm.hpp>
 #include<glm/gtc/matrix_transform.hpp>

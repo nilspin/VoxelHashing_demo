@@ -1,26 +1,43 @@
 #define STB_IMAGE_IMPLEMENTATION
 
-
+#include "cudaHelper.h"
 #include "Application.h"
 #include "stb_image.h"
 #include<fstream>
+#include<cuda_runtime_api.h>
+#include<cuda.h>
+#include<cuda_gl_interop.h>
 
 SDL_Event event;
 
 Application::Application() {
   frustum.setFromVectors(vec3(0,0,-1), vec3(0,0,0), vec3(1,0,0), vec3(0,1,0), 5.0, 700.0, 45, 1.3333);
-  texCoords.resize(640*480);
   image1 = stbi_load("assets/T0.png", &DepthWidth, &DepthHeight, &channels, 2);
   image2 = stbi_load("assets/T5.png", &DepthWidth, &DepthHeight, &channels, 2);
   if(image1 == nullptr) {cout<<"could not read image file!"<<endl; exit(0);}
+
+  //put into cuda device buffer
+  const int DEPTH_SIZE = sizeof(uint16_t)*DepthHeight*DepthWidth;
+  checkCudaErrors(cudaMalloc((void**)&d_depthInput, DEPTH_SIZE));
+  checkCudaErrors(cudaMalloc((void**)&d_depthTarget, DEPTH_SIZE));
+  checkCudaErrors(cudaMemcpy(d_depthInput, image1, DEPTH_SIZE, cudaMemcpyHostToDevice));
+  checkCudaErrors(cudaMemcpy(d_depthTarget, image2, DEPTH_SIZE, cudaMemcpyHostToDevice));
+  stbi_image_free(image1);
+  stbi_image_free(image2);
+
+
   cam.setPosition(glm::vec3(0, 0, 0));
   cam.setProjectionMatrix(proj);
   glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
   SetupShaders();
   SetupBuffers();
-  SetupDepthTextures();
-  UploadDepthToTexture(image1, depthTexture1, 0);
-  UploadDepthToTexture(image2, depthTexture2, 1);
+}
+
+Application::~Application() {
+  checkCudaErrors(cudaGraphicsUnregisterResource(cuda_input_resource));
+  checkCudaErrors(cudaGraphicsUnregisterResource(cuda_target_resource));
+  checkCudaErrors(cudaFree(d_depthInput));
+  checkCudaErrors(cudaFree(d_depthTarget));
 }
 
 void Application::run() {
@@ -34,25 +51,9 @@ void Application::run() {
     view = cam.getViewMatrix();
     MVP = proj*view*model;
 
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    drawVertexMap->use();
-
-    glUniformMatrix4fv(drawVertexMap->uniform("MVP"), 1, false, glm::value_ptr(MVP));
-
-    glBindVertexArray(vertexArray);
-    //inputSource.UploadDepthToTexture();
-
-
-    //first depthMap
-    glUniform1i(drawVertexMap->uniform("depthTexture"), 0);
-    glUniform3f(drawVertexMap->uniform("shadeColor"), 1, 0, 0);
-    glDrawArrays(GL_POINTS, 0, 640*480);
-    //second depthMap
-    glUniform1i(drawVertexMap->uniform("depthTexture"), 1);
-    glUniform3f(drawVertexMap->uniform("shadeColor"), 0, 1, 0);
-    glDrawArrays(GL_POINTS, 0, 640*480);
-    //
+    tracker.Align(d_input, d_inputNormals, d_target, d_targetNormals, d_depthInput, d_depthTarget);
+    draw(MVP);
+    
     mat4 scaleMat =  glm::scale(vec3(1000));
     mat4 newMVP = proj*view;//*scaleMat
     //Draw frustum
@@ -62,75 +63,61 @@ void Application::run() {
   }
 }
 
+void Application::draw(const glm::mat4& mvp)
+{
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  drawVertexMap->use();
+  glUniformMatrix4fv(drawVertexMap->uniform("MVP"), 1, false, glm::value_ptr(mvp));
+
+  glBindVertexArray(vertexArray);
+  glUniform3f(drawVertexMap->uniform("shadeColor"), 1, 0, 0);
+  glDrawArrays(GL_POINTS, 0, 640*480);
+
+  glUniform3f(drawVertexMap->uniform("shadeColor"), 0, 1, 0);
+  glDrawArrays(GL_POINTS, 0, 640*480);
+}
+
 void Application::SetupShaders() {
-  drawVertexMap = (make_unique<ShaderProgram>());
+  drawVertexMap = unique_ptr<ShaderProgram>(new ShaderProgram());
   drawVertexMap->initFromFiles("shaders/MainShader.vert", "shaders/MainShader.frag");
-  drawVertexMap->addAttribute("texCoords");
-  drawVertexMap->addUniform("depthTexture");
+  drawVertexMap->addAttribute("positions");
   drawVertexMap->addUniform("MVP");
   drawVertexMap->addUniform("shadeColor");
 }
 
-void Application::SetupDepthTextures() {
-  glGenTextures(1, &depthTexture1);
-  glBindTexture(GL_TEXTURE_2D, depthTexture1);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, DepthWidth, DepthHeight, 0, GL_RG, GL_UNSIGNED_BYTE, 0);
-  //filtering
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-  //Texture2
-  glGenTextures(1, &depthTexture2);
-  glBindTexture(GL_TEXTURE_2D, depthTexture2);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, DepthWidth, DepthHeight, 0, GL_RG, GL_UNSIGNED_BYTE, 0);
-  //filtering
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-  glBindTexture(GL_TEXTURE_2D, 0);
-}
-
 
 void Application::SetupBuffers() {
-  //First create array on RAM
-  for (int i = 0; i < DepthWidth; ++i)
-  {
-    for (int j = 0; j < DepthHeight; ++j)
-    {
-      texCoords[i * DepthHeight + j] = (glm::vec2(i, j));
-    }
-  }
+  
   //Create Vertex Array Object
   glGenVertexArrays(1, &vertexArray);
   glBindVertexArray(vertexArray);
+  const uint ARRAY_SIZE = DepthWidth * DepthHeight * sizeof(glm::vec4);
+  //As we go along register buffers with CUDA as well
+  glGenBuffers(1, &inputVBO);
+  glBindBuffer(GL_ARRAY_BUFFER, inputVBO);
+  glBufferData(GL_ARRAY_BUFFER, ARRAY_SIZE, nullptr, GL_DYNAMIC_DRAW);
+  checkCudaErrors(cudaGraphicsGLRegisterBuffer(&cuda_input_resource, inputVBO, cudaGraphicsRegisterFlagsNone));
+  checkCudaErrors(cudaGraphicsMapResources(1, &cuda_input_resource, 0));
+  size_t returnedBufferSize;
+  checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void**)&d_input, &returnedBufferSize, cuda_input_resource));
+  std::cout<<"Allocated input VBO size: "<<returnedBufferSize<<"\n";
 
-  glGenBuffers(1, &texCoordBuffer);
-  glBindBuffer(GL_ARRAY_BUFFER, texCoordBuffer);
-  glBufferData(GL_ARRAY_BUFFER, DepthWidth * DepthHeight * sizeof(glm::ivec2), texCoords.data(), GL_STATIC_DRAW);
+  glGenBuffers(1, &targetVBO);
+  glBindBuffer(GL_ARRAY_BUFFER, targetVBO);
+  glBufferData(GL_ARRAY_BUFFER, ARRAY_SIZE, nullptr, GL_DYNAMIC_DRAW);
+  checkCudaErrors(cudaGraphicsGLRegisterBuffer(&cuda_target_resource, targetVBO, cudaGraphicsRegisterFlagsNone));
+  checkCudaErrors(cudaGraphicsMapResources(1, &cuda_target_resource, 0));
+  checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void**)&d_target, &returnedBufferSize, cuda_target_resource));
+  std::cout<<"Allocated target VBO size: "<<returnedBufferSize<<"\n";
+
+  //Now set up VBOs
+  checkCudaErrors(cudaMalloc((void**)&d_inputNormals, ARRAY_SIZE));
+  checkCudaErrors(cudaMalloc((void**)&d_targetNormals, ARRAY_SIZE));
+  checkCudaErrors(cudaMalloc((void**)&d_correspondence, ARRAY_SIZE));
   //Assign attribs
-  glEnableVertexAttribArray(drawVertexMap->attribute("texCoords"));
-  glVertexAttribPointer(drawVertexMap->attribute("texCoords"), 2, GL_FLOAT, GL_FALSE, 0, 0);
-  glBindVertexArray(0);	//unbind VAO
-}
-
-void Application::UploadDepthToTexture(uint8_t* image, int texID, int texUnit) {
-
-  glActiveTexture(GL_TEXTURE0 + texUnit);
-  glBindTexture(GL_TEXTURE_2D, texID);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, 640, 480, 0, GL_RG, GL_UNSIGNED_BYTE, image);
-
-}
-
-Application::~Application() {
-  stbi_image_free(image1);
-  stbi_image_free(image2);
+  glEnableVertexAttribArray(drawVertexMap->attribute("positions"));
+  glVertexAttribPointer(drawVertexMap->attribute("positions"), 4, GL_FLOAT, GL_FALSE, 0, 0);
+  //glBindVertexArray(0);	//unbind VAO
 }
 
 void Application::processEvents() {

@@ -8,7 +8,7 @@ Frustum::Frustum(){
     glBindVertexArray(frustum);
     glGenBuffers(1,&frustumBuffer);
 
-    drawFrustum = (std::make_unique<ShaderProgram>());
+    drawFrustum = (std::unique_ptr<ShaderProgram>(new ShaderProgram()));
     drawFrustum->initFromFiles("shaders/drawFrustum.vert", "shaders/drawFrustum.frag");
     drawFrustum->addUniform("VP");
     drawFrustum->addUniform("frustumColor");
