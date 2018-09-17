@@ -7,10 +7,10 @@ class CameraTracking  {
 
 private:
   glm::mat4 deltaTransform;
-  void preProcess(glm::vec4 *, glm::vec4*, uint16_t*);
+  void preProcess(glm::vec4 *, glm::vec4*, const uint16_t*);
 public:
   void FindCorrespondences();
-  void Align(glm::vec4*, glm::vec4*, glm::vec4*, glm::vec4*, uint16_t*, uint16_t*);
+  void Align(glm::vec4*, glm::vec4*, glm::vec4*, glm::vec4*, const uint16_t*, const uint16_t*);
 };
 
 #endif 

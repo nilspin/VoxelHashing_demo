@@ -12,8 +12,8 @@ SDL_Event event;
 
 Application::Application() {
   frustum.setFromVectors(vec3(0,0,-1), vec3(0,0,0), vec3(1,0,0), vec3(0,1,0), 5.0, 700.0, 45, 1.3333);
-  image1 = stbi_load("assets/T0.png", &DepthWidth, &DepthHeight, &channels, 2);
-  image2 = stbi_load("assets/T5.png", &DepthWidth, &DepthHeight, &channels, 2);
+  image1 = stbi_load_16("assets/T0.png", &DepthWidth, &DepthHeight, &channels, 0);
+  image2 = stbi_load_16("assets/T5.png", &DepthWidth, &DepthHeight, &channels, 0);
   if(image1 == nullptr) {cout<<"could not read image file!"<<endl; exit(0);}
 
   //put into cuda device buffer
@@ -34,10 +34,16 @@ Application::Application() {
 }
 
 Application::~Application() {
+  glBindVertexArray(0);
+  cudaDeviceSynchronize();
+  checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_input_resource, 0));
+  checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_target_resource, 0));
   checkCudaErrors(cudaGraphicsUnregisterResource(cuda_input_resource));
   checkCudaErrors(cudaGraphicsUnregisterResource(cuda_target_resource));
   checkCudaErrors(cudaFree(d_depthInput));
   checkCudaErrors(cudaFree(d_depthTarget));
+  glDeleteBuffers(1, &inputVBO);
+  glDeleteBuffers(1, &targetVBO);
 }
 
 void Application::run() {
@@ -60,6 +66,7 @@ void Application::run() {
     frustum.draw(MVP);
 
     window.swap();
+    quit=true;
   }
 }
 
@@ -100,6 +107,7 @@ void Application::SetupBuffers() {
   checkCudaErrors(cudaGraphicsMapResources(1, &cuda_input_resource, 0));
   size_t returnedBufferSize;
   checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void**)&d_input, &returnedBufferSize, cuda_input_resource));
+  checkCudaErrors(cudaMemset(d_input, 0, returnedBufferSize));
   std::cout<<"Allocated input VBO size: "<<returnedBufferSize<<"\n";
 
   glGenBuffers(1, &targetVBO);

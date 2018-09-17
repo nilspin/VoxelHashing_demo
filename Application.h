@@ -51,8 +51,8 @@ private:
 	
 	//Texture & images
 	GLuint depthTexture1, depthTexture2;
-	uint8_t *image1=nullptr;
-	uint8_t *image2=nullptr;
+	uint16_t *image1=nullptr;
+	uint16_t *image2=nullptr;
 	
 	//OpenGL Buffer objects
 	GLuint inputVBO;
