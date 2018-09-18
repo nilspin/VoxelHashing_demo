@@ -5,7 +5,7 @@ PROJECT(ICP_Demo LANGUAGES CXX CUDA)
 # Useful CMake options
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOMOC ON)
-set(CMAKE_CXX_FLAGS "-std=c++0x -fpermissive")
+set(CMAKE_CXX_FLAGS "-std=c++11 -fpermissive")
 set(OpenGL_GL_PREFERENCE "GLVND")
 
 # Search desired Qt packages
@@ -27,8 +27,6 @@ if(CUDA_FOUND)
   set(CUDA_NVCC_FLAGS "
   -ccbin /usr/bin/g++-5; 
   -gencode;arch=compute_30,code=sm_30;  
-  -gencode;arch=compute_35,code=sm_35;
-  -gencode;arch=compute_35,code=compute_35;
   ")
 
   # add -Wextra compiler flag for gcc compilations
@@ -52,14 +50,14 @@ set(SOURCES DepthMain.cpp camera.cpp Window.cpp Application.cpp prereq.h ShaderP
     Application.h Frustum.h cudaHelper.h CameraTracking.h)
 
 #Compile
-add_library(CameraTracking STATIC CameraTracking.cu )
-set_target_properties(CameraTracking PROPERTIES POSITION_INDEPENDENT_CODE ON)
+add_library(CameraTracking SHARED CameraTracking.cu )
+#set_target_properties(CameraTracking PROPERTIES POSITION_INDEPENDENT_CODE ON)
 set_target_properties(CameraTracking PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 
 add_executable(${PROJECT_NAME} ${SOURCES})
 
 #Link all obj files
-target_link_libraries(${PROJECT_NAME} ${LIBS} SDL2::SDL2 CameraTracking)
+target_link_libraries(${PROJECT_NAME}  ${LIBS} SDL2::SDL2 CameraTracking )
 
 #Now copy shaders to build directory
 

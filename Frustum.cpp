@@ -62,10 +62,10 @@ void Frustum::setFromVectors(const vec3& dir, const vec3& pos, const vec3& right
     corners[6] = nearTopRight; 
     corners[7] = nearBotLeft; 
 */
-    corners[0] = vec3(-1,1,1);
-    corners[1] = vec3(1,1,1); 
-    corners[2] = vec3(-1,-1,1); 
-    corners[3] = vec3(1,-1,1); 
+    corners[0] = vec3(-1,1,0);
+    corners[1] = vec3(1,1,0); 
+    corners[2] = vec3(-1,-1,0); 
+    corners[3] = vec3(1,-1,0); 
     corners[4] = vec3(1,-1,-1); 
     corners[5] = vec3(-1,1,-1);
     corners[6] = vec3(1,1,-1); 
@@ -116,7 +116,7 @@ void Frustum::uploadBuffer() {
 
 void Frustum::draw(const glm::mat4& transform){
     mat4 VP = glm::inverse(transform);//mat4(1);//transform;//
-    //mat4 &VP = transform;
+    //const mat4 &VP = transform;
     drawFrustum->use();
     glBindVertexArray(frustum);
     glUniformMatrix4fv(drawFrustum->uniform("VP"), 1, false, glm::value_ptr(VP));

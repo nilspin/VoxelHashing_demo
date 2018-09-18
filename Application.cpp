@@ -22,6 +22,7 @@ Application::Application() {
   checkCudaErrors(cudaMalloc((void**)&d_depthTarget, DEPTH_SIZE));
   checkCudaErrors(cudaMemcpy(d_depthInput, image1, DEPTH_SIZE, cudaMemcpyHostToDevice));
   checkCudaErrors(cudaMemcpy(d_depthTarget, image2, DEPTH_SIZE, cudaMemcpyHostToDevice));
+  checkCudaErrors(cudaDeviceSynchronize());
   stbi_image_free(image1);
   stbi_image_free(image2);
 
@@ -31,6 +32,11 @@ Application::Application() {
   glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
   SetupShaders();
   SetupBuffers();
+
+  //TODO: Move into gameloop
+  tracker.Align(d_input, d_inputNormals, d_target, d_targetNormals, d_depthInput, d_depthTarget);
+  checkCudaErrors(cudaDeviceSynchronize());
+
 }
 
 Application::~Application() {
@@ -55,18 +61,19 @@ void Application::run() {
     cam.calcMatrices();
     GLfloat time = SDL_GetTicks();
     view = cam.getViewMatrix();
-    MVP = proj*view*model;
+    MVP = proj*view;//*model;
 
-    tracker.Align(d_input, d_inputNormals, d_target, d_targetNormals, d_depthInput, d_depthTarget);
+    //tracker.Align(d_input, d_inputNormals, d_target, d_targetNormals, d_depthInput, d_depthTarget);
+    //checkCudaErrors(cudaDeviceSynchronize());
     draw(MVP);
     
     mat4 scaleMat =  glm::scale(vec3(1000));
     mat4 newMVP = proj*view;//*scaleMat
     //Draw frustum
-    frustum.draw(MVP);
+    frustum.draw(newMVP);
 
     window.swap();
-    quit=true;
+    //quit=true;
   }
 }
 
@@ -77,8 +84,8 @@ void Application::draw(const glm::mat4& mvp)
   glUniformMatrix4fv(drawVertexMap->uniform("MVP"), 1, false, glm::value_ptr(mvp));
 
   glBindVertexArray(vertexArray);
-  glUniform3f(drawVertexMap->uniform("shadeColor"), 1, 0, 0);
-  glDrawArrays(GL_POINTS, 0, 640*480);
+  //glUniform3f(drawVertexMap->uniform("shadeColor"), 1, 0, 0);
+  //glDrawArrays(GL_POINTS, 0, 640*480);
 
   glUniform3f(drawVertexMap->uniform("shadeColor"), 0, 1, 0);
   glDrawArrays(GL_POINTS, 0, 640*480);
