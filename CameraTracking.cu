@@ -50,9 +50,9 @@ void calculateVertexPositions(vec4* d_vertexPositions, const uint16_t* d_depthBu
   float x = ((xidx - cx)*depth)/(float)fx;
   float y = ((yidx - cy)*depth)/(float)fy;
   vec4 vertex = vec4(x, -y, -depth, w);
-  /*
-  if(idx<100){printf("thread: %d - %f %f %f %f\n", idx, vertex.x, vertex.y, vertex.z, vertex.w);}
-  */
+  //*
+  if(idx<20){printf("thread: %d - %f %f %f %f\n", idx, vertex.x, vertex.y, vertex.z, vertex.w);}
+  //*/
   d_vertexPositions[idx] = vertex;
 }
 
@@ -103,5 +103,5 @@ void CameraTracking::Align(vec4* d_input, vec4* d_inputNormals, vec4* d_target,
 //Takes device pointers, calculates correct position and normals
 void CameraTracking::preProcess(vec4 *positions, vec4* normals, const uint16_t *depth)  {
   calculateVertexPositions<<<blocks, threads>>>(positions, depth);
-  calculateNormals<<<blocks, threads>>>(positions, normals);
+  //calculateNormals<<<blocks, threads>>>(positions, normals);
 }

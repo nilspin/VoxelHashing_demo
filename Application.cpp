@@ -34,18 +34,31 @@ Application::Application() {
   SetupBuffers();
 
   //TODO: Move into gameloop
+  size_t returnedBufferSize;
+  checkCudaErrors(cudaGraphicsMapResources(1, &cuda_input_resource, 0));
+  
+  checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void**)&d_input, &returnedBufferSize, cuda_input_resource));
+  checkCudaErrors(cudaMemset(d_input, 0, returnedBufferSize));
+  std::cout<<"\nAllocated input VBO size: "<<returnedBufferSize<<"\n";
   tracker.Align(d_input, d_inputNormals, d_target, d_targetNormals, d_depthInput, d_depthTarget);
+  checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_input_resource, 0));
+  //*Testing output
+  std::vector<glm::vec4> outputCUDA(640*480);
+  checkCudaErrors(cudaMemcpy(outputCUDA.data(), d_input, 640*480*sizeof(glm::vec4), cudaMemcpyDeviceToHost));
+  std::cout<<"\nCHECKING: CUDA output: "<<" "<<outputCUDA[0].x<<" "<<outputCUDA[0].y<<" "<<outputCUDA[0].z<<" "<<outputCUDA[0].w<<"\n";
+  //*/
+
+  //checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_target_resource, 0));
   checkCudaErrors(cudaDeviceSynchronize());
 
 }
 
 Application::~Application() {
+
   glBindVertexArray(0);
   cudaDeviceSynchronize();
-  checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_input_resource, 0));
-  checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_target_resource, 0));
   checkCudaErrors(cudaGraphicsUnregisterResource(cuda_input_resource));
-  checkCudaErrors(cudaGraphicsUnregisterResource(cuda_target_resource));
+  //checkCudaErrors(cudaGraphicsUnregisterResource(cuda_target_resource));
   checkCudaErrors(cudaFree(d_depthInput));
   checkCudaErrors(cudaFree(d_depthTarget));
   glDeleteBuffers(1, &inputVBO);
@@ -81,14 +94,23 @@ void Application::draw(const glm::mat4& mvp)
 {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   drawVertexMap->use();
-  glUniformMatrix4fv(drawVertexMap->uniform("MVP"), 1, false, glm::value_ptr(mvp));
-
-  glBindVertexArray(vertexArray);
-  //glUniform3f(drawVertexMap->uniform("shadeColor"), 1, 0, 0);
-  //glDrawArrays(GL_POINTS, 0, 640*480);
-
+  
+  //checkCudaErrors(cudaGraphicsMapResources(1, &cuda_input_resource, 0));
   glUniform3f(drawVertexMap->uniform("shadeColor"), 0, 1, 0);
+  glBindVertexArray(vertexArray);
+
+  glUniformMatrix4fv(drawVertexMap->uniform("MVP"), 1, false, glm::value_ptr(mvp));
   glDrawArrays(GL_POINTS, 0, 640*480);
+  glBindVertexArray(0);
+
+
+  //TESTING---------------
+  std::vector<glm::vec4> outputGL(20);
+  glBindBuffer(GL_ARRAY_BUFFER, inputVBO);
+  glGetBufferSubData(GL_ARRAY_BUFFER, 0, 20*sizeof(glm::vec4), outputGL.data());
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  std::cout<<"\nCHECKING: GL output: "<<" "<<outputGL[0].x<<" "<<outputGL[0].y<<" "<<outputGL[0].z<<" "<<outputGL[0].w<<"\n";
+  //----------------------
 }
 
 void Application::SetupShaders() {
@@ -110,29 +132,23 @@ void Application::SetupBuffers() {
   glGenBuffers(1, &inputVBO);
   glBindBuffer(GL_ARRAY_BUFFER, inputVBO);
   glBufferData(GL_ARRAY_BUFFER, ARRAY_SIZE, nullptr, GL_DYNAMIC_DRAW);
-  checkCudaErrors(cudaGraphicsGLRegisterBuffer(&cuda_input_resource, inputVBO, cudaGraphicsRegisterFlagsNone));
-  checkCudaErrors(cudaGraphicsMapResources(1, &cuda_input_resource, 0));
-  size_t returnedBufferSize;
-  checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void**)&d_input, &returnedBufferSize, cuda_input_resource));
-  checkCudaErrors(cudaMemset(d_input, 0, returnedBufferSize));
-  std::cout<<"Allocated input VBO size: "<<returnedBufferSize<<"\n";
+  glVertexAttribPointer(drawVertexMap->attribute("positions"), 4, GL_FLOAT, GL_FALSE, 0, 0);
+  glEnableVertexAttribArray(drawVertexMap->attribute("positions"));
 
   glGenBuffers(1, &targetVBO);
   glBindBuffer(GL_ARRAY_BUFFER, targetVBO);
   glBufferData(GL_ARRAY_BUFFER, ARRAY_SIZE, nullptr, GL_DYNAMIC_DRAW);
+  
+  //Unbind and do CUDA stuff
+  glBindVertexArray(0);
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  checkCudaErrors(cudaGraphicsGLRegisterBuffer(&cuda_input_resource, inputVBO, cudaGraphicsRegisterFlagsNone));
   checkCudaErrors(cudaGraphicsGLRegisterBuffer(&cuda_target_resource, targetVBO, cudaGraphicsRegisterFlagsNone));
-  checkCudaErrors(cudaGraphicsMapResources(1, &cuda_target_resource, 0));
-  checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void**)&d_target, &returnedBufferSize, cuda_target_resource));
-  std::cout<<"Allocated target VBO size: "<<returnedBufferSize<<"\n";
-
-  //Now set up VBOs
+  
   checkCudaErrors(cudaMalloc((void**)&d_inputNormals, ARRAY_SIZE));
   checkCudaErrors(cudaMalloc((void**)&d_targetNormals, ARRAY_SIZE));
   checkCudaErrors(cudaMalloc((void**)&d_correspondence, ARRAY_SIZE));
-  //Assign attribs
-  glEnableVertexAttribArray(drawVertexMap->attribute("positions"));
-  glVertexAttribPointer(drawVertexMap->attribute("positions"), 4, GL_FLOAT, GL_FALSE, 0, 0);
-  //glBindVertexArray(0);	//unbind VAO
+  
 }
 
 void Application::processEvents() {
