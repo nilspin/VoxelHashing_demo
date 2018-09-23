@@ -43,9 +43,9 @@ Application::Application() {
   tracker.Align(d_input, d_inputNormals, d_target, d_targetNormals, d_depthInput, d_depthTarget);
   checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_input_resource, 0));
   //*Testing output
-  std::vector<glm::vec4> outputCUDA(640*480);
-  checkCudaErrors(cudaMemcpy(outputCUDA.data(), d_input, 640*480*sizeof(glm::vec4), cudaMemcpyDeviceToHost));
-  std::cout<<"\nCHECKING: CUDA output: "<<" "<<outputCUDA[0].x<<" "<<outputCUDA[0].y<<" "<<outputCUDA[0].z<<" "<<outputCUDA[0].w<<"\n";
+  // std::vector<glm::vec4> outputCUDA(640*480);
+  // checkCudaErrors(cudaMemcpy(outputCUDA.data(), d_input, 640*480*sizeof(glm::vec4), cudaMemcpyDeviceToHost));
+  // std::cout<<"\nCHECKING: CUDA output: "<<" "<<outputCUDA[0].x<<" "<<outputCUDA[0].y<<" "<<outputCUDA[0].z<<" "<<outputCUDA[0].w<<"\n";
   //*/
 
   //checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_target_resource, 0));
@@ -96,7 +96,8 @@ void Application::draw(const glm::mat4& mvp)
   drawVertexMap->use();
   
   //checkCudaErrors(cudaGraphicsMapResources(1, &cuda_input_resource, 0));
-  glUniform3f(drawVertexMap->uniform("shadeColor"), 0, 1, 0);
+  glUniform3f(drawVertexMap->uniform("shadeColor"), 0.258, 0.956, 0.560);
+  //glUniform3f(drawVertexMap->uniform("shadeColor"), 0.956, 0.721, 0.254);
   glBindVertexArray(vertexArray);
 
   glUniformMatrix4fv(drawVertexMap->uniform("MVP"), 1, false, glm::value_ptr(mvp));
@@ -105,11 +106,11 @@ void Application::draw(const glm::mat4& mvp)
 
 
   //TESTING---------------
-  std::vector<glm::vec4> outputGL(20);
-  glBindBuffer(GL_ARRAY_BUFFER, inputVBO);
-  glGetBufferSubData(GL_ARRAY_BUFFER, 0, 20*sizeof(glm::vec4), outputGL.data());
-  glBindBuffer(GL_ARRAY_BUFFER, 0);
-  std::cout<<"\nCHECKING: GL output: "<<" "<<outputGL[0].x<<" "<<outputGL[0].y<<" "<<outputGL[0].z<<" "<<outputGL[0].w<<"\n";
+  // std::vector<glm::vec4> outputGL(20);
+  // glBindBuffer(GL_ARRAY_BUFFER, inputVBO);
+  // glGetBufferSubData(GL_ARRAY_BUFFER, 0, 20*sizeof(glm::vec4), outputGL.data());
+  // glBindBuffer(GL_ARRAY_BUFFER, 0);
+  // std::cout<<"\nCHECKING: GL output: "<<" "<<outputGL[0].x<<" "<<outputGL[0].y<<" "<<outputGL[0].z<<" "<<outputGL[0].w<<"\n";
   //----------------------
 }
 
