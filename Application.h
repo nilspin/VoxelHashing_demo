@@ -56,8 +56,11 @@ private:
 	
 	//OpenGL Buffer objects
 	GLuint inputVBO;
+  GLuint inputNormalVBO;
 	GLuint targetVBO;
-	GLuint vertexArray;
+  GLuint targetNormalVBO;
+	GLuint inputVAO;
+  GLuint targetVAO;
 
 
 	void SetupShaders();
@@ -66,9 +69,13 @@ private:
   void draw(const glm::mat4&);
 
   //CUDA stuff
-  struct cudaGraphicsResource *cuda_target_resource;
+  //----for out incoming frame-----
   struct cudaGraphicsResource *cuda_input_resource;
-  //TODO: Do we need this for normals as well?
+  struct cudaGraphicsResource *cuda_inputNormals_resource;
+    //----for frame to be compared against----
+  struct cudaGraphicsResource *cuda_target_resource;
+  struct cudaGraphicsResource *cuda_targetNormals_resource;
+
 
   uint16_t *d_depthInput, *d_depthTarget;
   vec4* d_input;

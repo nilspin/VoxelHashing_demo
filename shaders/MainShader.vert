@@ -1,16 +1,15 @@
 #version 430
 
-in vec4 positions;
-uniform mat4 MVP;
-//in vec4 normals;
-//out vec3 normal_dir;
+layout(location=0)in vec4 positions;
+layout(location=1)in vec4 normals;
+
+out INTERFACE_BLOCK_VXOUT {
+  vec4 pos;
+  vec4 normal_dir;
+} vx_out;
 
 void main()
 {
-  //normal_dir = normals.xyz;
-	//mat3 normalMatrix = mat3(transpose(inverse(MVP)));
-  //normal_dir = normalize(vec3(p))
-
-  gl_Position = MVP*positions;
-  
+  vx_out.normal_dir = normals;
+  vx_out.pos = positions;
 }

@@ -63,7 +63,10 @@ void calculateNormals(const vec4* d_positions, vec4* d_normals)
     return;
   }
 
-  d_normals[yidx*numRows+xidx] = vec4(MINF, MINF, MINF, MINF);
+  //find globalIdx row-major
+  const int idx = (yidx*numCols)+xidx;
+
+  d_normals[idx] = vec4(MINF, MINF, MINF, MINF);
 
   if(xidx > 0 && xidx < numCols-1 && yidx > 0 && yidx < numRows-1)  {
     const vec4 CC = d_positions[(yidx+0)*numCols+(xidx+0)];
@@ -80,7 +83,7 @@ void calculateNormals(const vec4* d_positions, vec4* d_normals)
 			if(l > 0.0f)
 			{
         //float4 v = make_float4(n/-l, 1.0f);
-        vec4 vert = vec4(n/-l, 1.0f);
+        vec4 vert = vec4(n, l);
 				d_normals[yidx*numCols+xidx] = vert;
         //printf("Normal for thread %d : %f %f %f", yidx*numRows+xidx, vert.x, vert.y, vert.z);
 			}
@@ -93,12 +96,12 @@ void CameraTracking::Align(vec4* d_input, vec4* d_inputNormals, vec4* d_target,
   vec4* d_targetNormals, const uint16_t* d_depthInput, const uint16_t* d_depthTarget) {
 
   preProcess(d_input, d_inputNormals, d_depthInput);
-  //preProcess(d_target, d_targetNormals, d_depthTarget);
+  preProcess(d_target, d_targetNormals, d_depthTarget);
 
 }
 
 //Takes device pointers, calculates correct position and normals
 void CameraTracking::preProcess(vec4 *positions, vec4* normals, const uint16_t *depth)  {
   calculateVertexPositions<<<blocks, threads>>>(positions, depth);
-  //calculateNormals<<<blocks, threads>>>(positions, normals);
+  calculateNormals<<<blocks, threads>>>(positions, normals);
 }
