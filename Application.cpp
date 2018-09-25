@@ -16,6 +16,7 @@ Application::Application() {
   image2 = stbi_load_16("assets/T5.png", &DepthWidth, &DepthHeight, &channels, 0);
   if(image1 == nullptr) {cout<<"could not read first image file!"<<endl; exit(0);}
   if(image2 == nullptr) {cout<<"could not read second image file!"<<endl; exit(0);}
+  tracker = unique_ptr<CameraTracking>(new CameraTracking(DepthWidth, DepthHeight));
 
   //put into cuda device buffer
   const int DEPTH_SIZE = sizeof(uint16_t)*DepthHeight*DepthWidth;
@@ -53,18 +54,18 @@ Application::Application() {
   checkCudaErrors(cudaMemset(d_input, 0, returnedBufferSize));
 
   std::cout<<"\nAllocated input VBO size: "<<returnedBufferSize<<"\n";
-  tracker.Align(d_input, d_inputNormals, d_target, d_targetNormals, d_depthInput, d_depthTarget);
+  tracker->Align(d_input, d_inputNormals, d_target, d_targetNormals, d_depthInput, d_depthTarget);
   checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_input_resource, 0));
   checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_inputNormals_resource, 0));
   checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_target_resource, 0));
   checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_targetNormals_resource, 0));
   
   //*Testing output
-    std::vector<glm::vec4> outputCUDA(640*480);
-    checkCudaErrors(cudaMemcpy(outputCUDA.data(), d_target, 640*480*sizeof(glm::vec4), cudaMemcpyDeviceToHost));
-    std::ofstream fout("targetData.txt");
-    std::for_each(outputCUDA.begin(), outputCUDA.end(), [&fout](const glm::vec4 &n){fout<<n.x<<" "<<n.y<<" "<<n.z<<" "<<n.w<<"\n";});
-   //std::cout<<"\nCHECKING: CUDA output: "<<" "<<outputCUDA[0].x<<" "<<outputCUDA[0].y<<" "<<outputCUDA[0].z<<" "<<outputCUDA[0].w<<"\n";
+  //   std::vector<glm::vec4> outputCUDA(640*480);
+  //   checkCudaErrors(cudaMemcpy(outputCUDA.data(), d_input, 640*480*sizeof(glm::vec4), cudaMemcpyDeviceToHost));
+  //   std::ofstream fout("correspondenceData.txt");
+  //   std::for_each(outputCUDA.begin(), outputCUDA.end(), [&fout](const glm::vec4 &n){fout<<n.x<<" "<<n.y<<" "<<n.z<<" "<<n.w<<"\n";});
+  //std::cout<<"\nCHECKING: CUDA output: "<<" "<<outputCUDA[0].x<<" "<<outputCUDA[0].y<<" "<<outputCUDA[0].z<<" "<<outputCUDA[0].w<<"\n";
   //*/
 
   //checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_target_resource, 0));
@@ -176,9 +177,6 @@ void Application::SetupBuffers() {
   //Unbind and do CUDA stuff
   glBindVertexArray(0);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
-  checkCudaErrors(cudaGraphicsGLRegisterBuffer(&cuda_input_resource, inputVBO, cudaGraphicsRegisterFlagsNone));
-  checkCudaErrors(cudaGraphicsGLRegisterBuffer(&cuda_inputNormals_resource, inputNormalVBO, cudaGraphicsRegisterFlagsNone));
-
 
   //-------------TARGET-BUFFER------------------------
   glGenVertexArrays(1, &targetVAO);
@@ -199,14 +197,17 @@ void Application::SetupBuffers() {
   //Unbind and do CUDA stuff
   glBindVertexArray(0);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+  //--------Register with CUDA-----
+  checkCudaErrors(cudaGraphicsGLRegisterBuffer(&cuda_input_resource, inputVBO, cudaGraphicsRegisterFlagsNone));
+  checkCudaErrors(cudaGraphicsGLRegisterBuffer(&cuda_inputNormals_resource, inputNormalVBO, cudaGraphicsRegisterFlagsNone));
   checkCudaErrors(cudaGraphicsGLRegisterBuffer(&cuda_target_resource, targetVBO, cudaGraphicsRegisterFlagsNone));
   checkCudaErrors(cudaGraphicsGLRegisterBuffer(&cuda_targetNormals_resource, targetNormalVBO, cudaGraphicsRegisterFlagsNone));
 
   //-------------Now allocate rest of CUDA arrays for which we don't need GL----------------  
-  checkCudaErrors(cudaMalloc((void**)&d_inputNormals, ARRAY_SIZE));
-  checkCudaErrors(cudaMalloc((void**)&d_targetNormals, ARRAY_SIZE));
-  checkCudaErrors(cudaMalloc((void**)&d_correspondence, ARRAY_SIZE));
-
+  //checkCudaErrors(cudaMalloc((void**)&d_inputNormals, ARRAY_SIZE));
+  //checkCudaErrors(cudaMalloc((void**)&d_targetNormals, ARRAY_SIZE));
+  
 }
 
 void Application::processEvents() {

@@ -2,15 +2,42 @@
 #define CAMERA_TRACKING_H
 
 #include<glm/glm.hpp>
+// #include<cuda_runtime_api.h>
+// #include<cuda.h>
+// #include<cuda_gl_interop.h>
+#include "cudaHelper.h"
+
+using glm::vec3;
+using glm::vec4;
+using glm::mat4;
 
 class CameraTracking  {
 
 private:
-  glm::mat4 deltaTransform;
-  void preProcess(glm::vec4 *, glm::vec4*, const uint16_t*);
+  int width, height;
+  
+  vec4* d_correspondenceNormals;
+  vec4* d_correspondence;
+  mat4 deltaTransform;
+  void preProcess(vec4 *, vec4*, const uint16_t*);
 public:
-  void FindCorrespondences();
-  void Align(glm::vec4*, glm::vec4*, glm::vec4*, glm::vec4*, const uint16_t*, const uint16_t*);
+  
+  CameraTracking(int, int);
+  ~CameraTracking();
+  //void FindCorrespondences(const vec4*, const vec4*, const vec4*, const vec4*, vec4*, vec4*, const mat4&, int, int);
+  void Align(vec4*, vec4*, vec4*, vec4*, const uint16_t*, const uint16_t*);
 };
+
+__global__
+void FindCorrespondences(const vec4*, const vec4*, const vec4*, const vec4*, vec4*, vec4*, const mat4&, int, int);
+
+__device__
+static inline int2 cam2screenPos(const vec3&);
+
+__global__
+void calculateVertexPositions(vec4* , const uint16_t*);
+
+__global__
+void calculateNormals(const vec4* , vec4*);
 
 #endif 

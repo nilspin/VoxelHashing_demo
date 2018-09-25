@@ -47,7 +47,7 @@ private:
 	unique_ptr<ShaderProgram> drawVertexMap;
 	
   //CameraTracker
-  CameraTracking tracker;
+  unique_ptr<CameraTracking> tracker;
 	
 	//Texture & images
 	GLuint depthTexture1, depthTexture2;
@@ -82,7 +82,7 @@ private:
   vec4* d_inputNormals;
   vec4* d_target;
   vec4* d_targetNormals;
-  vec4* d_correspondence;
+
 };
 
 #endif //APPLICATION_H

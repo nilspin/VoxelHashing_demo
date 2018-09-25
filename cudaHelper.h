@@ -1,7 +1,11 @@
+#ifndef CUDA_HELPER_H
+#define CUDA_HELPER_H
+
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <cuda_runtime_api.h>
 #include <iostream>
+
 
 #define checkCudaErrors(val) check( (val), #val, __FILE__, __LINE__)
 
@@ -13,3 +17,5 @@ void check(T err, const char* const func, const char* const file, const int line
     exit(1);
   }
 }
+
+#endif
