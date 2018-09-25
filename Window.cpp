@@ -29,11 +29,9 @@ bool Window::Initialize()
 	window = SDL_CreateWindow("KinectVis", 0, 0, 1280, 960, SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
 	context = SDL_GL_CreateContext(window);
 
-	GLenum err = glewInit();
-	if (GLEW_OK != err)
+	if (!gladLoadGL())
 	{
-		std::cout << "Sorry, but GLEW failed to load.";
-		return 1;
+		throw std::runtime_error("GLAD initialization failed");
 	}
 	return true;
 }

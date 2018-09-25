@@ -21,7 +21,7 @@ Edited by nilspin - 19/3/2018.
 #ifndef SHADER_PROGRAM_HPP
 #define SHADER_PROGRAM_HPP
 
-#include<GL/glew.h>
+#include<glad/glad.h>
 #include<GL/glu.h>
 #include<GL/gl.h>
 
