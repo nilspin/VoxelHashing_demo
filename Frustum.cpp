@@ -2,6 +2,8 @@
 #include "Frustum.h"
 //#include "Plane.h"
 
+using namespace glm;
+
 Frustum::Frustum(){
     lines.reserve(24);
     glGenVertexArrays(1,&frustum);
@@ -24,20 +26,20 @@ Frustum::~Frustum(){
 
 //This function should be enough for our use
 void Frustum::setFromVectors(const vec3& dir, const vec3& pos, const vec3& right,
-        const vec3& up, float near, float far, float fov, float aspect) {
+        const vec3& up, float Near, float Far, float fov, float aspect) {
 
     float angleTangent = tan(fov / 2);
-    float heightFar = angleTangent * far;
+    float heightFar = angleTangent * Far;
     float widthFar = heightFar * aspect;
-    float heightNear = angleTangent * near;
+    float heightNear = angleTangent * Near;
     float widthNear = heightNear * aspect;
-    vec3 farCenter = pos + dir * far;
+    vec3 farCenter = pos + dir * Far;
     vec3 farTopLeft = farCenter + (up * heightFar) - (right* widthFar);
     vec3 farTopRight = farCenter + (up * heightFar) + (right* widthFar);
     vec3 farBotLeft = farCenter - (up * heightFar) - (right* widthFar);
     vec3 farBotRight = farCenter - (up * heightFar) + (right* widthFar);
 
-    vec3 nearCenter = pos + dir * near;
+    vec3 nearCenter = pos + dir * Near;
     vec3 nearTopLeft = nearCenter + (up * heightNear) - (right* widthNear);
     vec3 nearTopRight = nearCenter + (up * heightNear) + (right* widthNear);
     vec3 nearBotLeft = nearCenter - (up * heightNear) - (right* widthNear);

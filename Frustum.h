@@ -13,12 +13,10 @@
 #include<memory>
 #include "ShaderProgram.hpp"
 
-using namespace glm;
-
 class Frustum{
     private:
-        vec3 corners[8];
-        std::vector<vec3> lines;
+        glm::vec3 corners[8];
+        std::vector<glm::vec3> lines;
         /*
         Plane top;
         Plane bottom;
@@ -28,13 +26,13 @@ class Frustum{
         Plane far;
         */
         std::unique_ptr<ShaderProgram> drawFrustum;
-        vec3 frustumColor = vec3(1,1,1); //white
+        glm::vec3 frustumColor = glm::vec3(1,1,1); //white
         GLuint frustum;//vao
         GLuint frustumBuffer;//line buffer, 12 lines*2 verts*vec3 size
 
         float fov = 45;
-        vec3 position = vec3(0,0,0);
-        vec3 up = vec3(0,1,0);
+        glm::vec3 position = glm::vec3(0,0,0);
+        glm::vec3 up = glm::vec3(0,1,0);
     public:
         glm::mat4 view = glm::lookAt(position, glm::vec3(0,0,-1), up);
         // Projection matrix : 45° Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
@@ -44,10 +42,10 @@ class Frustum{
         Frustum();
         ~Frustum();
         void uploadBuffer();   //setup vert buffers, shaders
-        void setFromViewProj(const mat4& view, const mat4& proj);
-        void setFromVectors(const vec3& dir, const vec3& pos, const vec3& right,
-                const vec3& up, float near, float far, float fov, float aspect);
-        void setFromParams(const mat4& view, float near, float far, float fx,
+        void setFromViewProj(const glm::mat4& view, const glm::mat4& proj);
+        void setFromVectors(const glm::vec3& dir, const glm::vec3& pos, const glm::vec3& right,
+                const glm::vec3& up, float near, float far, float fov, float aspect);
+        void setFromParams(const glm::mat4& view, float near, float far, float fx,
                 float fy, float cx, float cy, float imgWidth, float imgHeight);
 };
 

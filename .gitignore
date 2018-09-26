@@ -2,6 +2,7 @@
 /build
 /assets
 /temp
+.vs/
 tags
 stb_voxel_render.h
 key_terms

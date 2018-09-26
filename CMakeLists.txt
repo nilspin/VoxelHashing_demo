@@ -3,13 +3,15 @@ cmake_minimum_required (VERSION 3.9)
 PROJECT(ICP_Demo LANGUAGES C CXX CUDA)
 
 # Useful CMake options
+set(CMAKE_CUDA_COMPILER "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v9.2/bin/nvcc")
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_CXX_FLAGS "-std=c++11 -fpermissive")
 set(OpenGL_GL_PREFERENCE "GLVND")
 
 # Search desired Qt packages
-find_package(CUDA REQUIRED)
+#find_package(CUDA REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(SDL2 REQUIRED)
 find_package(glm REQUIRED)
@@ -20,7 +22,7 @@ set(GLAD_SRC "${GLAD_INCLUDE_DIR}/../src/glad.c")
 add_library("GLAD_LIBRARY" ${GLAD_SRC})
 target_include_directories("GLAD_LIBRARY" PRIVATE "${GLAD_INCLUDE_DIR}")
 
-set(INCLUDE_DIRS  ${INCLUDE_DIRS} ${CUDA_INCLUDE_DIRS} ${OPENGL_INCLUDE_DIRS} ${SDL2_INCLUDE_DIRS} ${GLAD_INCLUDE_DIR} ${Boost_INCLUDE_DIRS})
+set(INCLUDE_DIRS  ${INCLUDE_DIRS} ${CUDA_INCLUDE_DIRS} ${GLM_INCLUDE_DIR} ${OPENGL_INCLUDE_DIRS} ${SDL2_INCLUDE_DIRS} ${GLAD_INCLUDE_DIR} ${Boost_INCLUDE_DIRS})
 set(LIBS ${LIBS} ${OPENGL_LIBRARY} ${CUDA_LIBRARIES} ${SDL2_LIBRARIES} ${Boost_LIBRARIES} ${GLAD_LIBRARY})
 
 if(CUDA_FOUND)
@@ -55,13 +57,14 @@ set(SOURCES DepthMain.cpp camera.cpp Window.cpp Application.cpp prereq.h ShaderP
 
 #Compile
 add_library(CameraTracking SHARED CameraTracking.cu )
+set_target_properties(CameraTracking PROPERTIES LINKER_LANGUAGE CUDA)
 #set_target_properties(CameraTracking PROPERTIES POSITION_INDEPENDENT_CODE ON)
 set_target_properties(CameraTracking PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 
 add_executable(${PROJECT_NAME} ${SOURCES})
 
 #Link all obj files
-target_link_libraries(${PROJECT_NAME}  ${LIBS} SDL2::SDL2 CameraTracking )
+target_link_libraries(${PROJECT_NAME}  ${LIBS}  CameraTracking )  #SDL2::SDL2
 
 #Now copy shaders to build directory
 
