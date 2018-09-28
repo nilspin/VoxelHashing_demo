@@ -1,16 +1,15 @@
 #ifndef FRUSTUM_H
 #define FRUSTUM_H
 
+
 #include<glm/glm.hpp>
 #include<glm/gtc/matrix_transform.hpp>
 #include<glm/gtc/type_ptr.hpp>
 
-#include<glad/glad.h>
-#include<GL/glu.h>
-#include<GL/gl.h>
-
 #include<vector>
 #include<memory>
+
+#include "opengl_win.h"
 #include "ShaderProgram.hpp"
 
 class Frustum{

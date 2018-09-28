@@ -9,6 +9,10 @@
 #include<cuda_gl_interop.h>
 
 SDL_Event event;
+using glm::vec3;
+using glm::vec4;
+using glm::mat4;
+//using namespace glm;
 
 Application::Application() {
   frustum.setFromVectors(vec3(0,0,-1), vec3(0,0,0), vec3(1,0,0), vec3(0,1,0), 5.0, 700.0, 45, 1.3333);
@@ -156,7 +160,7 @@ void Application::SetupShaders() {
 
 void Application::SetupBuffers() {
   
-  const uint ARRAY_SIZE = DepthWidth * DepthHeight * sizeof(glm::vec4);
+  const int ARRAY_SIZE = DepthWidth * DepthHeight * sizeof(glm::vec4);
   
   //-------------INPUT BUFFER------------------------------
   glGenVertexArrays(1, &inputVAO);

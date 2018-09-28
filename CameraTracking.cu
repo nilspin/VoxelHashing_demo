@@ -1,3 +1,4 @@
+#include <Windows.h>
 #include <cuda_runtime.h>
 #include <cuda_runtime_api.h>
 #include <stdio.h>
@@ -25,7 +26,7 @@ dim3 threads = dim3(32,32,1);
 
 
 __device__
-static inline int2 cam2screenPos(const vec3 &p) {
+static inline int2 cam2screenPos(vec3 p) {
   float x = ((p.x * fx)/p.z) + cx;
   float y = ((p.y * fy)/p.z) + cy;
   return make_int2(x,y);
@@ -115,10 +116,10 @@ void CameraTracking::Align(vec4* d_input, vec4* d_inputNormals, vec4* d_target,
   glm::mat4 deltaT = mat4(1);
   checkCudaErrors(cudaDeviceSynchronize());
   
-  FindCorrespondences<<<blocks, threads>>>(d_input, d_inputNormals, d_target, d_targetNormals, d_correspondence, d_correspondenceNormals,
-                      deltaTransform, width, height);
+//  FindCorrespondences<<<blocks, threads>>>(d_input, d_inputNormals, d_target, d_targetNormals, d_correspondence, d_correspondenceNormals,
+//                      deltaTransform, width, height);
 
-  checkCudaErrors(cudaDeviceSynchronize());
+  //checkCudaErrors(cudaDeviceSynchronize());
   // std::vector<glm::vec4> outputCUDA(640*480);
   // std::cout<<"outputCuda.size()"<<outputCUDA.size()<<std::endl;
   // checkCudaErrors(cudaMemcpy(outputCUDA.data(), d_correspondence, 640*480*sizeof(glm::vec4), cudaMemcpyDeviceToHost));
@@ -153,7 +154,7 @@ __global__
 void FindCorrespondences(const vec4* input, const vec4* inputNormals, 
                                         const vec4* target, const vec4* targetnormals, 
                                         vec4* correspondence, vec4* correspondenceNormals,
-const mat4& deltaT, int width, int height) {
+const mat4 deltaT, int width, int height) {
 
   int xidx = blockDim.x*blockIdx.x + threadIdx.x;
   int yidx = blockDim.y*blockIdx.y + threadIdx.y;
@@ -166,14 +167,15 @@ const mat4& deltaT, int width, int height) {
   const int idx = (yidx*numCols)+xidx;
 
   vec4 p_in = input[idx];
+  vec4 p = p_in;
   //vec4 translated = vec4(0,0,0,0);
-  vec4 translated = deltaT*p_in;
+  //vec4 translated = deltaT*p_in;
 
   
   //At what index does translated input lie?
-  vec3 p = vec3(translated.x,translated.y,translated.z);
-  float x = ((p.x * 525)/p.z) + 319.5;
-  float y = ((p.y * 525)/p.z) + 239.5;
+  //vec3 p = vec3(translated.x,translated.y,translated.z);
+  //float x = ((p.x * 525)/p.z) + 319.5;
+  //float y = ((p.y * 525)/p.z) + 239.5;
 
   //int2 screenPos = make_int2(x,y);
   //printf("screenPos = ( %f, %f ) for thread %d \n", x, y, idx);

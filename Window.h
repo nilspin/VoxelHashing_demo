@@ -1,4 +1,6 @@
-#pragma once
+#ifndef WINDOW_H
+#define WINDOW_H
+
 #include "prereq.h"
 
 class Window
@@ -14,3 +16,4 @@ private:
 	bool Initialize();
 };
 
+#endif

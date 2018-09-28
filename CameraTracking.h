@@ -1,10 +1,15 @@
 #ifndef CAMERA_TRACKING_H
 #define CAMERA_TRACKING_H
 
+#define GLM_ENABLE_EXPERIMENTAL
+#define GLM_FORCE_CUDA
+#define GLM_SWIZZLE
+
+#include<Windows.h>
 #include<glm/glm.hpp>
-// #include<cuda_runtime_api.h>
-// #include<cuda.h>
-// #include<cuda_gl_interop.h>
+#include<cuda_runtime_api.h>
+#include<cuda.h>
+#include<cuda_gl_interop.h>
 #include "cudaHelper.h"
 
 using glm::vec3;

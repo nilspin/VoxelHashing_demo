@@ -3,60 +3,42 @@ cmake_minimum_required (VERSION 3.9)
 PROJECT(ICP_Demo LANGUAGES C CXX CUDA)
 
 # Useful CMake options
-set(CMAKE_CUDA_COMPILER "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v9.2/bin/nvcc")
+#set(CMAKE_CUDA_COMPILER "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v9.2/bin/nvcc")
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_CXX_FLAGS "-std=c++11 -fpermissive")
 set(OpenGL_GL_PREFERENCE "GLVND")
+set(CUDA_NVCC_FLAGS "-gencode arch=compute_61,code=sm_61")
+set(CUDA_NVCC_FLAGS_DEBUG ${CUDA_NVCC_FLAGS_DEBUG} "-G")
 
 # Search desired Qt packages
 #find_package(CUDA REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(SDL2 REQUIRED)
 find_package(glm REQUIRED)
+message(STATUS "GLM included at ${GLM_INCLUDE_DIR}")
 find_package(Boost COMPONENTS filesystem REQUIRED)  #only need this till nvcc starts supporting c++17 compiler
 
 set(GLAD_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/glad/include")
 set(GLAD_SRC "${GLAD_INCLUDE_DIR}/../src/glad.c")
-add_library("GLAD_LIBRARY" ${GLAD_SRC})
-target_include_directories("GLAD_LIBRARY" PRIVATE "${GLAD_INCLUDE_DIR}")
+add_library("GladLib" ${GLAD_SRC})
+target_include_directories("GladLib" PRIVATE "${GLAD_INCLUDE_DIR}")
 
 set(INCLUDE_DIRS  ${INCLUDE_DIRS} ${CUDA_INCLUDE_DIRS} ${GLM_INCLUDE_DIR} ${OPENGL_INCLUDE_DIRS} ${SDL2_INCLUDE_DIRS} ${GLAD_INCLUDE_DIR} ${Boost_INCLUDE_DIRS})
-set(LIBS ${LIBS} ${OPENGL_LIBRARY} ${CUDA_LIBRARIES} ${SDL2_LIBRARIES} ${Boost_LIBRARIES} ${GLAD_LIBRARY})
-
-if(CUDA_FOUND)
-  # compared to class settings, we let NVidia's FindCUDA CMake detect 
-  # whether to build x64.  We tell it to support most devices, though, 
-  # to make sure more people can easily run class code without knowing 
-  # about this compiler argument
-  set(CUDA_NVCC_FLAGS "
-  -ccbin /usr/bin/g++-5; 
-  -gencode;arch=compute_30,code=sm_30;  
-  ")
-
-  # add -Wextra compiler flag for gcc compilations
-  if (UNIX)
-    set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} "-Xcompiler -Wextra")
-  endif (UNIX)
-
-  # add debugging to CUDA NVCC flags.  For NVidia's NSight tools.
-  set(CUDA_NVCC_FLAGS_DEBUG ${CUDA_NVCC_FLAGS_DEBUG} "-g -G")
-
-else(CUDA_FOUND)
-  message("CUDA is not installed on this system.")
-endif()
+set(LIBS ${LIBS} ${OPENGL_LIBRARY} ${CUDA_LIBRARIES} ${SDL2_LIBRARIES} ${Boost_LIBRARIES} ${GladLib})
 
 #specify include directory
 #include_directories(/usr/include)
 include_directories(${CMAKE_SOURCE_DIR} )
-include_directories(INCLUDE_DIRS ${INCLUDE_DIRS})
+include_directories(${INCLUDE_DIRS})
 
 set(SOURCES DepthMain.cpp camera.cpp Window.cpp Application.cpp prereq.h ShaderProgram.hpp Frustum.cpp camera.h Window.h
-    Application.h Frustum.h cudaHelper.h CameraTracking.h ${GLAD_SRC})
+    Application.h Frustum.h cudaHelper.h  ${GLAD_SRC})
 
 #Compile
-add_library(CameraTracking SHARED CameraTracking.cu )
+add_library(CameraTracking SHARED CameraTracking.cu CameraTracking.h ${GLM_INCLUDE_DIR})
+#target_include_directories(CameraTracking SHARED CameraTracking.h "${GLM_INCLUDE_DIR}")
 set_target_properties(CameraTracking PROPERTIES LINKER_LANGUAGE CUDA)
 #set_target_properties(CameraTracking PROPERTIES POSITION_INDEPENDENT_CODE ON)
 set_target_properties(CameraTracking PROPERTIES CUDA_SEPARABLE_COMPILATION ON)

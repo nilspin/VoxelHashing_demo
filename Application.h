@@ -8,9 +8,6 @@
 #include "Frustum.h"
 #include "CameraTracking.h"
 
-using namespace std;
-using namespace glm;
-
 #define BUFFER_OFFSET(i) ((char*)NULL + (i))
 
 class Application
@@ -78,10 +75,10 @@ private:
 
 
   uint16_t *d_depthInput, *d_depthTarget;
-  vec4* d_input;
-  vec4* d_inputNormals;
-  vec4* d_target;
-  vec4* d_targetNormals;
+  glm::vec4* d_input;
+  glm::vec4* d_inputNormals;
+  glm::vec4* d_target;
+  glm::vec4* d_targetNormals;
 
 };
 

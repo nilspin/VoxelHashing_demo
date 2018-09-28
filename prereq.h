@@ -10,11 +10,8 @@
 #include<fstream>
 #include<memory>
 
-
-//GL
-#include<glad/glad.h>
-#include<GL/glu.h>
-#include<GL/gl.h>
+//OpenGL loader on Windows
+#include "opengl_win.h"
 
 //SDL
 #include <SDL.h>
