@@ -7,6 +7,7 @@
 #include "camera.h"
 #include "Frustum.h"
 #include "CameraTracking.h"
+#include "helper_cuda.h"
 
 #define BUFFER_OFFSET(i) ((char*)NULL + (i))
 
@@ -75,10 +76,10 @@ private:
 
 
   uint16_t *d_depthInput, *d_depthTarget;
-  glm::vec4* d_input;
-  glm::vec4* d_inputNormals;
-  glm::vec4* d_target;
-  glm::vec4* d_targetNormals;
+  float4* d_input;
+  float4* d_inputNormals;
+  float4* d_target;
+  float4* d_targetNormals;
 
 };
 

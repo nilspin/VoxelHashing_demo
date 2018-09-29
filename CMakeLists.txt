@@ -25,20 +25,21 @@ set(GLAD_SRC "${GLAD_INCLUDE_DIR}/../src/glad.c")
 add_library("GladLib" ${GLAD_SRC})
 target_include_directories("GladLib" PRIVATE "${GLAD_INCLUDE_DIR}")
 
-set(INCLUDE_DIRS  ${INCLUDE_DIRS} ${CUDA_INCLUDE_DIRS} ${GLM_INCLUDE_DIR} ${OPENGL_INCLUDE_DIRS} ${SDL2_INCLUDE_DIRS} ${GLAD_INCLUDE_DIR} ${Boost_INCLUDE_DIRS})
+set(CUHELPER_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cuda_helper")
+set(INCLUDE_DIRS  ${INCLUDE_DIRS} ${CUDA_INCLUDE_DIRS} ${CUHELPER_INCLUDE_DIR} ${GLM_INCLUDE_DIR} ${OPENGL_INCLUDE_DIRS} ${SDL2_INCLUDE_DIRS} ${GLAD_INCLUDE_DIR} ${Boost_INCLUDE_DIRS})
 set(LIBS ${LIBS} ${OPENGL_LIBRARY} ${CUDA_LIBRARIES} ${SDL2_LIBRARIES} ${Boost_LIBRARIES} ${GladLib})
 
 #specify include directory
 #include_directories(/usr/include)
-include_directories(${CMAKE_SOURCE_DIR} )
+#include_directories(${CMAKE_SOURCE_DIR} )
 include_directories(${INCLUDE_DIRS})
 
 set(SOURCES DepthMain.cpp camera.cpp Window.cpp Application.cpp prereq.h ShaderProgram.hpp Frustum.cpp camera.h Window.h
-    Application.h Frustum.h cudaHelper.h  ${GLAD_SRC})
+    Application.h Frustum.h  ${GLAD_SRC})
 
 #Compile
-add_library(CameraTracking SHARED CameraTracking.cu CameraTracking.h ${GLM_INCLUDE_DIR})
-#target_include_directories(CameraTracking SHARED CameraTracking.h "${GLM_INCLUDE_DIR}")
+add_library(CameraTracking SHARED CameraTracking.cu CameraTracking.h ${CUHELPER_INCLUDE_DIR})
+#target_include_directories(CameraTracking SHARED CameraTracking.h "${CUHELPER_INCLUDE_DIR}")
 set_target_properties(CameraTracking PROPERTIES LINKER_LANGUAGE CUDA)
 #set_target_properties(CameraTracking PROPERTIES POSITION_INDEPENDENT_CODE ON)
 set_target_properties(CameraTracking PROPERTIES CUDA_SEPARABLE_COMPILATION ON)

@@ -1,12 +1,14 @@
 #define STB_IMAGE_IMPLEMENTATION
 
-#include "cudaHelper.h"
 #include "Application.h"
-#include "stb_image.h"
+//#include "help"
 #include<fstream>
 #include<cuda_runtime_api.h>
-#include<cuda.h>
+//#include<cuda.h>
+
 #include<cuda_gl_interop.h>
+#include "helper_cuda.h"
+#include "stb_image.h"
 
 SDL_Event event;
 using glm::vec3;

@@ -6,43 +6,41 @@
 #define GLM_SWIZZLE
 
 #include<Windows.h>
-#include<glm/glm.hpp>
+//#include<glm/glm.hpp>
 #include<cuda_runtime_api.h>
-#include<cuda.h>
-#include<cuda_gl_interop.h>
-#include "cudaHelper.h"
+#include "cuda_helper/helper_cuda.h"
 
-using glm::vec3;
-using glm::vec4;
-using glm::mat4;
+//This is a simple vector library. Use this with CUDA instead of GLM.
+#include "cuda_helper/cuda_SimpleMatrixUtil.h"
+
 
 class CameraTracking  {
 
 private:
   int width, height;
   
-  vec4* d_correspondenceNormals;
-  vec4* d_correspondence;
-  mat4 deltaTransform;
-  void preProcess(vec4 *, vec4*, const uint16_t*);
+  float4* d_correspondenceNormals;
+  float4* d_correspondence;
+  float4x4 deltaTransform;
+  void preProcess(float4 *, float4*, const uint16_t*);
 public:
   
   CameraTracking(int, int);
   ~CameraTracking();
   //void FindCorrespondences(const vec4*, const vec4*, const vec4*, const vec4*, vec4*, vec4*, const mat4&, int, int);
-  void Align(vec4*, vec4*, vec4*, vec4*, const uint16_t*, const uint16_t*);
+  void Align(float4*, float4*, float4*, float4*, const uint16_t*, const uint16_t*);
 };
 
 __global__
-void FindCorrespondences(const vec4*, const vec4*, const vec4*, const vec4*, vec4*, vec4*, const mat4&, int, int);
+void FindCorrespondences(const float4*, const float4*, const float4*, const float4*, float4*, float4*, const float4x4&, int, int);
 
 __device__
-static inline int2 cam2screenPos(const vec3&);
+static inline int2 cam2screenPos(const float3&);
 
 __global__
-void calculateVertexPositions(vec4* , const uint16_t*);
+void calculateVertexPositions(float4* , const uint16_t*);
 
 __global__
-void calculateNormals(const vec4* , vec4*);
+void calculateNormals(const float4* , float4*);
 
 #endif 

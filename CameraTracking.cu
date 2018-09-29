@@ -1,6 +1,7 @@
 #include <Windows.h>
-#include <cuda_runtime.h>
-#include <cuda_runtime_api.h>
+
+#include <helper_cuda.h>
+#include <helper_math.h>
 #include <stdio.h>
 #include <algorithm>
 #include <iostream>
@@ -9,7 +10,7 @@
 //#include <glm/gtx/string_cast.hpp>
 #include "CameraTracking.h"
 
-using namespace glm;
+//using namespace glm;
 #define MINF __int_as_float(0xff800000)
 //Kinect v2 specific camera params
 #define numCols 640
@@ -26,14 +27,14 @@ dim3 threads = dim3(32,32,1);
 
 
 __device__
-static inline int2 cam2screenPos(vec3 p) {
+static inline int2 cam2screenPos(float3 p) {
   float x = ((p.x * fx)/p.z) + cx;
   float y = ((p.y * fy)/p.z) + cy;
   return make_int2(x,y);
 }
 
 __global__
-void calculateVertexPositions(vec4* d_vertexPositions, const uint16_t* d_depthBuffer)  {
+void calculateVertexPositions(float4* d_vertexPositions, const uint16_t* d_depthBuffer)  {
   int xidx = blockDim.x*blockIdx.x + threadIdx.x;
   int yidx = blockDim.y*blockIdx.y + threadIdx.y;
   
@@ -60,7 +61,7 @@ void calculateVertexPositions(vec4* d_vertexPositions, const uint16_t* d_depthBu
   
   float x = ((xidx - cx)*depth)/(float)fx;
   float y = ((yidx - cy)*depth)/(float)fy;
-  vec4 vertex = vec4(x, -y, -depth, w);
+  float4 vertex = make_float4(x, -y, -depth, w);
   //*
   //if(idx<20){printf("thread: %d - %f %f %f %f\n", idx, vertex.x, vertex.y, vertex.z, vertex.w);}
   //*/
@@ -68,7 +69,7 @@ void calculateVertexPositions(vec4* d_vertexPositions, const uint16_t* d_depthBu
 }
 
 __global__
-void calculateNormals(const vec4* d_positions, vec4* d_normals)
+void calculateNormals(const float4* d_positions, float4* d_normals)
 {
   int xidx = blockDim.x*blockIdx.x + threadIdx.x;
   int yidx = blockDim.y*blockIdx.y + threadIdx.y;
@@ -80,40 +81,40 @@ void calculateNormals(const vec4* d_positions, vec4* d_normals)
   //find globalIdx row-major
   const int idx = (yidx*numCols)+xidx;
 
-  d_normals[idx] = vec4(MINF, MINF, MINF, MINF);
+  d_normals[idx] = make_float4(MINF, MINF, MINF, MINF);
 
   if(xidx > 0 && xidx < numCols-1 && yidx > 0 && yidx < numRows-1)  {
-    const vec4 CC = d_positions[(yidx+0)*numCols+(xidx+0)];
-		const vec4 PC = d_positions[(yidx+1)*numCols+(xidx+0)];
-		const vec4 CP = d_positions[(yidx+0)*numCols+(xidx+1)];
-		const vec4 MC = d_positions[(yidx-1)*numCols+(xidx+0)];
-		const vec4 CM = d_positions[(yidx+0)*numCols+(xidx-1)];
+    const float4 CC = d_positions[(yidx+0)*numCols+(xidx+0)];
+		const float4 PC = d_positions[(yidx+1)*numCols+(xidx+0)];
+		const float4 CP = d_positions[(yidx+0)*numCols+(xidx+1)];
+		const float4 MC = d_positions[(yidx-1)*numCols+(xidx+0)];
+		const float4 CM = d_positions[(yidx+0)*numCols+(xidx-1)];
 
     if(CC.x != MINF && PC.x != MINF && CP.x != MINF && MC.x != MINF && CM.x != MINF)
 		{
-			const vec3 n = cross(vec3(PC)-vec3(MC), vec3(CP)-vec3(CM));
+			const float3 n = cross(make_float3(PC)-make_float3(MC), make_float3(CP)-make_float3(CM));
 			const float  l = length(n);
 
 			if(l > 0.0f)
 			{
-        //float4 v = make_float4(n/-l, 1.0f);
-        vec4 vert = vec4(n, l);
+				//float4 v = make_float4(n/-l, 1.0f);
+				float4 vert = make_float4(n, l);
 				d_normals[yidx*numCols+xidx] = vert;
-        //printf("Normal for thread %d : %f %f %f", yidx*numRows+xidx, vert.x, vert.y, vert.z);
+				//printf("Normal for thread %d : %f %f %f", yidx*numRows+xidx, vert.x, vert.y, vert.z);
 			}
 		}
   }
   
 }
 
-void CameraTracking::Align(vec4* d_input, vec4* d_inputNormals, vec4* d_target, 
-  vec4* d_targetNormals, const uint16_t* d_depthInput, const uint16_t* d_depthTarget) {
+void CameraTracking::Align(float4* d_input, float4* d_inputNormals, float4* d_target, 
+  float4* d_targetNormals, const uint16_t* d_depthInput, const uint16_t* d_depthTarget) {
 
   preProcess(d_input, d_inputNormals, d_depthInput);
   preProcess(d_target, d_targetNormals, d_depthTarget);
 
   //We now have all data we need. find correspondence.
-  glm::mat4 deltaT = mat4(1);
+  //glm::mat4 deltaT = mat4(1);
   checkCudaErrors(cudaDeviceSynchronize());
   
 //  FindCorrespondences<<<blocks, threads>>>(d_input, d_inputNormals, d_target, d_targetNormals, d_correspondence, d_correspondenceNormals,
@@ -130,14 +131,14 @@ void CameraTracking::Align(vec4* d_input, vec4* d_inputNormals, vec4* d_target,
 }
 
 //Takes device pointers, calculates correct position and normals
-void CameraTracking::preProcess(vec4 *positions, vec4* normals, const uint16_t *depth)  {
+void CameraTracking::preProcess(float4 *positions, float4* normals, const uint16_t *depth)  {
   calculateVertexPositions<<<blocks, threads>>>(positions, depth);
   calculateNormals<<<blocks, threads>>>(positions, normals);
 }
 
 CameraTracking::CameraTracking(int w, int h):width(w),height(h)
 {
-  const int ARRAY_SIZE = width*height*sizeof(glm::vec4);
+  const int ARRAY_SIZE = width*height*sizeof(float4);
   checkCudaErrors(cudaMalloc((void**)&d_correspondence, ARRAY_SIZE));
   checkCudaErrors(cudaMemset(d_correspondence, 0, ARRAY_SIZE));
   checkCudaErrors(cudaMalloc((void**)&d_correspondenceNormals, ARRAY_SIZE));
@@ -151,10 +152,10 @@ CameraTracking::~CameraTracking()
 }
 
 __global__
-void FindCorrespondences(const vec4* input, const vec4* inputNormals, 
-                                        const vec4* target, const vec4* targetnormals, 
-                                        vec4* correspondence, vec4* correspondenceNormals,
-const mat4 deltaT, int width, int height) {
+void FindCorrespondences(const float4* input, const float4* inputNormals, 
+                                        const float4* target, const float4* targetnormals, 
+                                        float4* correspondence, float4* correspondenceNormals,
+const float4x4 deltaT, int width, int height) {
 
   int xidx = blockDim.x*blockIdx.x + threadIdx.x;
   int yidx = blockDim.y*blockIdx.y + threadIdx.y;
@@ -166,8 +167,8 @@ const mat4 deltaT, int width, int height) {
   //find globalIdx row-major
   const int idx = (yidx*numCols)+xidx;
 
-  vec4 p_in = input[idx];
-  vec4 p = p_in;
+  float4 p_in = input[idx];
+  float4 p = p_in;
   //vec4 translated = vec4(0,0,0,0);
   //vec4 translated = deltaT*p_in;
 
