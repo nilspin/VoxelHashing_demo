@@ -5,7 +5,7 @@
 using namespace glm;
 
 Frustum::Frustum(){
-    lines.reserve(24);
+    lines.resize(24);
     glGenVertexArrays(1,&frustum);
     glBindVertexArray(frustum);
     glGenBuffers(1,&frustumBuffer);

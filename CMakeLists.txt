@@ -38,11 +38,11 @@ set(SOURCES DepthMain.cpp camera.cpp Window.cpp Application.cpp prereq.h ShaderP
     Application.h Frustum.h  ${GLAD_SRC})
 
 #Compile
-add_library(CameraTracking SHARED CameraTracking.cu CameraTracking.h ${CUHELPER_INCLUDE_DIR})
-#target_include_directories(CameraTracking SHARED CameraTracking.h "${CUHELPER_INCLUDE_DIR}")
+add_library(CameraTracking STATIC CameraTracking.cu CameraTracking.h ${CUHELPER_INCLUDE_DIR})
+#target_include_directories(CameraTracking STATIC CameraTracking.h "${CUHELPER_INCLUDE_DIR}")
 set_target_properties(CameraTracking PROPERTIES LINKER_LANGUAGE CUDA)
-#set_target_properties(CameraTracking PROPERTIES POSITION_INDEPENDENT_CODE ON)
-set_target_properties(CameraTracking PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+set_target_properties(CameraTracking PROPERTIES POSITION_INDEPENDENT_CODE ON)
+#set_target_properties(CameraTracking PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 
 add_executable(${PROJECT_NAME} ${SOURCES})
 
