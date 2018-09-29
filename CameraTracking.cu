@@ -1,7 +1,5 @@
 #include <Windows.h>
 
-#include <helper_cuda.h>
-#include <helper_math.h>
 #include <stdio.h>
 #include <algorithm>
 #include <iostream>
@@ -25,9 +23,8 @@ const int distThreshold = 2.0;
 dim3 blocks = dim3(20,15,1);
 dim3 threads = dim3(32,32,1);
 
-
 __device__
-static inline int2 cam2screenPos(float3 p) {
+static inline int2 cam2screenPos(float3 &p) {
   float x = ((p.x * fx)/p.z) + cx;
   float y = ((p.y * fy)/p.z) + cy;
   return make_int2(x,y);
@@ -117,17 +114,17 @@ void CameraTracking::Align(float4* d_input, float4* d_inputNormals, float4* d_ta
   //glm::mat4 deltaT = mat4(1);
   checkCudaErrors(cudaDeviceSynchronize());
   
-//  FindCorrespondences<<<blocks, threads>>>(d_input, d_inputNormals, d_target, d_targetNormals, d_correspondence, d_correspondenceNormals,
-//                      deltaTransform, width, height);
+  FindCorrespondences<<<blocks, threads>>>(d_input, d_inputNormals, d_target, d_targetNormals, d_correspondence, d_correspondenceNormals,
+                      deltaTransform, width, height);
 
-  //checkCudaErrors(cudaDeviceSynchronize());
-  // std::vector<glm::vec4> outputCUDA(640*480);
-  // std::cout<<"outputCuda.size()"<<outputCUDA.size()<<std::endl;
-  // checkCudaErrors(cudaMemcpy(outputCUDA.data(), d_correspondence, 640*480*sizeof(glm::vec4), cudaMemcpyDeviceToHost));
-  // std::ofstream fout("correspondenceData.txt");
-  // std::for_each(outputCUDA.begin(), outputCUDA.end(), [&fout](const glm::vec4 &n){fout<<n.x<<" "<<n.y<<" "<<n.z<<" "<<n.w<<"\n";});
-  // fout.close();
-                     
+  checkCudaErrors(cudaDeviceSynchronize());
+   /*std::vector<float4> outputCUDA(640*480);
+   std::cout<<"outputCuda.size()"<<outputCUDA.size()<<std::endl;
+   checkCudaErrors(cudaMemcpy(outputCUDA.data(), d_correspondenceNormals, 640*480*sizeof(float4), cudaMemcpyDeviceToHost));
+   std::ofstream fout("correspondenceData.txt");
+   std::for_each(outputCUDA.begin(), outputCUDA.end(), [&fout](const float4 &n){fout<<n.x<<" "<<n.y<<" "<<n.z<<" "<<n.w<<"\n";});
+   fout.close();
+   */                  
 }
 
 //Takes device pointers, calculates correct position and normals
@@ -143,6 +140,9 @@ CameraTracking::CameraTracking(int w, int h):width(w),height(h)
   checkCudaErrors(cudaMemset(d_correspondence, 0, ARRAY_SIZE));
   checkCudaErrors(cudaMalloc((void**)&d_correspondenceNormals, ARRAY_SIZE));
   checkCudaErrors(cudaMemset(d_correspondenceNormals, 0, ARRAY_SIZE));
+  float arr[16] = { 1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1 };
+  deltaTransform = float4x4(arr);
+  float4x4 transposed = deltaTransform.getTranspose();
 }
 
 CameraTracking::~CameraTracking()
@@ -168,22 +168,24 @@ const float4x4 deltaT, int width, int height) {
   const int idx = (yidx*numCols)+xidx;
 
   float4 p_in = input[idx];
-  float4 p = p_in;
+  //float4 p = p_in;
   //vec4 translated = vec4(0,0,0,0);
-  //vec4 translated = deltaT*p_in;
+  float4 translated = deltaT*p_in;
 
   
   //At what index does translated input lie?
-  //vec3 p = vec3(translated.x,translated.y,translated.z);
+  float3 p = make_float3(translated);
   //float x = ((p.x * 525)/p.z) + 319.5;
   //float y = ((p.y * 525)/p.z) + 239.5;
 
-  //int2 screenPos = make_int2(x,y);
-  //printf("screenPos = ( %f, %f ) for thread %d \n", x, y, idx);
+  int2 screenPos = cam2screenPos(p);
+  if (idx == 25214) {
+	  printf("translated pos:(%f, %f, %f) screenPos = ( %d, %d ) for thread %d blockX %d blockY %d \n", p.x, p.y, p.z, screenPos.x, screenPos.y, idx, blockIdx.x, blockIdx.y);
+  }
   
-  /*
+  //*
   //now lookup this index in target image
-  vec4 p_target;//, n_target;
+  float4 p_target;//, n_target;
   int linearScreenPos = (screenPos.y*numCols)+screenPos.x;
 
   if(screenPos.x >= numCols || screenPos.y>= numRows) {
@@ -192,16 +194,16 @@ const float4x4 deltaT, int width, int height) {
 
   p_target = target[linearScreenPos];
   if(p_target.w == 1.0f)  {
-    float d = length(translated - p_target);
+    float d = length(make_float3(translated) - make_float3(p_target));
     if(d < distThreshold) {
       correspondence[idx] = p_target;
-      printf("thread %d, correspondence : %f %f %f %f \n", idx, p_target.x, p_target.y, p_target.z, p_target.w);
+      //printf("thread %d, correspondence : %f %f %f %f and length %f \n", idx, p_target.x, p_target.y, p_target.z, p_target.w, d);
       //Don't need normal of correspondence right now, 
       //but many papers seem to use this for weighted ICP.
       //Might need later so set to 0.
-      correspondenceNormals[idx] = vec4(0);
+      correspondenceNormals[idx] = make_float4(d,0,0,0);
     }
   }
-  */
+  //*/
 }
 
