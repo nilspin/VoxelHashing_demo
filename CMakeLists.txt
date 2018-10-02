@@ -21,12 +21,20 @@ find_package(glm REQUIRED)
 message(STATUS "GLM included at ${GLM_INCLUDE_DIR}")
 find_package(Boost COMPONENTS filesystem REQUIRED)  #only need this till nvcc starts supporting c++17 compiler
 
+set(CUHELPER_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cuda_helper")
+
+#Compile GladLib
 set(GLAD_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/glad/include")
 set(GLAD_SRC "${GLAD_INCLUDE_DIR}/../src/glad.c")
 add_library("GladLib" ${GLAD_SRC})
 target_include_directories("GladLib" PRIVATE "${GLAD_INCLUDE_DIR}")
 
-set(CUHELPER_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cuda_helper")
+#Compile CameraTrackingUtils
+add_library(CameraTrackingUtils STATIC CameraTrackingUtils.cu ${CUHELPER_INCLUDE_DIR})
+set_target_properties(CameraTrackingUtils PROPERTIES LINKER_LANGUAGE CUDA)
+set_target_properties(CameraTrackingUtils PROPERTIES POSITION_INDEPENDENT_CODE ON)
+#set_target_properties(CameraTrackingUtils PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+
 set(INCLUDE_DIRS  ${INCLUDE_DIRS} ${CUDA_INCLUDE_DIRS} ${CUHELPER_INCLUDE_DIR} ${EIGEN3_INCLUDE_DIR} ${GLM_INCLUDE_DIR} 
                 ${OPENGL_INCLUDE_DIRS} ${SDL2_INCLUDE_DIRS} ${GLAD_INCLUDE_DIR} ${Boost_INCLUDE_DIRS})  #${ARMADILLO_INCLUDE_DIR}
 
@@ -36,20 +44,14 @@ set(LIBS ${LIBS} ${OPENGL_LIBRARY} ${CUDA_LIBRARIES}  ${SDL2_LIBRARIES} ${Boost_
 #include_directories(${CMAKE_SOURCE_DIR} )
 include_directories(${INCLUDE_DIRS})
 
-set(SOURCES DepthMain.cpp camera.cpp Window.cpp Application.cpp prereq.h ShaderProgram.hpp Frustum.cpp camera.h Window.h
-    Application.h Frustum.h  ${GLAD_SRC})
+set(SOURCES DepthMain.cpp camera.cpp Window.cpp Application.cpp CameraTracking.cpp prereq.h ShaderProgram.hpp Frustum.cpp camera.h Window.h
+    Application.h Frustum.h CameraTracking.h ${GLAD_SRC})
 
-#Compile
-add_library(CameraTracking STATIC CameraTracking.cu CameraTracking.h ${CUHELPER_INCLUDE_DIR})
-#target_include_directories(CameraTracking STATIC CameraTracking.h "${CUHELPER_INCLUDE_DIR}")
-set_target_properties(CameraTracking PROPERTIES LINKER_LANGUAGE CUDA)
-set_target_properties(CameraTracking PROPERTIES POSITION_INDEPENDENT_CODE ON)
-#set_target_properties(CameraTracking PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 
 add_executable(${PROJECT_NAME} ${SOURCES})
 
 #Link all obj files
-target_link_libraries(${PROJECT_NAME}  ${LIBS}  CameraTracking )  #SDL2::SDL2
+target_link_libraries(${PROJECT_NAME}  CameraTrackingUtils ${LIBS}  )  #SDL2::SDL2
 
 #Now copy shaders to build directory
 
