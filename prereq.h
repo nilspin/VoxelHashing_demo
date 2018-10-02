@@ -17,6 +17,9 @@
 #include <SDL.h>
 #include <SDL_opengl.h>
 
+//Make Eigen use Intel's MKL
+#define EIGEN_USE_MKL_ALL
+
 //GLM stuff
 #define GLM_ENABLE_EXPERIMENTAL
 #define GLM_SWIZZLE

@@ -9,11 +9,12 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_CXX_FLAGS "-std=c++11 -fpermissive")
 set(OpenGL_GL_PREFERENCE "GLVND")
-set(CUDA_NVCC_FLAGS "-gencode arch=compute_61,code=sm_61")
+string(APPEND CMAKE_CUDA_FLAGS " -gencode arch=compute_61,code=sm_61")
 set(CUDA_NVCC_FLAGS_DEBUG ${CUDA_NVCC_FLAGS_DEBUG} "-G")
 
-# Search desired Qt packages
 #find_package(CUDA REQUIRED)
+#find_package(Armadillo REQUIRED)
+find_package(Eigen3 REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(SDL2 REQUIRED)
 find_package(glm REQUIRED)
@@ -26,11 +27,12 @@ add_library("GladLib" ${GLAD_SRC})
 target_include_directories("GladLib" PRIVATE "${GLAD_INCLUDE_DIR}")
 
 set(CUHELPER_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cuda_helper")
-set(INCLUDE_DIRS  ${INCLUDE_DIRS} ${CUDA_INCLUDE_DIRS} ${CUHELPER_INCLUDE_DIR} ${GLM_INCLUDE_DIR} ${OPENGL_INCLUDE_DIRS} ${SDL2_INCLUDE_DIRS} ${GLAD_INCLUDE_DIR} ${Boost_INCLUDE_DIRS})
-set(LIBS ${LIBS} ${OPENGL_LIBRARY} ${CUDA_LIBRARIES} ${SDL2_LIBRARIES} ${Boost_LIBRARIES} ${GladLib})
+set(INCLUDE_DIRS  ${INCLUDE_DIRS} ${CUDA_INCLUDE_DIRS} ${CUHELPER_INCLUDE_DIR} ${EIGEN3_INCLUDE_DIR} ${GLM_INCLUDE_DIR} 
+                ${OPENGL_INCLUDE_DIRS} ${SDL2_INCLUDE_DIRS} ${GLAD_INCLUDE_DIR} ${Boost_INCLUDE_DIRS})  #${ARMADILLO_INCLUDE_DIR}
+
+set(LIBS ${LIBS} ${OPENGL_LIBRARY} ${CUDA_LIBRARIES}  ${SDL2_LIBRARIES} ${Boost_LIBRARIES} ${GladLib})  #${ARMADILLO_LIBRARY}
 
 #specify include directory
-#include_directories(/usr/include)
 #include_directories(${CMAKE_SOURCE_DIR} )
 include_directories(${INCLUDE_DIRS})
 
