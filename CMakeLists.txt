@@ -30,7 +30,7 @@ add_library("GladLib" ${GLAD_SRC})
 target_include_directories("GladLib" PRIVATE "${GLAD_INCLUDE_DIR}")
 
 #Compile CameraTrackingUtils
-add_library(CameraTrackingUtils STATIC CameraTrackingUtils.cu ${CUHELPER_INCLUDE_DIR})
+add_library(CameraTrackingUtils STATIC CameraTrackingUtils.cu LinearSystem.cu ${CUHELPER_INCLUDE_DIR})
 set_target_properties(CameraTrackingUtils PROPERTIES LINKER_LANGUAGE CUDA)
 set_target_properties(CameraTrackingUtils PROPERTIES POSITION_INDEPENDENT_CODE ON)
 #set_target_properties(CameraTrackingUtils PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
@@ -44,8 +44,8 @@ set(LIBS ${LIBS} ${OPENGL_LIBRARY} ${CUDA_LIBRARIES}  ${SDL2_LIBRARIES} ${Boost_
 #include_directories(${CMAKE_SOURCE_DIR} )
 include_directories(${INCLUDE_DIRS})
 
-set(SOURCES DepthMain.cpp camera.cpp Window.cpp Application.cpp CameraTracking.cpp prereq.h ShaderProgram.hpp Frustum.cpp camera.h Window.h
-    Application.h Frustum.h CameraTracking.h ${GLAD_SRC})
+set(SOURCES DepthMain.cpp camera.cpp Window.cpp Application.cpp LinearSystem.cpp CameraTracking.cpp prereq.h ShaderProgram.hpp Frustum.cpp camera.h Window.h
+    Application.h Frustum.h CameraTracking.h LinearSystem.h EigenUtil.h ${GLAD_SRC})
 
 
 add_executable(${PROJECT_NAME} ${SOURCES})
