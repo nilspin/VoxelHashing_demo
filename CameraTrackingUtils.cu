@@ -6,13 +6,12 @@
 #include <cuda_runtime_api.h>
 #include "cuda_helper/helper_cuda.h"
 #include "cuda_helper/helper_math.h"
-//#include <cutil_inline.h>
-//#include <cutil_math.h>
 
 //This is a simple vector library. Use this with CUDA instead of GLM.
 #include "cuda_helper/cuda_SimpleMatrixUtil.h"
 
 #define MINF __int_as_float(0xff800000)
+#define MAXF __int_as_float(0x7F7FFFFF)
 #define fx 525
 #define fy 525
 #define cx 319.5
@@ -21,7 +20,8 @@
 #define numCols 640
 #define numRows 480
 
-const int distThreshold = 2.0;
+const float distThres = 2.0;
+const float normalThres = -1.f;
 //Since numCols = 640 and numRows = 480, we set blockDim according to 32x32 tile
 dim3 blocks = dim3(20, 15, 1);
 dim3 threads = dim3(32, 32, 1);
@@ -108,7 +108,7 @@ __global__
 void FindCorrespondences(const float4* input, const float4* inputNormals,
 	const float4* target, const float4* targetnormals,
 	float4* correspondence, float4* correspondenceNormals,
-	const float4x4 deltaT, int width, int height) {
+	const float4x4 deltaT, float distThres, float normalThres, int width, int height) {
 
 	int xidx = blockDim.x*blockIdx.x + threadIdx.x;
 	int yidx = blockDim.y*blockIdx.y + threadIdx.y;
@@ -117,39 +117,41 @@ void FindCorrespondences(const float4* input, const float4* inputNormals,
 		return;
 	}
 
-	//find globalIdx row-major
 	const int idx = (yidx*numCols) + xidx;
 
+	correspondence[idx] = make_float4(MINF, MINF, MINF, MINF);
+	correspondenceNormals[idx] = make_float4(MINF, MINF, MINF, MINF);
 	float4 p_in = input[idx];
-	float4 translated = deltaT*p_in;
+	float4 n_in = inputNormals[idx];
 
+	if (p_in.w != 0 && n_in.w != 0) {	//if both pos and normal are valid points
 
-	//At what index does translated input lie?
-	float3 p = make_float3(translated);
+		float4 transformedPos = deltaT*p_in;
+		float4 transformedNormal = deltaT*n_in;
 
-	int2 screenPos = cam2screenPos(p);
-	if (idx == 25214) {
-		printf("translated pos:(%f, %f, %f) screenPos = ( %d, %d ) for thread %d blockX %d blockY %d \n", p.x, p.y, p.z, screenPos.x, screenPos.y, idx, blockIdx.x, blockIdx.y);
-	}
+		int2 screenPos = cam2screenPos(make_float3(transformedPos));
+//		if (idx == 25214) {
+//			printf("translated pos:(%f, %f, %f) screenPos = ( %d, %d ) for thread %d blockX %d blockY %d \n", p.x, p.y, p.z, screenPos.x, screenPos.y, idx, blockIdx.x, blockIdx.y);
+//		}
 
-	//now lookup this index in target image
-	float4 p_target;//, n_target;
-	int linearScreenPos = (screenPos.y*numCols) + screenPos.x;
+		//now lookup this index in target image
+		float4 p_target, n_target;
+		int linearScreenPos = (screenPos.y*numCols) + screenPos.x;
 
-	if (screenPos.x >= numCols || screenPos.y >= numRows) {
-		return;
-	}
+		if (screenPos.x >= numCols || screenPos.x < 0 || screenPos.y >= numRows || screenPos.y < 0) {
+			return;
+		}
 
-	p_target = target[linearScreenPos];
-	if (p_target.w == 1.0f) {
-		float d = length(make_float3(translated) - make_float3(p_target));
-		if (d < distThreshold) {
-			correspondence[idx] = p_target;
-			//printf("thread %d, correspondence : %f %f %f %f and length %f \n", idx, p_target.x, p_target.y, p_target.z, p_target.w, d);
-			//Don't need normal of correspondence right now, 
-			//but many papers seem to use this for weighted ICP.
-			//Might need later so set to 0.
-			correspondenceNormals[idx] = make_float4(d, 0, 0, 0);
+		p_target = target[linearScreenPos];
+		n_target = targetnormals[linearScreenPos];
+		
+		if (p_target.w != 0.0f) {
+			float n = dot(make_float3(transformedNormal), make_float3(n_target));
+			float d = length(make_float3(transformedPos) - make_float3(p_target));
+			if (d <= distThres && n >= normalThres) {
+				correspondence[idx] = p_target;
+				correspondenceNormals[idx] = n_target;
+			}
 		}
 	}
 }
@@ -158,7 +160,7 @@ extern "C" void computeCorrespondences(const float4* d_input, const float4* d_in
 	const float4x4 deltaTransform, const int width, const int height)
 {
 	FindCorrespondences <<<blocks, threads >>>(d_input, d_inputNormals, d_target, d_targetNormals, d_correspondence, d_correspondenceNormals,
-		deltaTransform, width, height);
+		deltaTransform, distThres, normalThres, width, height);
 	checkCudaErrors(cudaDeviceSynchronize());
 
 }

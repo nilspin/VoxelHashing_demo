@@ -31,14 +31,27 @@ void CameraTracking::Align(float4* d_input, float4* d_inputNormals, float4* d_ta
   computeCorrespondences(d_input, d_inputNormals, d_target, d_targetNormals, d_correspondence, d_correspondenceNormals, 
   					deltaTransform, width, height);
   
-  //deltaTransform  = rigidAlignment()
+  Matrix4x4f deltaT = Matrix4x4f(deltaTransform.ptr());
+  
+  //Matrix4x4f updatedDeltaT = rigidAlignment(d_input, d_inputNormals, deltaT);
    /*std::vector<float4> outputCUDA(640*480);
    std::cout<<"outputCuda.size()"<<outputCUDA.size()<<std::endl;
-   checkCudaErrors(cudaMemcpy(outputCUDA.data(), d_correspondenceNormals, 640*480*sizeof(float4), cudaMemcpyDeviceToHost));
+   checkCudaErrors(cudaMemcpy(outputCUDA.data(), d_correspondence, 640*480*sizeof(float4), cudaMemcpyDeviceToHost));
    std::ofstream fout("correspondenceData.txt");
    std::for_each(outputCUDA.begin(), outputCUDA.end(), [&fout](const float4 &n){fout<<n.x<<" "<<n.y<<" "<<n.z<<" "<<n.w<<"\n";});
    fout.close();
-   */                  
+   */
+}
+
+Eigen::Matrix4f CameraTracking::rigidAlignment(const float4* d_input, const float4* d_inputNormals, const Eigen::Matrix4f& deltaT) {
+	Matrix4x4f computedTransform = deltaT;
+	Matrix6x7f system;
+	linearSystem.build(d_input, d_correspondence, d_correspondenceNormals, 0.0f, 0.0f, deltaT, width, height, system);
+
+	//solve 6x6 matrix of linear equations
+
+	//then linearize the computed matrix to extract Rotation and Translation
+	return computedTransform;
 }
 
 CameraTracking::CameraTracking(int w, int h):width(w),height(h)

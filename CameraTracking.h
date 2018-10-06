@@ -9,13 +9,14 @@
 #include <cuda_runtime_api.h>
 //This is a simple vector library. Use this with CUDA instead of GLM.
 #include "cuda_helper/cuda_SimpleMatrixUtil.h"
-#include <Eigen/Cholesky>
+#include "LinearSystem.h"
+#include "EigenUtil.h"
 
 class CameraTracking  {
 
 private:
   int width, height;
-  
+  LinearSystem linearSystem;
   Eigen::Matrix4f temp;;
   float4* d_correspondenceNormals;
   float4* d_correspondence;
@@ -25,6 +26,7 @@ public:
   CameraTracking(int, int);
   ~CameraTracking();
   void Align(float4*, float4*, float4*, float4*, const uint16_t*, const uint16_t*);
+  Eigen::Matrix4f rigidAlignment(const float4*, const float4*, const Eigen::Matrix4f&);
 };
 
 #endif 
