@@ -4,6 +4,9 @@
 #include <cuda_runtime_api.h>
 #include "EigenUtil.h"
 
+const int NUMBLOCKS = 300;
+const int OUTPUT_SIZE = 26 * NUMBLOCKS;
+
 class LinearSystem
 {
 public:
@@ -13,7 +16,8 @@ public:
 				float meanStdev, Matrix4x4f deltaT, int width, int height, Matrix6x7f& system);
 
 private:
-
+	float* d_generatedMatrixSystem;
+	float* h_accumulated_matrix;
 };
 
 #endif //LINEAR_SYSTEM_H

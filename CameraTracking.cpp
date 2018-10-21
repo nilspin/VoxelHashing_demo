@@ -33,7 +33,7 @@ void CameraTracking::Align(float4* d_input, float4* d_inputNormals, float4* d_ta
   
   Matrix4x4f deltaT = Matrix4x4f(deltaTransform.ptr());
   
-  //Matrix4x4f updatedDeltaT = rigidAlignment(d_input, d_inputNormals, deltaT);
+  Matrix4x4f updatedDeltaT = rigidAlignment(d_input, d_inputNormals, deltaT);
    /*std::vector<float4> outputCUDA(640*480);
    std::cout<<"outputCuda.size()"<<outputCUDA.size()<<std::endl;
    checkCudaErrors(cudaMemcpy(outputCUDA.data(), d_correspondence, 640*480*sizeof(float4), cudaMemcpyDeviceToHost));
