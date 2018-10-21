@@ -14,9 +14,9 @@ void LinearSystem::build(const float4* d_input, const float4* d_correspondence, 
 
 LinearSystem::LinearSystem()
 {
-	checkCudaErrors(cudaMalloc((void**)&d_generatedMatrixSystem, OUTPUT_SIZE));
-	checkCudaErrors(cudaMemset((void**)&d_generatedMatrixSystem, 0, OUTPUT_SIZE * sizeof(float)));
-	h_accumulated_matrix = new float[27];
+	checkCudaErrors(cudaMalloc((void**)&d_generatedMatrixSystem, OUTPUT_SIZE * sizeof(float)));
+	checkCudaErrors(cudaMemset(d_generatedMatrixSystem, 0x00, OUTPUT_SIZE * sizeof(float)));
+	h_accumulated_matrix = new float[26];
 }
 
 LinearSystem::~LinearSystem()
