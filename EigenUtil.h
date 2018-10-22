@@ -4,7 +4,7 @@
 #include <Eigen/Dense>
 #include <Eigen/StdVector>
 #include <Eigen/Cholesky>
-
+#include <Eigen/Geometry>
 
 using Matrix6x7f = Eigen::Matrix<float, 6, 7>;
 using Matrix6x6f = Eigen::Matrix<float, 6, 6>;

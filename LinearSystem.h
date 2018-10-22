@@ -5,7 +5,8 @@
 #include "EigenUtil.h"
 
 const int NUMBLOCKS = 300;
-const int OUTPUT_SIZE = 26 * NUMBLOCKS;
+const int SYSTEM_SIZE = 27;
+const int OUTPUT_SIZE = SYSTEM_SIZE * NUMBLOCKS;
 
 class LinearSystem
 {
@@ -13,7 +14,7 @@ public:
 	LinearSystem();
 	~LinearSystem();
 	void build(const float4* input, const float4* correspondence, const float4* correspondenceNormal, float mean, 
-				float meanStdev, Matrix4x4f deltaT, int width, int height, Matrix6x7f& system);
+				float meanStdev, int width, int height, Matrix6x7f& system);
 
 private:
 	float* d_generatedMatrixSystem;
