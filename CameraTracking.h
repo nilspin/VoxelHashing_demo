@@ -17,16 +17,19 @@ class CameraTracking  {
 private:
   int width, height;
   LinearSystem linearSystem;
-  Eigen::Matrix4f temp;;
+  Eigen::Matrix4f calculatedTransform;
   float4* d_correspondenceNormals;
   float4* d_correspondence;
   float4x4 deltaTransform;
+  Matrix4x4f delinearizeTransformation(const Vector6f & sol);
+
 public:
   
   CameraTracking(int, int);
   ~CameraTracking();
   void Align(float4*, float4*, float4*, float4*, const uint16_t*, const uint16_t*);
   Eigen::Matrix4f rigidAlignment(const float4*, const float4*, const Eigen::Matrix4f&);
+  Matrix4x4f getTransform() { return calculatedTransform; }
 };
 
 #endif 

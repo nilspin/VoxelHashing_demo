@@ -33,7 +33,7 @@ void CameraTracking::Align(float4* d_input, float4* d_inputNormals, float4* d_ta
   
   Matrix4x4f deltaT = Matrix4x4f(deltaTransform.ptr());
   
-  Matrix4x4f updatedDeltaT = rigidAlignment(d_input, d_inputNormals, deltaT);
+  calculatedTransform = rigidAlignment(d_input, d_inputNormals, deltaT);
    /*std::vector<float4> outputCUDA(640*480);
    std::cout<<"outputCuda.size()"<<outputCUDA.size()<<std::endl;
    checkCudaErrors(cudaMemcpy(outputCUDA.data(), d_correspondence, 640*480*sizeof(float4), cudaMemcpyDeviceToHost));
@@ -43,15 +43,44 @@ void CameraTracking::Align(float4* d_input, float4* d_inputNormals, float4* d_ta
    */
 }
 
+/*
+Extract a transform matrix from our solved vector
+*/
+Matrix4x4f CameraTracking::delinearizeTransformation(const Vector6f& sol) {
+	Matrix4x4f res; res.setIdentity();
+
+	//Rotation
+	Matrix3x3f R = Eigen::AngleAxisf(sol[0], Eigen::Vector3f::UnitZ()).toRotationMatrix()*
+		Eigen::AngleAxisf(sol[1], Eigen::Vector3f::UnitY()).toRotationMatrix()*
+		Eigen::AngleAxisf(sol[2], Eigen::Vector3f::UnitX()).toRotationMatrix();
+	//Translation
+	Eigen::Vector3f t = sol.segment(3, 3);
+
+	res.block(0, 0, 3, 3) = R;
+	res.block(0, 3, 3, 1) = t;
+
+	return res;
+}
+
 Eigen::Matrix4f CameraTracking::rigidAlignment(const float4* d_input, const float4* d_inputNormals, const Eigen::Matrix4f& deltaT) {
 	Matrix4x4f computedTransform = deltaT;
 	Matrix6x7f system;
-	linearSystem.build(d_input, d_correspondence, d_correspondenceNormals, 0.0f, 0.0f, deltaT, width, height, system);
+	linearSystem.build(d_input, d_correspondence, d_correspondenceNormals, 0.0f, 0.0f, width, height, system);
 
-	//solve 6x6 matrix of linear equations
+	//solve 6x7 matrix of linear equations
+	std::cout << "Filled matrix system : \n";
+	std::cout << system << "\n";
+	Matrix6x6f ATA = system.block(0, 0, 6, 6);
+	Vector6f ATb = system.block(0, 6, 6, 1);
 
-	//then linearize the computed matrix to extract Rotation and Translation
-	return computedTransform;
+	Eigen::JacobiSVD<Matrix6x6f> SVD(ATA, Eigen::ComputeFullU | Eigen::ComputeFullV);
+	Vector6f x = SVD.solve(ATb);
+
+	//then delinearize the computed matrix to extract transform matrix
+	Matrix4x4f newTransform = delinearizeTransformation(x);
+	std::cout << "New transform : " << newTransform << "\n";
+
+	return newTransform;
 }
 
 CameraTracking::CameraTracking(int w, int h):width(w),height(h)

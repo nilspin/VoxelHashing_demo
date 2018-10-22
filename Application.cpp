@@ -6,6 +6,7 @@
 #include<cuda_runtime_api.h>
 //#include<cuda.h>
 
+#include<glm/gtx/string_cast.hpp>
 #include<cuda_gl_interop.h>
 #include "helper_cuda.h"
 #include "stb_image.h"
@@ -61,6 +62,9 @@ Application::Application() {
 
   std::cout<<"\nAllocated input VBO size: "<<returnedBufferSize<<"\n";
   tracker->Align(d_input, d_inputNormals, d_target, d_targetNormals, d_depthInput, d_depthTarget);
+  deltaT = glm::make_mat4(tracker->getTransform().data());
+  deltaT = glm::transpose(deltaT);
+  std::cout << "glm rigid transform : \n" << glm::to_string(deltaT) << "\n";
   checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_input_resource, 0));
   checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_inputNormals_resource, 0));
   checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_target_resource, 0));
@@ -134,6 +138,8 @@ void Application::draw(const glm::mat4& mvp)
   
 
   glBindVertexArray(targetVAO);
+  glm::mat4 newMVP = proj*view*deltaT;
+  glUniformMatrix4fv(drawVertexMap->uniform("MVP"), 1, false, glm::value_ptr(newMVP));
   glUniform3f(drawVertexMap->uniform("shadeColor"), 0.956, 0.721, 0.254);
   glDrawArrays(GL_POINTS, 0, 640*480);
   glBindVertexArray(0);
