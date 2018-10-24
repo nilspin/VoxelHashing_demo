@@ -127,9 +127,10 @@ void Application::draw(const glm::mat4& mvp)
 {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   drawVertexMap->use();
-  
+  glm::mat4 newMVP = proj*view*deltaT;
+
   //checkCudaErrors(cudaGraphicsMapResources(1, &cuda_input_resource, 0));
-  glUniformMatrix4fv(drawVertexMap->uniform("MVP"), 1, false, glm::value_ptr(mvp));
+  glUniformMatrix4fv(drawVertexMap->uniform("MVP"), 1, false, glm::value_ptr(newMVP));
   
   
   glBindVertexArray(inputVAO);
@@ -138,8 +139,7 @@ void Application::draw(const glm::mat4& mvp)
   
 
   glBindVertexArray(targetVAO);
-  glm::mat4 newMVP = proj*view*deltaT;
-  glUniformMatrix4fv(drawVertexMap->uniform("MVP"), 1, false, glm::value_ptr(newMVP));
+  glUniformMatrix4fv(drawVertexMap->uniform("MVP"), 1, false, glm::value_ptr(mvp));
   glUniform3f(drawVertexMap->uniform("shadeColor"), 0.956, 0.721, 0.254);
   glDrawArrays(GL_POINTS, 0, 640*480);
   glBindVertexArray(0);

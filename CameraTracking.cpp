@@ -25,22 +25,18 @@ void CameraTracking::Align(float4* d_input, float4* d_inputNormals, float4* d_ta
   preProcess(d_input, d_inputNormals, d_depthInput);
   preProcess(d_target, d_targetNormals, d_depthTarget);
 
-  //We now have all data we need. find correspondence.
-  //glm::mat4 deltaT = mat4(1);
-  
-  computeCorrespondences(d_input, d_inputNormals, d_target, d_targetNormals, d_correspondence, d_correspondenceNormals, 
-  					deltaTransform, width, height);
-  
-  Matrix4x4f deltaT = Matrix4x4f(deltaTransform.ptr());
-  
-  calculatedTransform = rigidAlignment(d_input, d_inputNormals, deltaT);
-   /*std::vector<float4> outputCUDA(640*480);
-   std::cout<<"outputCuda.size()"<<outputCUDA.size()<<std::endl;
-   checkCudaErrors(cudaMemcpy(outputCUDA.data(), d_correspondence, 640*480*sizeof(float4), cudaMemcpyDeviceToHost));
-   std::ofstream fout("correspondenceData.txt");
-   std::for_each(outputCUDA.begin(), outputCUDA.end(), [&fout](const float4 &n){fout<<n.x<<" "<<n.y<<" "<<n.z<<" "<<n.w<<"\n";});
-   fout.close();
-   */
+  for (int iter = 0; iter < maxIters; iter++) {
+	  //We now have all data we need. find correspondence.
+	  float4x4 deltaT = float4x4(deltaTransform.data());
+
+	  computeCorrespondences(d_input, d_inputNormals, d_target, d_targetNormals, d_correspondence, d_correspondenceNormals,
+		  deltaT, width, height);
+
+	  //Matrix4x4f deltaT = Matrix4x4f(deltaTransform.data());
+
+	  Matrix4x4f partialTransform = rigidAlignment(d_input, d_inputNormals, deltaTransform);
+	  deltaTransform = partialTransform*deltaTransform;
+  }
 }
 
 /*
@@ -91,8 +87,8 @@ CameraTracking::CameraTracking(int w, int h):width(w),height(h)
   checkCudaErrors(cudaMalloc((void**)&d_correspondenceNormals, ARRAY_SIZE));
   checkCudaErrors(cudaMemset(d_correspondenceNormals, 0, ARRAY_SIZE));
   float arr[16] = { 1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1 };
-  deltaTransform = float4x4(arr);
-  float4x4 transposed = deltaTransform.getTranspose();
+  deltaTransform = Matrix4x4f(arr);
+  //float4x4 transposed = deltaTransform.transpose();
 }
 
 CameraTracking::~CameraTracking()

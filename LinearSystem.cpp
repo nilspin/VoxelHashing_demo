@@ -2,6 +2,7 @@
 #include "LinearSystem.h"
 #include <cuda_runtime_api.h>
 #include "cuda_helper/helper_cuda.h"
+#include <cstring>
 
 const double M_PI = 3.14159265358979323846;
 
@@ -11,6 +12,10 @@ extern "C" void buildLinearSystemOnDevice(const float4* d_input, const float4* d
 
 void LinearSystem::build(const float4* d_input, const float4* d_correspondence, const float4* d_correspondenceNormal, float mean,
 					float meanStdev, int width, int height, Matrix6x7f& system) {
+
+	//First clear memory from previous computation
+	checkCudaErrors(cudaMemset(d_generatedMatrixSystem, 0x00, OUTPUT_SIZE * sizeof(float)));
+	std::memset(h_accumulated_matrix, 0x00, NUMBLOCKS*SYSTEM_SIZE * sizeof(float));
 
 	buildLinearSystemOnDevice(d_input, d_correspondence, d_correspondenceNormal, d_generatedMatrixSystem, h_accumulated_matrix);
 
