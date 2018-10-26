@@ -1,7 +1,9 @@
 #ifndef CAMTRACKING_UTIL
 #define CAMTRACKING_UTIL
 
-#include <Windows.h>
+#if defined(_WIN32)
+  #include <Windows.h>
+#endif
 
 #include <cuda_runtime_api.h>
 #include "cuda_helper/helper_cuda.h"
@@ -28,7 +30,7 @@ dim3 threads = dim3(32, 32, 1);
 
 
 __device__
-static inline int2 cam2screenPos(float3 &p) {
+static inline int2 cam2screenPos(float3 p) {
 	float x = ((p.x * fx) / p.z) + cx;
 	float y = ((p.y * fy) / p.z) + cy;
 	return make_int2(x, y);

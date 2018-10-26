@@ -9,10 +9,10 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_CXX_FLAGS "-std=c++11 -fpermissive")
 set(OpenGL_GL_PREFERENCE "GLVND")
-string(APPEND CMAKE_CUDA_FLAGS " -gencode arch=compute_61,code=sm_61")
-set(CUDA_NVCC_FLAGS_DEBUG ${CUDA_NVCC_FLAGS_DEBUG} "-G")
+string(APPEND CMAKE_CUDA_FLAGS " -gencode arch=compute_30,code=sm_30")
+#set(CUDA_NVCC_FLAGS_DEBUG ${CUDA_NVCC_FLAGS_DEBUG} "-G")
 
-#find_package(CUDA REQUIRED)
+find_package(CUDA REQUIRED)
 #find_package(Armadillo REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(OpenGL REQUIRED)
@@ -30,7 +30,7 @@ add_library("GladLib" ${GLAD_SRC})
 target_include_directories("GladLib" PRIVATE "${GLAD_INCLUDE_DIR}")
 
 #Compile CameraTrackingUtils
-add_library(CameraTrackingUtils STATIC CameraTrackingUtils.cu LinearSystem.cu ${CUHELPER_INCLUDE_DIR})
+add_library(CameraTrackingUtils STATIC LinearSystem.cu CameraTrackingUtils.cu)
 set_target_properties(CameraTrackingUtils PROPERTIES LINKER_LANGUAGE CUDA)
 set_target_properties(CameraTrackingUtils PROPERTIES POSITION_INDEPENDENT_CODE ON)
 #set_target_properties(CameraTrackingUtils PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
@@ -51,7 +51,7 @@ set(SOURCES DepthMain.cpp camera.cpp Window.cpp Application.cpp LinearSystem.cpp
 add_executable(${PROJECT_NAME} ${SOURCES})
 
 #Link all obj files
-target_link_libraries(${PROJECT_NAME}  CameraTrackingUtils ${LIBS}  )  #SDL2::SDL2
+target_link_libraries(${PROJECT_NAME}   CameraTrackingUtils ${LIBS} SDL2)  #SDL2::SDL2
 
 #Now copy shaders to build directory
 

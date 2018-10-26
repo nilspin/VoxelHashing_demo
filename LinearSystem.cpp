@@ -4,7 +4,7 @@
 #include "cuda_helper/helper_cuda.h"
 #include <cstring>
 
-const double M_PI = 3.14159265358979323846;
+//const double M_PI = 3.14159265358979323846;
 
 
 extern "C" void buildLinearSystemOnDevice(const float4* d_input, const float4* d_target, const float4* d_targetNormals,

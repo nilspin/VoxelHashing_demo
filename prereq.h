@@ -11,11 +11,15 @@
 #include<memory>
 
 //OpenGL loader on Windows
-#include "opengl_win.h"
+#if defined(_WIN32)
+  #include "opengl_win.h"
+#elif defined(__linux__)
+  #include "opengl_linux.h"
+#endif
 
 //SDL
-#include <SDL.h>
-#include <SDL_opengl.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_opengl.h>
 
 //Make Eigen use Intel's MKL
 //#define EIGEN_USE_MKL_ALL

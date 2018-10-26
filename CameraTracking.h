@@ -5,7 +5,10 @@
 #define GLM_FORCE_CUDA
 #define GLM_SWIZZLE
 
-#include <Windows.h>
+#if defined(_WIN32)
+  #include <Windows.h>
+#endif
+
 #include <cuda_runtime_api.h>
 //This is a simple vector library. Use this with CUDA instead of GLM.
 #include "cuda_helper/cuda_SimpleMatrixUtil.h"

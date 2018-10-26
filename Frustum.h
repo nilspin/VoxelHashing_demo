@@ -9,7 +9,10 @@
 #include<vector>
 #include<memory>
 
-#include "opengl_win.h"
+#if defined(_WIN32)
+  #include "opengl_win.h"
+#endif
+
 #include "ShaderProgram.hpp"
 
 class Frustum{

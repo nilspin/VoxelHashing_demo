@@ -1,4 +1,6 @@
-#include <Windows.h>
+#if defined(_WIN32)
+  #include <Windows.h>
+#endif
 
 #include <stdio.h>
 #include <algorithm>

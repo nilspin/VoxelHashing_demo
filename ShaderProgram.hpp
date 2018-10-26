@@ -21,7 +21,11 @@ Edited by nilspin - 19/3/2018.
 #ifndef SHADER_PROGRAM_HPP
 #define SHADER_PROGRAM_HPP
 
-#include "opengl_win.h"
+#if defined(_WIN32)
+  #include "opengl_win.h"
+#elif defined(__linux__)
+  #include "opengl_linux.h"
+#endif
 
 #include<boost/filesystem.hpp>
 
