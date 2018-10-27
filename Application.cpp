@@ -107,40 +107,44 @@ void Application::run() {
     cam.calcMatrices();
     GLfloat time = SDL_GetTicks();
     view = cam.getViewMatrix();
-    MVP = proj*view;//*model;
+    mat4 VP = proj*view;//*model;
 
     //tracker.Align(d_input, d_inputNormals, d_target, d_targetNormals, d_depthInput, d_depthTarget);
     //checkCudaErrors(cudaDeviceSynchronize());
-    draw(MVP);
+    draw(VP);
     
-    mat4 scaleMat =  glm::scale(vec3(1000));
-    mat4 newMVP = proj*view;//*scaleMat
+    //mat4 scaleMat =  glm::scale(vec3(1000));
+    //mat4 newMVP = proj*view;//*scaleMat
     //Draw frustum
-    //frustum.draw(newMVP);
+    //frustum.draw(VP);
 
     window.swap();
     //quit=true;
   }
 }
 
-void Application::draw(const glm::mat4& mvp)
+void Application::draw(const glm::mat4& vp)
 {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   drawVertexMap->use();
-  glm::mat4 newMVP = proj*view*deltaT;
+  glm::mat4 MVP = vp*glm::mat4(1);
+  glm::mat4 newMVP = vp*deltaT;
+  glm::vec3 camPos = cam.getCamPos();
 
   //checkCudaErrors(cudaGraphicsMapResources(1, &cuda_input_resource, 0));
-  glUniformMatrix4fv(drawVertexMap->uniform("MVP"), 1, false, glm::value_ptr(newMVP));
+  glUniform3f(drawVertexMap->uniform("CamPos"), camPos.x, camPos.y, camPos.z);
+  glUniformMatrix4fv(drawVertexMap->uniform("MVP"), 1, false, glm::value_ptr(MVP));
+  glUniform3f(drawVertexMap->uniform("LightPos"), 0.0f, 0.0f, 0.0f);
   
   
   glBindVertexArray(inputVAO);
-  glUniform3f(drawVertexMap->uniform("shadeColor"), 0.258, 0.956, 0.560);
+  glUniform3f(drawVertexMap->uniform("ShadeColor"), 0.258, 0.956, 0.560);
   glDrawArrays(GL_POINTS, 0, 640*480);
   
 
   glBindVertexArray(targetVAO);
-  glUniformMatrix4fv(drawVertexMap->uniform("MVP"), 1, false, glm::value_ptr(mvp));
-  glUniform3f(drawVertexMap->uniform("shadeColor"), 0.956, 0.721, 0.254);
+  glUniformMatrix4fv(drawVertexMap->uniform("MVP"), 1, false, glm::value_ptr(MVP));
+  glUniform3f(drawVertexMap->uniform("ShadeColor"), 0.956, 0.721, 0.254);
   glDrawArrays(GL_POINTS, 0, 640*480);
   glBindVertexArray(0);
 
@@ -157,12 +161,14 @@ void Application::draw(const glm::mat4& mvp)
 void Application::SetupShaders() {
   drawVertexMap = unique_ptr<ShaderProgram>(new ShaderProgram());
   drawVertexMap->initFromFiles("shaders/MainShader.vert", 
-                               "shaders/MainShader.geom",
+                               /*"shaders/MainShader.geom",*/
                                "shaders/MainShader.frag");
   drawVertexMap->addAttribute("positions");
   drawVertexMap->addAttribute("normals");
   drawVertexMap->addUniform("MVP");
-  drawVertexMap->addUniform("shadeColor");
+  drawVertexMap->addUniform("ShadeColor");
+  drawVertexMap->addUniform("LightPos");
+  drawVertexMap->addUniform("CamPos");
 }
 
 
