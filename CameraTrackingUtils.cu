@@ -5,6 +5,7 @@
   #include <Windows.h>
 #endif
 
+#include <iostream>
 #include <cuda_runtime_api.h>
 #include "cuda_helper/helper_cuda.h"
 #include "cuda_helper/helper_math.h"
@@ -22,12 +23,19 @@
 #define numCols 640
 #define numRows 480
 
-const float distThres = 2.0;
+const float distThres = 0.38;
 const float normalThres = -1.f;
+const float idealError = 0.0f;
 //Since numCols = 640 and numRows = 480, we set blockDim according to 32x32 tile
 dim3 blocks = dim3(20, 15, 1);
 dim3 threads = dim3(32, 32, 1);
 
+__device__ float globalError;
+
+__device__ inline
+bool isValid(float4 v) {
+	return v.w != MINF;
+}
 
 __device__
 static inline int2 cam2screenPos(float3 p) {
@@ -91,8 +99,8 @@ void calculateNormals(const float4* d_positions, float4* d_normals)
 			if (l > 0.0f)
 			{
 				//float4 v = make_float4(n/-l, 1.0f);
-				float4 vert = make_float4(n, l);
-				d_normals[yidx*numCols + xidx] = vert;
+				float4 vert = make_float4(n/l, 1.0);
+				d_normals[idx] = vert;
 				//printf("Normal for thread %d : %f %f %f", yidx*numRows+xidx, vert.x, vert.y, vert.z);
 			}
 		}
@@ -126,9 +134,10 @@ void FindCorrespondences(const float4* input, const float4* inputNormals,
 	float4 p_in = input[idx];
 	float4 n_in = inputNormals[idx];
 
-	if (p_in.w != 0 && n_in.w != 0) {	//if both pos and normal are valid points
-
-		float4 transformedPos = deltaT*p_in;
+	if (isValid(p_in) && isValid(n_in)) {	//if both pos and normal are valid points
+    p_in.w = 1.0f;
+    float4 transformedPos = deltaT*p_in;
+    n_in.w = 0.0f;
 		float4 transformedNormal = deltaT*n_in;
 
 		int2 screenPos = cam2screenPos(make_float3(transformedPos));
@@ -140,21 +149,21 @@ void FindCorrespondences(const float4* input, const float4* inputNormals,
 		float4 p_target, n_target;
 		int linearScreenPos = (screenPos.y*numCols) + screenPos.x;
 
-		if (screenPos.x >= numCols || screenPos.x < 0 || screenPos.y >= numRows || screenPos.y < 0) {
-			return;
-		}
-
-		p_target = target[linearScreenPos];
+		if (screenPos.x >= 0 && screenPos.y >= 0 && screenPos.x < numCols && screenPos.y < numRows) {
+    
+    p_target = target[linearScreenPos];
 		n_target = targetnormals[linearScreenPos];
 		
-		if (p_target.w != 0.0f) {
-			float n = dot(make_float3(transformedNormal), make_float3(n_target));
-			float d = length(make_float3(transformedPos) - make_float3(p_target));
-			if (d <= distThres && n >= normalThres) {
-				correspondence[idx] = p_target;
-				correspondenceNormals[idx] = n_target;
-			}
-		}
+		if (isValid(p_target) && isValid(n_target)) {
+        float n = dot(make_float3(transformedNormal), make_float3(n_target));
+        float d = length(make_float3(transformedPos) - make_float3(p_target));
+        if (d <= distThres && n >= normalThres) {
+          atomicAdd(&globalError, d);
+          correspondence[idx] = p_target;
+          correspondenceNormals[idx] = n_target;
+        }
+		  }
+    }
 	}
 }
 
@@ -165,9 +174,14 @@ extern "C" void computeCorrespondences(const float4* d_input, const float4* d_in
 	const int ARRAY_SIZE = width*height * sizeof(float4);
 	checkCudaErrors(cudaMemset(d_correspondence, 0x00, ARRAY_SIZE));
 	checkCudaErrors(cudaMemset(d_correspondenceNormals, 0x00, ARRAY_SIZE));
+  checkCudaErrors(cudaMemcpyToSymbol(globalError, &idealError, sizeof(float)));
 
 	FindCorrespondences <<<blocks, threads >>>(d_input, d_inputNormals, d_target, d_targetNormals, d_correspondence, d_correspondenceNormals,
 		deltaTransform, distThres, normalThres, width, height);
+
+  float globalErrorReadback = 0.0;
+  checkCudaErrors(cudaMemcpyFromSymbol(&globalErrorReadback, globalError, sizeof(float)));
+  std::cout<<" Global correspondence error = "<<globalErrorReadback<<" \n\n";
 	checkCudaErrors(cudaDeviceSynchronize());
 
 }

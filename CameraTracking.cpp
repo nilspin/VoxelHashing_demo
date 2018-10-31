@@ -77,7 +77,7 @@ Eigen::Matrix4f CameraTracking::rigidAlignment(const float4* d_input, const floa
 
 	//then delinearize the computed matrix to extract transform matrix
 	Matrix4x4f newTransform = delinearizeTransformation(x);
-	std::cout << "New transform : " << newTransform << "\n";
+	std::cout << "New transform : \n" << newTransform << "\n";
 
 	return newTransform;
 }
