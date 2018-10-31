@@ -25,7 +25,7 @@ void buildLinearSystem(const float4* input, const float4* target, const float4* 
 
 	const int SYSTEM_SIZE = 27;	//we need 26 floats to build Ax=b system
 	const int WINDOW_SIZE = 8;	//we process 8 correspondences per thread
-	__shared__ float linearSystem_shared[128*SYSTEM_SIZE];
+	__shared__ extern float linearSystem_shared[];
 
 	const int idx = (blockIdx.x * blockDim.x) + (WINDOW_SIZE * threadIdx.x);
 	float4 s, d, n;
@@ -81,7 +81,7 @@ extern "C" void buildLinearSystemOnDevice(const float4* d_input, const float4* d
 {
 	dim3 blocks = dim3(300, 1, 1);
 	dim3 threads = dim3(128);
-	buildLinearSystem <<<blocks, threads >>>(d_input, d_target, d_targetNormals, d_generatedMatrixSystem);
+	buildLinearSystem <<<blocks, threads, 128*SYSTEM_SIZE*sizeof(float) >>>(d_input, d_target, d_targetNormals, d_generatedMatrixSystem);
 	checkCudaErrors(cudaDeviceSynchronize());
 	checkCudaErrors(cudaMemcpy(h_generatedMatrixSystem, d_generatedMatrixSystem, blocks.x * SYSTEM_SIZE * sizeof(float), cudaMemcpyDeviceToHost));
 

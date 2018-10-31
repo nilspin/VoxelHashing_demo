@@ -28,6 +28,7 @@ void CameraTracking::Align(float4* d_input, float4* d_inputNormals, float4* d_ta
   preProcess(d_target, d_targetNormals, d_depthTarget);
 
   for (int iter = 0; iter < maxIters; iter++) {
+    std::cout<<"Iteration : "<<iter<<"\n";
 	  //We now have all data we need. find correspondence.
 	  float4x4 deltaT = float4x4(deltaTransform.data());
 
@@ -37,7 +38,7 @@ void CameraTracking::Align(float4* d_input, float4* d_inputNormals, float4* d_ta
 	  //Matrix4x4f deltaT = Matrix4x4f(deltaTransform.data());
 
 	  Matrix4x4f partialTransform = rigidAlignment(d_input, d_inputNormals, deltaTransform);
-	  deltaTransform = partialTransform*deltaTransform;
+	  deltaTransform = partialTransform;
   }
 }
 
@@ -62,14 +63,14 @@ Matrix4x4f CameraTracking::delinearizeTransformation(const Vector6f& sol) {
 
 Eigen::Matrix4f CameraTracking::rigidAlignment(const float4* d_input, const float4* d_inputNormals, const Eigen::Matrix4f& deltaT) {
 	Matrix4x4f computedTransform = deltaT;
-	Matrix6x7f system;
-	linearSystem.build(d_input, d_correspondence, d_correspondenceNormals, 0.0f, 0.0f, width, height, system);
+	Matrix6x6f ATA; Vector6f ATb;
+	linearSystem.build(d_input, d_correspondence, d_correspondenceNormals, 0.0f, 0.0f, width, height, ATA, ATb);
 
 	//solve 6x7 matrix of linear equations
 	std::cout << "Filled matrix system : \n";
 	std::cout << system << "\n";
-	Matrix6x6f ATA = system.block(0, 0, 6, 6);
-	Vector6f ATb = system.block(0, 6, 6, 1);
+	//Matrix6x6f ATA = system.block(0, 0, 6, 6);
+	//Vector6f ATb = system.block(0, 6, 6, 1);
 
 	Eigen::JacobiSVD<Matrix6x6f> SVD(ATA, Eigen::ComputeFullU | Eigen::ComputeFullV);
 	Vector6f x = SVD.solve(ATb);

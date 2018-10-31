@@ -11,11 +11,21 @@ extern "C" void buildLinearSystemOnDevice(const float4* d_input, const float4* d
 	float* d_generatedMatrixSystem, float* h_generatedMatrixSystem);
 
 void LinearSystem::build(const float4* d_input, const float4* d_correspondence, const float4* d_correspondenceNormal, float mean,
-					float meanStdev, int width, int height, Matrix6x7f& system) {
+					float meanStdev, int width, int height, Matrix6x6f& ATA, Vector6f& ATb) {
 
 	//First clear memory from previous computation
 	checkCudaErrors(cudaMemset(d_generatedMatrixSystem, 0x00, OUTPUT_SIZE * sizeof(float)));
-	std::memset(h_accumulated_matrix, 0x00, NUMBLOCKS*SYSTEM_SIZE * sizeof(float));
+	std::memset(h_accumulated_matrix, 0x00, NUMBLOCKS*SYSTEM_SIZE*sizeof(float));
+
+/*  std::cout<<"matrix system before : \n";
+  for(int i = 0; i < NUMBLOCKS; ++i)  {
+    std::cout<<i<<") ";
+    for(int j=0; j<SYSTEM_SIZE; ++j)  {
+      std::cout<<h_accumulated_matrix[SYSTEM_SIZE*i + j]<<"\t";
+    }
+    std::cout<<")\n";
+  }
+*/
 
 	buildLinearSystemOnDevice(d_input, d_correspondence, d_correspondenceNormal, d_generatedMatrixSystem, h_accumulated_matrix);
 
@@ -36,20 +46,24 @@ void LinearSystem::build(const float4* d_input, const float4* d_correspondence, 
 	k = 0;
 	for (int i = 0; i < 6; ++i) {
 		for (int j = i; j < 6; ++j) {
-			system(i, j) = h_accumulated_matrix[k++];
+			ATA(i, j) = h_accumulated_matrix[k++];
 		}
-		system(i, 6) = h_accumulated_matrix[21 + i];
 	}
 	//fill lower triangle
 	for (int i = 0; i < 6; ++i) {
 		for (int j = i; j < 6; ++j) {
-			system(j, i) = system(i, j);
+			ATA(j, i) = ATA(i, j);
 		}
 	}
+  //fill ATb
+  for(int i=0;i<6;++i)  {
+    ATb(i) = h_accumulated_matrix[21 + i];
+  }
 }
 
 LinearSystem::LinearSystem()
 {
+  accumulated_matrix.reserve(300);
 	checkCudaErrors(cudaMalloc((void**)&d_generatedMatrixSystem, OUTPUT_SIZE * sizeof(float)));
 	checkCudaErrors(cudaMemset(d_generatedMatrixSystem, 0x00, OUTPUT_SIZE * sizeof(float)));
 	h_accumulated_matrix = new float[NUMBLOCKS*SYSTEM_SIZE];

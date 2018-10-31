@@ -133,7 +133,7 @@ void Application::draw(const glm::mat4& vp)
 
   //checkCudaErrors(cudaGraphicsMapResources(1, &cuda_input_resource, 0));
   glUniform3f(drawVertexMap->uniform("CamPos"), camPos.x, camPos.y, camPos.z);
-  glUniformMatrix4fv(drawVertexMap->uniform("MVP"), 1, false, glm::value_ptr(MVP));
+  glUniformMatrix4fv(drawVertexMap->uniform("MVP"), 1, false, glm::value_ptr(newMVP));
   glUniform3f(drawVertexMap->uniform("LightPos"), 0.0f, 0.0f, 0.0f);
   
   

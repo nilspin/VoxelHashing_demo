@@ -163,8 +163,8 @@ extern "C" void computeCorrespondences(const float4* d_input, const float4* d_in
 {
 	//First clear the previous correspondence calculation
 	const int ARRAY_SIZE = width*height * sizeof(float4);
-	checkCudaErrors(cudaMemset(d_correspondence, 0, ARRAY_SIZE));
-	checkCudaErrors(cudaMemset(d_correspondenceNormals, 0, ARRAY_SIZE));
+	checkCudaErrors(cudaMemset(d_correspondence, 0x00, ARRAY_SIZE));
+	checkCudaErrors(cudaMemset(d_correspondenceNormals, 0x00, ARRAY_SIZE));
 
 	FindCorrespondences <<<blocks, threads >>>(d_input, d_inputNormals, d_target, d_targetNormals, d_correspondence, d_correspondenceNormals,
 		deltaTransform, distThres, normalThres, width, height);

@@ -25,13 +25,13 @@ private:
   float4* d_correspondence;
   Matrix4x4f deltaTransform;
   Matrix4x4f delinearizeTransformation(const Vector6f & sol);
+  Eigen::Matrix4f rigidAlignment(const float4*, const float4*, const Eigen::Matrix4f&);
 
 public:
   
   CameraTracking(int, int);
   ~CameraTracking();
   void Align(float4*, float4*, float4*, float4*, const uint16_t*, const uint16_t*);
-  Eigen::Matrix4f rigidAlignment(const float4*, const float4*, const Eigen::Matrix4f&);
   Matrix4x4f getTransform() { return deltaTransform; }
 };
 
