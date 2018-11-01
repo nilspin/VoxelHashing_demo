@@ -45,7 +45,7 @@ set(LIBS ${LIBS} ${OPENGL_LIBRARY} ${CUDA_LIBRARIES}  ${SDL2_LIBRARIES} ${Boost_
 include_directories(${INCLUDE_DIRS})
 
 set(SOURCES DepthMain.cpp camera.cpp Window.cpp Application.cpp LinearSystem.cpp CameraTracking.cpp prereq.h ShaderProgram.hpp Frustum.cpp camera.h Window.h
-    Application.h Frustum.h CameraTracking.h LinearSystem.h EigenUtil.h ${GLAD_SRC})
+    Application.h Frustum.h CameraTracking.h LinearSystem.h EigenUtil.h termcolor.hpp ${GLAD_SRC})
 
 
 add_executable(${PROJECT_NAME} ${SOURCES})

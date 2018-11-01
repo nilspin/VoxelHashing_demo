@@ -8,6 +8,7 @@
 #include <fstream>
 #include <vector>
 #include "CameraTracking.h"
+#include "termcolor.hpp"
 
 
 extern "C" void computeCorrespondences(const float4* d_input, const float4* d_inputNormals, const float4* d_target, const float4* d_targetNormals, float4* d_correspondence, float4* d_correspondenceNormals,
@@ -28,7 +29,7 @@ void CameraTracking::Align(float4* d_input, float4* d_inputNormals, float4* d_ta
   preProcess(d_target, d_targetNormals, d_depthTarget);
 
   for (int iter = 0; iter < maxIters; iter++) {
-    std::cout<<"Iteration : "<<iter<<"\n";
+    std::cout<< termcolor::on_red<< "Iteration : "<<iter<< termcolor::reset<< "\n";
 	  //We now have all data we need. find correspondence.
 	  float4x4 deltaT = float4x4(deltaTransform.data());
 
@@ -67,17 +68,21 @@ Eigen::Matrix4f CameraTracking::rigidAlignment(const float4* d_input, const floa
 	linearSystem.build(d_input, d_correspondence, d_correspondenceNormals, 0.0f, 0.0f, width, height, ATA, ATb);
 
 	//solve 6x7 matrix of linear equations
-	std::cout << "Filled matrix system : \n";
-	std::cout << system << "\n";
-	//Matrix6x6f ATA = system.block(0, 0, 6, 6);
-	//Vector6f ATb = system.block(0, 6, 6, 1);
+	std::cout << termcolor::green <<"Filled matrix system ATA | ATb : \n"<< termcolor::reset;
+  for(int i=0;i<6;++i)  {
+    for(int j=0;j<6;++j)  {
+      std::cout<<ATA(i,j) <<" ";
+    }
+    std::cout<< "| "<<ATb(i)<<"\n";
+  }
 
 	Eigen::JacobiSVD<Matrix6x6f> SVD(ATA, Eigen::ComputeFullU | Eigen::ComputeFullV);
 	Vector6f x = SVD.solve(ATb);
 
 	//then delinearize the computed matrix to extract transform matrix
 	Matrix4x4f newTransform = delinearizeTransformation(x);
-	std::cout << "New transform : \n" << newTransform << "\n";
+	std::cout << termcolor::green<< "Calculated transform : \n"<<termcolor::reset;
+  std::cout << newTransform << "\n";
 
 	return newTransform;
 }

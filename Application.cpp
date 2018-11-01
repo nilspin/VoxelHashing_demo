@@ -8,6 +8,7 @@
 
 #include<glm/gtx/string_cast.hpp>
 #include<cuda_gl_interop.h>
+#include "termcolor.hpp"
 #include "helper_cuda.h"
 #include "stb_image.h"
 
@@ -64,7 +65,7 @@ Application::Application() {
   tracker->Align(d_input, d_inputNormals, d_target, d_targetNormals, d_depthInput, d_depthTarget);
   deltaT = glm::make_mat4(tracker->getTransform().data());
   deltaT = glm::transpose(deltaT);
-  std::cout << "glm rigid transform : \n" << glm::to_string(deltaT) << "\n";
+  std::cout << termcolor::on_blue<< "Final rigid transform : \n" << termcolor::reset<< glm::to_string(deltaT) << "\n";
   checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_input_resource, 0));
   checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_inputNormals_resource, 0));
   checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_target_resource, 0));

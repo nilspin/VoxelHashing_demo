@@ -181,7 +181,7 @@ extern "C" void computeCorrespondences(const float4* d_input, const float4* d_in
 
   float globalErrorReadback = 0.0;
   checkCudaErrors(cudaMemcpyFromSymbol(&globalErrorReadback, globalError, sizeof(float)));
-  std::cout<<" Global correspondence error = "<<globalErrorReadback<<" \n\n";
+  std::cout<<"Global correspondence error = "<<globalErrorReadback<<" \n\n";
 	checkCudaErrors(cudaDeviceSynchronize());
 
 }

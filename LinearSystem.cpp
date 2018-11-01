@@ -2,6 +2,7 @@
 #include "LinearSystem.h"
 #include <cuda_runtime_api.h>
 #include "cuda_helper/helper_cuda.h"
+#include "termcolor.hpp"
 #include <cstring>
 
 //const double M_PI = 3.14159265358979323846;
@@ -36,11 +37,13 @@ void LinearSystem::build(const float4* d_input, const float4* d_correspondence, 
 			h_accumulated_matrix[j] += h_accumulated_matrix[SYSTEM_SIZE*i + j];
 		}
 	}
-	std::cout << "Generated linear system : \n";
+  
+	std::cout <<termcolor::green << "Generated linear system : \n" <<termcolor::reset;
 	for (int i = 0; i < SYSTEM_SIZE; ++i) {
 		std::cout << h_accumulated_matrix[i] << "\t";
 	}
 	std::cout << "\n";
+  
 
 	//Fill the system matrix
 	k = 0;
