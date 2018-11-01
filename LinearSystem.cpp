@@ -40,7 +40,7 @@ void LinearSystem::build(const float4* d_input, const float4* d_correspondence, 
   
 	std::cout <<termcolor::green << "Generated linear system : \n" <<termcolor::reset;
 	for (int i = 0; i < SYSTEM_SIZE; ++i) {
-		std::cout << h_accumulated_matrix[i] << "\t";
+		std::cout << h_accumulated_matrix[i] << " ";
 	}
 	std::cout << "\n";
   

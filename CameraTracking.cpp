@@ -29,7 +29,8 @@ void CameraTracking::Align(float4* d_input, float4* d_inputNormals, float4* d_ta
   preProcess(d_target, d_targetNormals, d_depthTarget);
 
   for (int iter = 0; iter < maxIters; iter++) {
-    std::cout<< termcolor::on_red<< "Iteration : "<<iter<< termcolor::reset<< "\n";
+    std::cout<< "\n"<<termcolor::on_red<< "Iteration : "<<iter << termcolor::reset << "\n";
+    //std::cout << termcolor::underline <<"                                               \n"<< termcolor::reset;
 	  //We now have all data we need. find correspondence.
 	  float4x4 deltaT = float4x4(deltaTransform.data());
 

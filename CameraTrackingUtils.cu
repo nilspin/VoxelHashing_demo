@@ -23,8 +23,8 @@
 #define numCols 640
 #define numRows 480
 
-const float distThres = 0.38;
-const float normalThres = -1.f;
+const float distThres = 1.0f;
+const float normalThres = 1.f;
 const float idealError = 0.0f;
 //Since numCols = 640 and numRows = 480, we set blockDim according to 32x32 tile
 dim3 blocks = dim3(20, 15, 1);
@@ -157,7 +157,7 @@ void FindCorrespondences(const float4* input, const float4* inputNormals,
 		if (isValid(p_target) && isValid(n_target)) {
         float n = dot(make_float3(transformedNormal), make_float3(n_target));
         float d = length(make_float3(transformedPos) - make_float3(p_target));
-        if (d <= distThres && n >= normalThres) {
+        if (d <= distThres) {
           atomicAdd(&globalError, d);
           correspondence[idx] = p_target;
           correspondenceNormals[idx] = n_target;

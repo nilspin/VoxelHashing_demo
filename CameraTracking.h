@@ -20,7 +20,7 @@ class CameraTracking  {
 private:
   int width, height;
   LinearSystem linearSystem;
-  int maxIters = 4;
+  int maxIters = 10;
   float4* d_correspondenceNormals;
   float4* d_correspondence;
   Matrix4x4f deltaTransform;

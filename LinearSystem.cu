@@ -1,6 +1,7 @@
 #include <cuda_runtime_api.h>
 #include "cuda_helper/helper_cuda.h"
 #include "cuda_helper/helper_math.h"
+#include <thrust/device_vector.h>
 //#include "EigenUtil.h"
 
 #define numRows 480
@@ -27,7 +28,11 @@ void buildLinearSystem(const float4* input, const float4* target, const float4* 
 	const int WINDOW_SIZE = 8;	//we process 8 correspondences per thread
 	__shared__ extern float linearSystem_shared[];
 
-	const int idx = (blockIdx.x * blockDim.x) + (WINDOW_SIZE * threadIdx.x);
+  const int idx = (blockIdx.x * blockDim.x * WINDOW_SIZE ) + (WINDOW_SIZE * threadIdx.x);
+//  if(blockIdx.x==0){
+//    printf("block : %d threadIdx.x : %d, idx : %d, idx+7 : %d \n", blockIdx.x, threadIdx.x, idx, idx+7);
+//  }
+
 	float4 s, d, n;
 	for (int t = 0; t < WINDOW_SIZE; ++t) {
 		s = input[idx + t];
@@ -43,9 +48,9 @@ void buildLinearSystem(const float4* input, const float4* target, const float4* 
 			A[2] = first3.z;
 			A[3] = n.x;
 			A[4] = n.y;
-			A[5] = n.z;
+      A[5] = n.z;
+          
 			//We now have enough information to build Ax=b system. Let's calculate ATA and ATb
-			//printf("tid %d -- A : %f %f %f %f %f %f, b : %f \n", idx, A[0], A[1], A[2], A[3], A[4], A[5], b);
 			int k = 0;
 			for (int i = 0; i < 6; ++i) {
 				for (int j = i; j < 6; ++j) {
