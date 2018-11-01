@@ -22,7 +22,7 @@ float calculate_b(float3 n, float3 d, float3 s) {
 }
 
 __global__
-void buildLinearSystem(const float4* input, const float4* target, const float4* target_normal, float* linearSystem) {
+void buildLinearSystem(const float4* input, const float4* target, const float4* target_normal, float* linearSystem_out) {
 
 	const int SYSTEM_SIZE = 27;	//we need 26 floats to build Ax=b system
 	const int WINDOW_SIZE = 8;	//we process 8 correspondences per thread
@@ -32,6 +32,11 @@ void buildLinearSystem(const float4* input, const float4* target, const float4* 
 //  if(blockIdx.x==0){
 //    printf("block : %d threadIdx.x : %d, idx : %d, idx+7 : %d \n", blockIdx.x, threadIdx.x, idx, idx+7);
 //  }
+
+  //clear shared memory first!
+  for (int i = 0; i< SYSTEM_SIZE; ++i)  {
+    linearSystem_shared[SYSTEM_SIZE*threadIdx.x + i] = 0.0f;
+  }
 
 	float4 s, d, n;
 	for (int t = 0; t < WINDOW_SIZE; ++t) {
@@ -74,10 +79,12 @@ void buildLinearSystem(const float4* input, const float4* target, const float4* 
 	//Whole system should've been reduced to 1st array by now.	
 
 	if (threadIdx.x == 0) {
-		//write block output to global memory
+    //write block output to global memory
+//    printf("Writing linear system for block %d : ", blockIdx.x);
 		for (int i = 0; i < SYSTEM_SIZE; ++i) {
-			linearSystem[blockIdx.x*SYSTEM_SIZE + i] = linearSystem_shared[i];
-		}
+      linearSystem_out[blockIdx.x*SYSTEM_SIZE + i] = linearSystem_shared[i];
+//      printf("i%d %f \t",i, linearSystem_shared[i]);
+    }
 	}
 }
 
