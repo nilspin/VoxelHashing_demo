@@ -31,7 +31,7 @@ void CameraTracking::Align(float4* d_input, float4* d_inputNormals, float4* d_ta
   //WriteDeviceArrayToFile(d_inputNormals, "sourceNormalsDevice", width*height);
 
   for (int iter = 0; iter < maxIters; iter++) {
-    globalCorrespondenceError = 0.0f;
+    //globalCorrespondenceError = 0.0f;
     std::cout<< "\n"<<termcolor::on_red<< "Iteration : "<<iter << termcolor::reset << "\n";
     //std::cout << termcolor::underline <<"                                               \n"<< termcolor::reset;
 
@@ -51,7 +51,7 @@ void CameraTracking::Align(float4* d_input, float4* d_inputNormals, float4* d_ta
 	  //Matrix4x4f deltaT = Matrix4x4f(deltaTransform.data());
 
 	  Matrix4x4f intermediateT = rigidAlignment(d_input, d_inputNormals, deltaTransform);
-    deltaTransform = deltaTransform*intermediateT;
+    deltaTransform = intermediateT;//intermediateT*deltaTransform;
   }
 }
 
