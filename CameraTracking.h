@@ -20,10 +20,11 @@ class CameraTracking  {
 private:
   int width, height;
   LinearSystem linearSystem;
-  int maxIters = 10;
+  int maxIters = 20;
   float4* d_correspondenceNormals;
   float4* d_correspondence;
   Matrix4x4f deltaTransform;
+  float globalCorrespondenceError = 0.0f;
   Matrix4x4f delinearizeTransformation(const Vector6f & sol);
   Eigen::Matrix4f rigidAlignment(const float4*, const float4*, const Eigen::Matrix4f&);
 

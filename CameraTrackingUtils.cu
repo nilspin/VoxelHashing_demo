@@ -13,8 +13,8 @@
 //This is a simple vector library. Use this with CUDA instead of GLM.
 #include "cuda_helper/cuda_SimpleMatrixUtil.h"
 
-#define MINF __int_as_float(0xff800000)
-#define MAXF __int_as_float(0x7F7FFFFF)
+//#define MINF __int_as_float(0xff800000)
+//#define MAXF __int_as_float(0x7F7FFFFF)
 #define fx 525
 #define fy 525
 #define cx 319.5
@@ -23,8 +23,8 @@
 #define numCols 640
 #define numRows 480
 
-const float distThres = 1.0f;
-const float normalThres = 1.f;
+const float distThres = 5.0f;
+const float normalThres = -1.0f;
 const float idealError = 0.0f;
 //Since numCols = 640 and numRows = 480, we set blockDim according to 32x32 tile
 dim3 blocks = dim3(20, 15, 1);
@@ -141,9 +141,6 @@ void FindCorrespondences(const float4* input, const float4* inputNormals,
 		float4 transformedNormal = deltaT*n_in;
 
 		int2 screenPos = cam2screenPos(make_float3(transformedPos));
-//		if (idx == 25214) {
-//			printf("translated pos:(%f, %f, %f) screenPos = ( %d, %d ) for thread %d blockX %d blockY %d \n", p.x, p.y, p.z, screenPos.x, screenPos.y, idx, blockIdx.x, blockIdx.y);
-//		}
 
 		//now lookup this index in target image
 		float4 p_target, n_target;
@@ -151,23 +148,26 @@ void FindCorrespondences(const float4* input, const float4* inputNormals,
 
 		if (screenPos.x >= 0 && screenPos.y >= 0 && screenPos.x < numCols && screenPos.y < numRows) {
     
-    p_target = target[linearScreenPos];
-		n_target = targetnormals[linearScreenPos];
-		
-		if (isValid(p_target) && isValid(n_target)) {
-        float n = dot(make_float3(transformedNormal), make_float3(n_target));
-        float d = length(make_float3(transformedPos) - make_float3(p_target));
-        if (d <= distThres) {
-          atomicAdd(&globalError, d);
-          correspondence[idx] = p_target;
-          correspondenceNormals[idx] = n_target;
+      p_target = target[linearScreenPos];
+      n_target = targetnormals[linearScreenPos];
+      
+      if (isValid(p_target) && isValid(n_target)) {
+          //This is point-to-plane metric
+          //float n = dot(make_float3(transformedNormal), make_float3(n_target));
+
+          //this is point-to-point metric
+          float d = length(make_float3(transformedPos) - make_float3(p_target));
+          if (d <= distThres /*&& n >= normalThres*/) {
+            atomicAdd(&globalError, d);
+            correspondence[idx] = p_target;
+            correspondenceNormals[idx] = n_target;
         }
-		  }
+      }
     }
 	}
 }
 
-extern "C" void computeCorrespondences(const float4* d_input, const float4* d_inputNormals, const float4* d_target, const float4* d_targetNormals, float4* d_correspondence, float4* d_correspondenceNormals,
+extern "C" float computeCorrespondences(const float4* d_input, const float4* d_inputNormals, const float4* d_target, const float4* d_targetNormals, float4* d_correspondence, float4* d_correspondenceNormals,
 	const float4x4 deltaTransform, const int width, const int height)
 {
 	//First clear the previous correspondence calculation
@@ -181,9 +181,9 @@ extern "C" void computeCorrespondences(const float4* d_input, const float4* d_in
 
   float globalErrorReadback = 0.0;
   checkCudaErrors(cudaMemcpyFromSymbol(&globalErrorReadback, globalError, sizeof(float)));
-  std::cout<<"Global correspondence error = "<<globalErrorReadback<<" \n\n";
+  //std::cout<<"Global correspondence error = "<<globalErrorReadback<<" \n\n";
 	checkCudaErrors(cudaDeviceSynchronize());
-
+  return globalErrorReadback;
 }
 
 #endif // CAMTRACKING_UTIL

@@ -9,9 +9,10 @@
 #include <vector>
 #include "CameraTracking.h"
 #include "termcolor.hpp"
+#include "DebugHelper.hpp"
 
 
-extern "C" void computeCorrespondences(const float4* d_input, const float4* d_inputNormals, const float4* d_target, const float4* d_targetNormals, float4* d_correspondence, float4* d_correspondenceNormals,
+extern "C" float computeCorrespondences(const float4* d_input, const float4* d_inputNormals, const float4* d_target, const float4* d_targetNormals, float4* d_correspondence, float4* d_correspondenceNormals,
 	const float4x4 deltaTransform, const int width, const int height);
 
 //Takes device pointers, calculates correct position and normals
@@ -27,20 +28,30 @@ void CameraTracking::Align(float4* d_input, float4* d_inputNormals, float4* d_ta
 
   preProcess(d_input, d_inputNormals, d_depthInput);
   preProcess(d_target, d_targetNormals, d_depthTarget);
+  //WriteDeviceArrayToFile(d_inputNormals, "sourceNormalsDevice", width*height);
 
   for (int iter = 0; iter < maxIters; iter++) {
+    globalCorrespondenceError = 0.0f;
     std::cout<< "\n"<<termcolor::on_red<< "Iteration : "<<iter << termcolor::reset << "\n";
     //std::cout << termcolor::underline <<"                                               \n"<< termcolor::reset;
-	  //We now have all data we need. find correspondence.
+
+    //CUDA files cannot include any Eigen headers, don't know why. So convert eigen matrix to __device__ compatible float4x4. 
 	  float4x4 deltaT = float4x4(deltaTransform.data());
 
-	  computeCorrespondences(d_input, d_inputNormals, d_target, d_targetNormals, d_correspondence, d_correspondenceNormals,
+	  //We now have all data we need. find correspondence.
+	  globalCorrespondenceError = computeCorrespondences(d_input, d_inputNormals, d_target, d_targetNormals, d_correspondence, d_correspondenceNormals,
 		  deltaT, width, height);
 
+    if(globalCorrespondenceError <= 0.0f) {
+      std::cout<<"\n\n"<<termcolor::bold<<termcolor::grey<<termcolor::on_white<<"Correspondence error is zero. Stopping."<<termcolor::reset<<"\n\n";
+      break;
+    }
+
+    std::cout<<termcolor::green<<"Global correspondence error = "<<globalCorrespondenceError<<termcolor::reset<<" \n\n";
 	  //Matrix4x4f deltaT = Matrix4x4f(deltaTransform.data());
 
-	  Matrix4x4f partialTransform = rigidAlignment(d_input, d_inputNormals, deltaTransform);
-	  deltaTransform = partialTransform;
+	  Matrix4x4f intermediateT = rigidAlignment(d_input, d_inputNormals, deltaTransform);
+    deltaTransform = deltaTransform*intermediateT;
   }
 }
 
@@ -54,11 +65,13 @@ Matrix4x4f CameraTracking::delinearizeTransformation(const Vector6f& sol) {
 	Matrix3x3f R = Eigen::AngleAxisf(sol[0], Eigen::Vector3f::UnitZ()).toRotationMatrix()*
 		Eigen::AngleAxisf(sol[1], Eigen::Vector3f::UnitY()).toRotationMatrix()*
 		Eigen::AngleAxisf(sol[2], Eigen::Vector3f::UnitX()).toRotationMatrix();
-	//Translation
+	
+  //Translation
 	Eigen::Vector3f t = sol.segment(3, 3);
 
 	res.block(0, 0, 3, 3) = R;
-	res.block(0, 3, 3, 1) = t;
+	//res.block(0, 3, 3, 1) = t;
+  res.block(0, 3, 3, 1) = t;
 
 	return res;
 }

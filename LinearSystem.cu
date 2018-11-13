@@ -54,12 +54,13 @@ void buildLinearSystem(const float4* input, const float4* target, const float4* 
 			A[3] = n.x;
 			A[4] = n.y;
       A[5] = n.z;
-          
+
 			//We now have enough information to build Ax=b system. Let's calculate ATA and ATb
 			int k = 0;
 			for (int i = 0; i < 6; ++i) {
 				for (int j = i; j < 6; ++j) {
-					linearSystem_shared[SYSTEM_SIZE*threadIdx.x + (k++)] += A[i] * A[j];	//For ATA
+          //21 elements for upper triangular matrix of 6x6 ATA
+					linearSystem_shared[SYSTEM_SIZE*threadIdx.x + (k++)] += A[i] * A[j];	
 				}
 				linearSystem_shared[SYSTEM_SIZE*threadIdx.x + 21 + i] += A[i] * b;	//For ATb
 			}
@@ -88,12 +89,12 @@ void buildLinearSystem(const float4* input, const float4* target, const float4* 
 	}
 }
 
-extern "C" void buildLinearSystemOnDevice(const float4* d_input, const float4* d_target, const float4* d_targetNormals,
+extern "C" void buildLinearSystemOnDevice(const float4* d_input, const float4* d_correspondence, const float4* d_correspondenceNormals,
 	float* d_generatedMatrixSystem, float* h_generatedMatrixSystem)
 {
 	dim3 blocks = dim3(300, 1, 1);
 	dim3 threads = dim3(128);
-	buildLinearSystem <<<blocks, threads, 128*SYSTEM_SIZE*sizeof(float) >>>(d_input, d_target, d_targetNormals, d_generatedMatrixSystem);
+	buildLinearSystem <<<blocks, threads, 128*SYSTEM_SIZE*sizeof(float) >>>(d_input, d_correspondence, d_correspondenceNormals, d_generatedMatrixSystem);
 	checkCudaErrors(cudaDeviceSynchronize());
 	checkCudaErrors(cudaMemcpy(h_generatedMatrixSystem, d_generatedMatrixSystem, blocks.x * SYSTEM_SIZE * sizeof(float), cudaMemcpyDeviceToHost));
 
