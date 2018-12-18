@@ -30,6 +30,8 @@ const float idealError = 0.0f;
 dim3 blocks = dim3(20, 15, 1);
 dim3 threads = dim3(32, 32, 1);
 
+__device__ __constant__ float3x3 K;  //Camera intrinsic matrix
+__device__ __constant__ float3x3 K_inv;
 __device__ float globalError;
 
 __device__ inline
@@ -39,6 +41,8 @@ bool isValid(float4 v) {
 
 __device__
 static inline int2 cam2screenPos(float3 p) {
+  //float3 sp = K*p;
+  //return make_int2(sp.x + 0.5, sp.y + 0.5);
 	float x = ((p.x * fx) / p.z) + cx;
 	float y = ((p.y * fy) / p.z) + cy;
 	return make_int2(x, y);
@@ -62,11 +66,11 @@ void calculateVertexPositions(float4* d_vertexPositions, const uint16_t* d_depth
 	if (depth == 0) {
 		w = 0.0f;
 	}
-
-	float x = ((xidx - cx)*depth) / (float)fx;
-	float y = ((yidx - cy)*depth) / (float)fy;
-	float4 vertex = make_float4(x, -y, -depth, w);
-	d_vertexPositions[idx] = vertex;
+  
+  float3 imageCoord = make_float3(xidx, yidx, 1.0);
+  float3 point = K_inv*imageCoord*depth;
+  float4 vertex = make_float4(point.x, -point.y, -point.z, w);
+  d_vertexPositions[idx] = vertex;
 }
 
 __global__
@@ -186,4 +190,9 @@ extern "C" float computeCorrespondences(const float4* d_input, const float4* d_i
   return globalErrorReadback;
 }
 
+extern "C" bool SetCameraIntrinsic(const float* intrinsic, const float* invIntrinsic) {
+  checkCudaErrors(cudaMemcpyToSymbol(K, intrinsic, 9*sizeof(float)));
+  checkCudaErrors(cudaMemcpyToSymbol(K_inv, invIntrinsic, 9*sizeof(float)));
+  return true;
+}
 #endif // CAMTRACKING_UTIL

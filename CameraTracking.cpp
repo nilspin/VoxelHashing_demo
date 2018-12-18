@@ -15,6 +15,7 @@
 extern "C" float computeCorrespondences(const float4* d_input, const float4* d_inputNormals, const float4* d_target, const float4* d_targetNormals, float4* d_correspondence, float4* d_correspondenceNormals,
 	const float4x4 deltaTransform, const int width, const int height);
 
+extern "C" bool SetCameraIntrinsic(const float* intrinsic, const float* invIntrinsic);
 //Takes device pointers, calculates correct position and normals
 extern "C" void preProcess(float4 *positions, float4* normals, const uint16_t *depth);
 
@@ -110,6 +111,12 @@ CameraTracking::CameraTracking(int w, int h):width(w),height(h)
   checkCudaErrors(cudaMemset(d_correspondenceNormals, 0, ARRAY_SIZE));
   float arr[16] = { 1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1 };
   deltaTransform = Matrix4x4f(arr);
+  const float intrinsics[] = {525.0, 0, 319.5, 0, 525.0, 239.5, 0, 0, 1}; //TODO: read from file
+  Matrix3x3f K{intrinsics}; //Camera intrinsic matrix
+  Matrix3x3f K_inv = K.inverse();
+  std::cout<< termcolor::on_blue<< "Intrinsic camera matrix :" <<termcolor::reset<<"\n";
+  std::cout<< termcolor::bold<< K << termcolor::reset<< "\n\n";
+  SetCameraIntrinsic(K.data(), K_inv.data());
   //float4x4 transposed = deltaTransform.transpose();
 }
 

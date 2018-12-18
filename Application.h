@@ -5,7 +5,7 @@
 #include "Window.h"
 #include "ShaderProgram.hpp"
 #include "camera.h"
-#include "Frustum.h"
+//#include "Frustum.h"
 #include "CameraTracking.h"
 #include "helper_cuda.h"
 
@@ -39,7 +39,7 @@ private:
   glm::mat4 deltaT = glm::mat4(1);  //we need to find this each iteration
 
   //Frustum
-  Frustum frustum;
+  //Frustum frustum;
 
 	//Shader
 	unique_ptr<ShaderProgram> drawVertexMap;

@@ -19,9 +19,10 @@ using glm::mat4;
 //using namespace glm;
 
 Application::Application() {
-  frustum.setFromVectors(vec3(0,0,-1), vec3(0,0,0), vec3(1,0,0), vec3(0,1,0), 5.0, 700.0, 45, 1.3333);
-  image1 = stbi_load_16("assets/T0.png", &DepthWidth, &DepthHeight, &channels, 0);
-  image2 = stbi_load_16("assets/T5.png", &DepthWidth, &DepthHeight, &channels, 0);
+  //frustum.setFromVectors(vec3(0,0,-1), vec3(0,0,0), vec3(1,0,0), vec3(0,1,0), 5.0, 700.0, 45, 1.3333);
+  //stbi_set_flip_vertically_on_load(true); //Keep commented for now
+  image1 = stbi_load_16("assets/0000.png", &DepthWidth, &DepthHeight, &channels, 0);
+  image2 = stbi_load_16("assets/0001.png", &DepthWidth, &DepthHeight, &channels, 0);
   if(image1 == nullptr) {cout<<"could not read first image file!"<<endl; exit(0);}
   if(image2 == nullptr) {cout<<"could not read second image file!"<<endl; exit(0);}
   tracker = unique_ptr<CameraTracking>(new CameraTracking(DepthWidth, DepthHeight));
