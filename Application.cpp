@@ -71,7 +71,7 @@ Application::Application() {
   checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_inputNormals_resource, 0));
   checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_target_resource, 0));
   checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_targetNormals_resource, 0));
-  
+
   //*Testing output
   //   std::vector<glm::vec4> outputCUDA(640*480);
   //   checkCudaErrors(cudaMemcpy(outputCUDA.data(), d_input, 640*480*sizeof(glm::vec4), cudaMemcpyDeviceToHost));
@@ -93,7 +93,7 @@ Application::~Application() {
   checkCudaErrors(cudaGraphicsUnregisterResource(cuda_inputNormals_resource));
   checkCudaErrors(cudaGraphicsUnregisterResource(cuda_target_resource));
   checkCudaErrors(cudaGraphicsUnregisterResource(cuda_targetNormals_resource));
-  
+
   checkCudaErrors(cudaFree(d_depthInput));
   checkCudaErrors(cudaFree(d_depthTarget));
   glDeleteBuffers(1, &inputVBO);
@@ -114,7 +114,7 @@ void Application::run() {
     //tracker.Align(d_input, d_inputNormals, d_target, d_targetNormals, d_depthInput, d_depthTarget);
     //checkCudaErrors(cudaDeviceSynchronize());
     draw(VP);
-    
+
     //mat4 scaleMat =  glm::scale(vec3(1000));
     //mat4 newMVP = proj*view;//*scaleMat
     //Draw frustum
@@ -137,12 +137,12 @@ void Application::draw(const glm::mat4& vp)
   glUniform3f(drawVertexMap->uniform("CamPos"), camPos.x, camPos.y, camPos.z);
   glUniformMatrix4fv(drawVertexMap->uniform("MVP"), 1, false, glm::value_ptr(newMVP));
   glUniform3f(drawVertexMap->uniform("LightPos"), 0.0f, 0.0f, 0.0f);
-  
-  
+
+
   glBindVertexArray(inputVAO);
   glUniform3f(drawVertexMap->uniform("ShadeColor"), 0.258, 0.956, 0.560);
   glDrawArrays(GL_POINTS, 0, 640*480);
-  
+
 
   glBindVertexArray(targetVAO);
   glUniformMatrix4fv(drawVertexMap->uniform("MVP"), 1, false, glm::value_ptr(MVP));
@@ -162,7 +162,7 @@ void Application::draw(const glm::mat4& vp)
 
 void Application::SetupShaders() {
   drawVertexMap = unique_ptr<ShaderProgram>(new ShaderProgram());
-  drawVertexMap->initFromFiles("shaders/MainShader.vert", 
+  drawVertexMap->initFromFiles("shaders/MainShader.vert",
                                /*"shaders/MainShader.geom",*/
                                "shaders/MainShader.frag");
   drawVertexMap->addAttribute("positions");
@@ -175,9 +175,9 @@ void Application::SetupShaders() {
 
 
 void Application::SetupBuffers() {
-  
+
   const int ARRAY_SIZE = DepthWidth * DepthHeight * sizeof(glm::vec4);
-  
+
   //-------------INPUT BUFFER------------------------------
   glGenVertexArrays(1, &inputVAO);
   glBindVertexArray(inputVAO);
@@ -224,10 +224,10 @@ void Application::SetupBuffers() {
   checkCudaErrors(cudaGraphicsGLRegisterBuffer(&cuda_target_resource, targetVBO, cudaGraphicsRegisterFlagsNone));
   checkCudaErrors(cudaGraphicsGLRegisterBuffer(&cuda_targetNormals_resource, targetNormalVBO, cudaGraphicsRegisterFlagsNone));
 
-  //-------------Now allocate rest of CUDA arrays for which we don't need GL----------------  
+  //-------------Now allocate rest of CUDA arrays for which we don't need GL----------------
   //checkCudaErrors(cudaMalloc((void**)&d_inputNormals, ARRAY_SIZE));
   //checkCudaErrors(cudaMalloc((void**)&d_targetNormals, ARRAY_SIZE));
-  
+
 }
 
 void Application::processEvents() {

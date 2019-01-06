@@ -41,11 +41,11 @@ bool isValid(float4 v) {
 
 __device__
 static inline int2 cam2screenPos(float3 p) {
-  //float3 sp = K*p;
+  float3 sp = K*p;
   //return make_int2(sp.x + 0.5, sp.y + 0.5);
 	float x = ((p.x * fx) / p.z) + cx;
 	float y = ((p.y * fy) / p.z) + cy;
-	return make_int2(x, y);
+	return make_int2(sp.x, sp.y);
 }
 
 __global__
