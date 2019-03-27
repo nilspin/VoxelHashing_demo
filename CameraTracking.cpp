@@ -11,9 +11,10 @@
 #include "termcolor.hpp"
 #include "DebugHelper.hpp"
 
-
-extern "C" float computeCorrespondences(const float4* d_input, const float4* d_inputNormals, const float4* d_target, const float4* d_targetNormals, float4* d_correspondence, float4* d_correspondenceNormals,
-	const float4x4 deltaTransform, const int width, const int height);
+extern "C" float computeCorrespondences(const float4* d_input, const float4* d_target,
+    const float4* d_targetNormals, thrust::device_vector<float4>& corres,
+    thrust::device_vector<float4>& corresNormals,thrust::device_vector<float>& residual,
+    const float4x4 deltaTransform, const int width, const int height);
 
 extern "C" bool SetCameraIntrinsic(const float* intrinsic, const float* invIntrinsic);
 //Takes device pointers, calculates correct position and normals
@@ -24,7 +25,7 @@ extern "C" void preProcess(float4 *positions, float4* normals, const uint16_t *d
 
 //-------------------------------------------------------------------------------
 
-void CameraTracking::Align(float4* d_input, float4* d_inputNormals, float4* d_target, 
+void CameraTracking::Align(float4* d_input, float4* d_inputNormals, float4* d_target,
   float4* d_targetNormals, const uint16_t* d_depthInput, const uint16_t* d_depthTarget) {
 
   preProcess(d_input, d_inputNormals, d_depthInput);
@@ -36,12 +37,11 @@ void CameraTracking::Align(float4* d_input, float4* d_inputNormals, float4* d_ta
     std::cout<< "\n"<<termcolor::on_red<< "Iteration : "<<iter << termcolor::reset << "\n";
     //std::cout << termcolor::underline <<"                                               \n"<< termcolor::reset;
 
-    //CUDA files cannot include any Eigen headers, don't know why. So convert eigen matrix to __device__ compatible float4x4. 
+    //CUDA files cannot include any Eigen headers, don't know why. So convert eigen matrix to __device__ compatible float4x4.
 	  float4x4 deltaT = float4x4(deltaTransform.data());
 
 	  //We now have all data we need. find correspondence.
-	  globalCorrespondenceError = computeCorrespondences(d_input, d_inputNormals, d_target, d_targetNormals, d_correspondence, d_correspondenceNormals,
-		  deltaT, width, height);
+	  globalCorrespondenceError = computeCorrespondences(d_input, d_target, d_targetNormals, d_correspondences, d_correspondenceNormals, d_residuals, deltaT, width, height);
 
     if(globalCorrespondenceError <= 0.0f) {
       std::cout<<"\n\n"<<termcolor::bold<<termcolor::grey<<termcolor::on_white<<"Correspondence error is zero. Stopping."<<termcolor::reset<<"\n\n";
@@ -51,6 +51,7 @@ void CameraTracking::Align(float4* d_input, float4* d_inputNormals, float4* d_ta
     std::cout<<termcolor::green<<"Global correspondence error = "<<globalCorrespondenceError<<termcolor::reset<<" \n\n";
 	  //Matrix4x4f deltaT = Matrix4x4f(deltaTransform.data());
 
+    solver.BuildLinearSystem(d_coordPair);
 	  Matrix4x4f intermediateT = rigidAlignment(d_input, d_inputNormals, deltaTransform);
     deltaTransform = intermediateT;//intermediateT*deltaTransform;
   }
@@ -66,7 +67,7 @@ Matrix4x4f CameraTracking::delinearizeTransformation(const Vector6f& sol) {
 	Matrix3x3f R = Eigen::AngleAxisf(sol[0], Eigen::Vector3f::UnitZ()).toRotationMatrix()*
 		Eigen::AngleAxisf(sol[1], Eigen::Vector3f::UnitY()).toRotationMatrix()*
 		Eigen::AngleAxisf(sol[2], Eigen::Vector3f::UnitX()).toRotationMatrix();
-	
+
   //Translation
 	Eigen::Vector3f t = sol.segment(3, 3);
 
@@ -104,11 +105,12 @@ Eigen::Matrix4f CameraTracking::rigidAlignment(const float4* d_input, const floa
 
 CameraTracking::CameraTracking(int w, int h):width(w),height(h)
 {
-  const int ARRAY_SIZE = width*height*sizeof(float4);
-  checkCudaErrors(cudaMalloc((void**)&d_correspondence, ARRAY_SIZE));
-  checkCudaErrors(cudaMemset(d_correspondence, 0, ARRAY_SIZE));
-  checkCudaErrors(cudaMalloc((void**)&d_correspondenceNormals, ARRAY_SIZE));
-  checkCudaErrors(cudaMemset(d_correspondenceNormals, 0, ARRAY_SIZE));
+  const int ARRAY_SIZE = width*height*sizeof(CoordPair);
+  d_coordPair.resize(width*height);
+  //checkCudaErrors(cudaMalloc((void**)&d_correspondence, ARRAY_SIZE));
+  //checkCudaErrors(cudaMemset(d_correspondence, 0, ARRAY_SIZE));
+  //checkCudaErrors(cudaMalloc((void**)&d_correspondenceNormals, ARRAY_SIZE));
+  //checkCudaErrors(cudaMemset(d_correspondenceNormals, 0, ARRAY_SIZE));
   float arr[16] = { 1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1 };
   deltaTransform = Matrix4x4f(arr);
   const float intrinsics[] = {525.0, 0, 319.5, 0, 525.0, 239.5, 0, 0, 1}; //TODO: read from file

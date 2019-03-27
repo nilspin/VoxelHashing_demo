@@ -9,6 +9,9 @@
 #include <cuda_runtime_api.h>
 #include "cuda_helper/helper_cuda.h"
 #include "cuda_helper/helper_math.h"
+#include <thrust/device_vector.h>
+#include <thrust/device_ptr.h>
+#include <thrust/fill.h>
 
 //This is a simple vector library. Use this with CUDA instead of GLM.
 #include "cuda_helper/cuda_SimpleMatrixUtil.h"
@@ -43,9 +46,9 @@ __device__
 static inline int2 cam2screenPos(float3 p) {
   float3 sp = K*p;
   //return make_int2(sp.x + 0.5, sp.y + 0.5);
-	float x = ((p.x * fx) / p.z) + cx;
-	float y = ((p.y * fy) / p.z) + cy;
-	return make_int2(sp.x, sp.y);
+	//float x = ((p.x * fx) / p.z) + cx;
+	//float y = ((p.y * fy) / p.z) + cy;
+	return make_int2(sp.x/sp.z + 0.5, sp.y/sp.z + 0.5);
 }
 
 __global__
@@ -66,7 +69,7 @@ void calculateVertexPositions(float4* d_vertexPositions, const uint16_t* d_depth
 	if (depth == 0) {
 		w = 0.0f;
 	}
-  
+
   float3 imageCoord = make_float3(xidx, yidx, 1.0);
   float3 point = K_inv*imageCoord*depth;
   float4 vertex = make_float4(point.x, -point.y, -point.z, w);
@@ -118,12 +121,14 @@ extern "C" void preProcess(float4 *positions, float4* normals, const uint16_t *d
 
 }
 
-__global__
-void FindCorrespondences(const float4* input, const float4* inputNormals,
-	const float4* target, const float4* targetnormals,
-	float4* correspondence, float4* correspondenceNormals,
-	const float4x4 deltaT, float distThres, float normalThres, int width, int height) {
 
+__global__
+void FindCorrespondences(const float4* input,	const float4* target,
+    const float4* targetnormals, float4* correspondences, float4* correspondenceNormals,, float* residuals,	const float4x4 deltaT,
+    float distThres, float normalThres, int width, int height)
+{
+
+  const int offset = 1;
 	int xidx = blockDim.x*blockIdx.x + threadIdx.x;
 	int yidx = blockDim.y*blockIdx.y + threadIdx.y;
 
@@ -131,57 +136,50 @@ void FindCorrespondences(const float4* input, const float4* inputNormals,
 		return;
 	}
 
-	const int idx = (yidx*numCols) + xidx;
+	const int idx = (yidx*width) + xidx;
 
-	correspondence[idx] = make_float4(MINF, MINF, MINF, MINF);
-	correspondenceNormals[idx] = make_float4(MINF, MINF, MINF, MINF);
-	float4 p_in = input[idx];
-	float4 n_in = inputNormals[idx];
+	float4 pSrc = input[idx];
 
-	if (isValid(p_in) && isValid(n_in)) {	//if both pos and normal are valid points
-    p_in.w = 1.0f;
-    float4 transformedPos = deltaT*p_in;
-    n_in.w = 0.0f;
-		float4 transformedNormal = deltaT*n_in;
+	if (pSrc.z != 0) {	//if both pos and normal are valid points
+    pSrc.w = 1.0f;
+    float4 transPSrc = deltaT * pSrc;
 
-		int2 screenPos = cam2screenPos(make_float3(transformedPos));
+		int2 projected = cam2screenPos(make_float3(transformedPos));
+    int2 &sp = projected;
+    sp /= offset;
 
-		//now lookup this index in target image
-		float4 p_target, n_target;
-		int linearScreenPos = (screenPos.y*numCols) + screenPos.x;
-
-		if (screenPos.x >= 0 && screenPos.y >= 0 && screenPos.x < numCols && screenPos.y < numRows) {
-    
-      p_target = target[linearScreenPos];
-      n_target = targetnormals[linearScreenPos];
-      
-      if (isValid(p_target) && isValid(n_target)) {
-          //This is point-to-plane metric
-          //float n = dot(make_float3(transformedNormal), make_float3(n_target));
-
-          //this is point-to-point metric
-          float d = length(make_float3(transformedPos) - make_float3(p_target));
-          if (d <= distThres /*&& n >= normalThres*/) {
-            atomicAdd(&globalError, d);
-            correspondence[idx] = p_target;
-            correspondenceNormals[idx] = n_target;
-        }
+    if(sp.x > 0 && sp.y > 0 && sp.x < width && sp.y < height)
+    {
+      int targetIndex = (sp.y * width) + sp.x;
+      float4 pTar = target[targetIndex];
+      float4 nTar = targetNormals[targetIndex];
+      float3 diff = make_float3(transPSrc - pTar);
+      float d = dot(diff, make_float3(nTar));
+      if (d < distThres)  {
+        atomicAdd(&globalError, d);
+        correspondences[idx] = pTar;
+        correspondenceNormals[idx] = nTar;
+        residuals[idx] = d;
+        //coordpairs[idx].srcindex = idx;
+        //coordpairs[idx].targIndex = targetIndex;
+        //coordpairs[idx].srcindex = d;
       }
     }
 	}
 }
 
-extern "C" float computeCorrespondences(const float4* d_input, const float4* d_inputNormals, const float4* d_target, const float4* d_targetNormals, float4* d_correspondence, float4* d_correspondenceNormals,
-	const float4x4 deltaTransform, const int width, const int height)
+extern "C" float computeCorrespondences(const float4* d_input, const float4* d_target,
+    const float4* d_targetNormals, thrust::device_vector<float4>& corres,
+    thrust::device_vector<float4>& corresNormals,thrust::device_vector<float>& residual,
+    const float4x4 deltaTransform, const int width, const int height)
 {
 	//First clear the previous correspondence calculation
-	const int ARRAY_SIZE = width*height * sizeof(float4);
-	checkCudaErrors(cudaMemset(d_correspondence, 0x00, ARRAY_SIZE));
-	checkCudaErrors(cudaMemset(d_correspondenceNormals, 0x00, ARRAY_SIZE));
+  CoordPair temp;
+  checkCudaErrors(thrust::fill(coordPairs.begin(), coordPairs.end(), temp));
   checkCudaErrors(cudaMemcpyToSymbol(globalError, &idealError, sizeof(float)));
 
-	FindCorrespondences <<<blocks, threads >>>(d_input, d_inputNormals, d_target, d_targetNormals, d_correspondence, d_correspondenceNormals,
-		deltaTransform, distThres, normalThres, width, height);
+	FindCorrespondences <<<blocks, threads>>>(d_input, d_target, d_targetNormals,
+      d_correspondences, d_corresNormals, d_residuals,	deltaTransform, distThres, normalThres, width, height);
 
   float globalErrorReadback = 0.0;
   checkCudaErrors(cudaMemcpyFromSymbol(&globalErrorReadback, globalError, sizeof(float)));
