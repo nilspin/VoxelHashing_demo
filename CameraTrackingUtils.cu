@@ -9,8 +9,8 @@
 #include <cuda_runtime_api.h>
 #include "cuda_helper/helper_cuda.h"
 #include "cuda_helper/helper_math.h"
-#include <thrust/device_vector.h>
-#include <thrust/device_ptr.h>
+//#include <thrust/device_vector.h>
+//#include <thrust/device_ptr.h>
 #include <thrust/fill.h>
 #include "common.h"
 
@@ -34,8 +34,8 @@
 dim3 blocks = dim3(20, 15, 1);
 dim3 threads = dim3(32, 32, 1);
 
-using thrust::device_vector;
-using thrust::device_ptr;
+//using thrust::device_vector;
+//using thrust::device_ptr;
 
 __device__ __constant__ float3x3 K;  //Camera intrinsic matrix
 __device__ __constant__ float3x3 K_inv;
@@ -175,19 +175,20 @@ void FindCorrespondences(const float4* input,	const float4* target,
 }
 
 extern "C" float computeCorrespondences(const float4* d_input, const float4* d_target,
-    const float4* d_targetNormals, device_vector<float4>& corres,
-    device_vector<float4>& corresNormals, device_vector<float>& residuals,
+    const float4* d_targetNormals, float4* corres,
+    float4* corresNormals, float* residuals,
     const float4x4 deltaTransform, const int width, const int height)
 {
 	//First clear the previous correspondence calculation
   checkCudaErrors(cudaMemcpyToSymbol(globalError, &idealError, sizeof(float)));
 
-  float4* d_correspondences = thrust::raw_pointer_cast(&corres[0]);
-  float4* d_corresNormals = thrust::raw_pointer_cast(&corresNormals[0]);
-  float* d_residuals = thrust::raw_pointer_cast(&residuals[0]);
+  //TODO All move all this to .cu file
+  thrust::fill(corres, corres + (width*height), float4{0});
+  thrust::fill(corresNormals, corresNormals+ (width*height), float4{0});
+  thrust::fill(residuals, residuals+ (width*height), (float)0.0f);
 
 	FindCorrespondences <<<blocks, threads>>>(d_input, d_target, d_targetNormals,
-      d_correspondences, d_corresNormals, d_residuals,	deltaTransform, distThres, normalThres, width, height);
+      corres, corresNormals, residuals,	deltaTransform, distThres, normalThres, width, height);
 
   float globalErrorReadback = 0.0;
   checkCudaErrors(cudaMemcpyFromSymbol(&globalErrorReadback, globalError, sizeof(float)));

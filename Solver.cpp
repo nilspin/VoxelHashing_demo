@@ -1,14 +1,14 @@
 #include "Solver.h"
 #include "termcolor.hpp"
 #include <string>
-#include <thrust/fill.h>
-#include <thrust/copy.h>
+//#include <thrust/fill.h>
+//#include <thrust/copy.h>
 
 float alpha = 1.0;
 float beta = 0.0f;
 
 extern "C"
-void CalculateJacobiansAndResiduals(const float4* d_input, const device_vector<float4>& corres, const device_vector<float4>& d_corresNormals, device_vector<float>& d_Jac);
+void CalculateJacobiansAndResiduals(const float4* d_input, const float4* corres, const float4* d_corresNormals, const float* d_Jac, const float* d_res);
 //inline
 //float calculate_B(const vec3& n, const vec3& d, const vec3& s)  {
 //  glm::vec3 p = vec3(d - s);
@@ -46,16 +46,16 @@ void Solver::PrintSystem()  {
 //  JacMat.row(index) << n.x, n.y, n.z, T.x, T.y, T.z ;
 //}
 
-void Solver::BuildLinearSystem(const float4* d_input, const device_vector<float4>& d_correspondences, const device_vector<float4>& d_correspondenceNormals, const device_vector<float>& d_residuals, int width, int height) {
+void Solver::BuildLinearSystem(const float4* d_input, const float4* d_correspondences, const float4* d_correspondenceNormals, const float* d_residuals, int width, int height) {
 
-  d_residual_ptr = thrust::raw_pointer_cast(&d_residuals[0]);
+  //d_residual = thrust::raw_pointer_cast(&d_residuals[0]);
   numCorrPairs = width*height;  //corrImageCoords.size();
   //d_Jac.resize(numCorrPairs*6); //Do we need to resize at runtime?
   //d_residual.resize(numCorrPairs);
-  thrust::fill(d_Jac.begin(), d_Jac.end(), 0);
+  //thrust::fill(d_Jac.begin(), d_Jac.end(), 0);
   //thrust::fill(d_residual.begin(), d_residual.end(), 0);
-  thrust::fill(d_JTJ.begin(), d_JTJ.end(), 0);
-  thrust::fill(d_JTr.begin(), d_JTr.end(), 0);
+  //thrust::fill(d_JTJ.begin(), d_JTJ.end(), 0);
+  //thrust::fill(d_JTr.begin(), d_JTr.end(), 0);
   //Jac = MatrixXf(numCorrPairs,6);
   //residual = VectorXf(numCorrPairs);
   //PrintMatrixDims(Jac, std::string("Jac"));
@@ -68,22 +68,26 @@ void Solver::BuildLinearSystem(const float4* d_input, const device_vector<float4
   //JTJ.setZero();
   //JTr.setZero();
   //residual.setZero();
-  uint idx = 0;
+  //uint idx = 0;
 
   //Invoke kernel here
   std::cout<<"Calculating Jacobians and residuals\n";
-  CalculateJacobiansAndResiduals(d_input, d_correspondences, d_correspondenceNormals, d_Jac);
+  CalculateJacobiansAndResiduals(d_input, d_correspondences, d_correspondenceNormals, d_Jac, d_residuals);
+  checkCudaErrors(cudaDeviceSynchronize());
   //Now Jac and res are populated. Invoke cublas functions to calculate JTJ and JTr
   //JTr
   std::cout<<"Calculating JTr\n";
   //TODO : Set this d_residual_ptr correctly
-  stat = cublasSgemv(handle, CUBLAS_OP_N, 6, numCols*numRows, &alpha, d_Jac_ptr/*d_a*/, 6, d_residual_ptr/*d_x*/, 1, &beta, d_JTr_ptr/*d_y*/, 1);
-  cudaMemcpy(JTr.data(), d_JTr_ptr, 6*sizeof(float), cudaMemcpyDeviceToHost); // copy back
-  std::cout<<JTr<<"\n";
+  stat = cublasSgemv(handle, CUBLAS_OP_N, 6, numCols*numRows, &alpha, d_Jac/*d_a*/, 6, d_residuals/*d_x*/, 1, &beta, d_JTr/*d_y*/, 1);
   //JTJ
   std::cout<<"Calculating JTJ\n";
-  stat = cublasSsyrk(handle, CUBLAS_FILL_MODE_LOWER, CUBLAS_OP_N, 6, numCols*numRows, &alpha, d_Jac_ptr/*d_a*/, 6, &beta, d_JTJ_ptr/*d_c*/, 6); //compute JJT in column-maj order
-  cudaMemcpy(JTJ.data(), d_JTJ_ptr, 6*6*sizeof(float), cudaMemcpyDeviceToHost); // copy back
+  stat = cublasSsyrk(handle, CUBLAS_FILL_MODE_LOWER, CUBLAS_OP_N, 6, numCols*numRows, &alpha, d_Jac/*d_a*/, 6, &beta, d_JTJ/*d_c*/, 6); //compute JJT in column-maj order
+
+  //copy back
+  cudaMemcpy(JTr.data(), d_JTr, JTr_SIZE, cudaMemcpyDeviceToHost);
+  std::cout<<JTr<<"\n";
+
+  cudaMemcpy(JTJ.data(), d_JTJ, JTJ_SIZE, cudaMemcpyDeviceToHost);
   std::cout<<JTJ<<"\n";
   checkCudaErrors(cudaDeviceSynchronize());
 
@@ -149,19 +153,32 @@ void Solver::SolveJacobianSystem(const Matrix6x6f& JTJ, const Vector6f& JTr)  {
 //}
 
 Solver::Solver() {
-  d_Jac.resize(6*numCols*numRows);
-  //d_residual.resize(numCols*numRows);
-  d_JTr.resize(6);
-  d_JTJ.resize(6*6);
+  JAC_SIZE = 6*numCols*numRows*sizeof(float);
+  RES_SIZE = numCols*numRows*sizeof(float);
+  JTJ_SIZE = 6*6*sizeof(float);
+  JTr_SIZE = 6*sizeof(float);
 
-  thrust::fill(d_Jac.begin(), d_Jac.end(), (float)0.0f);
+  checkCudaErrors(cudaMalloc((void**)&d_Jac, JAC_SIZE));
+  checkCudaErrors(cudaMemset(d_Jac, 0, JAC_SIZE));
+  //checkCudaErrors(cudaMalloc((void**)&d_residual, RES_SIZE));
+  //checkCudaErrors(cudaMemset(d_residual, 0, RES_SIZE));
+  checkCudaErrors(cudaMalloc((void**)&d_JTJ, JTJ_SIZE));
+  checkCudaErrors(cudaMemset(d_JTJ, 0, JTJ_SIZE));
+  checkCudaErrors(cudaMalloc((void**)&d_JTr, JTr_SIZE));
+  checkCudaErrors(cudaMemset(d_JTr, 0, JTr_SIZE));
+  //d_Jac.resize(6*numCols*numRows);
+  //d_residual.resize(numCols*numRows);
+  //d_JTr.resize(6);
+  //d_JTJ.resize(6*6);
+
+  //thrust::fill(d_Jac.begin(), d_Jac.end(), (float)0.0f);
   //thrust::fill(d_residual.begin(), d_residual.end(), 0);
   stat = cublasCreate(&handle);
 
-  d_Jac_ptr = thrust::raw_pointer_cast(&d_Jac[0]);
+  //d_Jac_ptr = thrust::raw_pointer_cast(&d_Jac[0]);
   //d_residual_ptr = thrust::raw_pointer_cast(&d_residual[0]);
-  d_JTr_ptr = thrust::raw_pointer_cast(&d_JTr[0]);
-  d_JTJ_ptr = thrust::raw_pointer_cast(&d_JTJ[0]);
+  //d_JTr_ptr = thrust::raw_pointer_cast(&d_JTr[0]);
+  //d_JTJ_ptr = thrust::raw_pointer_cast(&d_JTJ[0]);
 
   JTJ.setZero();
   JTr.setZero();
@@ -170,5 +187,9 @@ Solver::Solver() {
 }
 
 Solver::~Solver() {
+  checkCudaErrors(cudaFree(d_Jac));
+  //checkCudaErrors(cudaFree(d_residual));
+  checkCudaErrors(cudaFree(d_JTJ));
+  checkCudaErrors(cudaFree(d_JTr));
   cublasDestroy(handle);
 }

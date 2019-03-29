@@ -7,15 +7,12 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
-#include <thrust/fill.h>
+//#include <thrust/fill.h>
 #include "CameraTracking.h"
 #include "termcolor.hpp"
 #include "DebugHelper.hpp"
 
-extern "C" float computeCorrespondences(const float4* d_input, const float4* d_target,
-    const float4* d_targetNormals, thrust::device_vector<float4>& corres,
-    thrust::device_vector<float4>& corresNormals,thrust::device_vector<float>& residual,
-    const float4x4 deltaTransform, const int width, const int height);
+extern "C" float computeCorrespondences(const float4* d_input, const float4* d_target, const float4* d_targetNormals, float4* corres, float4* corresNormals, float* residual, const float4x4 deltaTransform, const int width, const int height);
 
 extern "C" bool SetCameraIntrinsic(const float* intrinsic, const float* invIntrinsic);
 //Takes device pointers, calculates correct position and normals
@@ -44,9 +41,10 @@ void CameraTracking::Align(float4* d_input, float4* d_inputNormals, float4* d_ta
 	  float4x4 deltaT = float4x4(deltaTransform.data());
 
     //Clear previous data
-    thrust::fill(d_correspondences.begin(), d_correspondences.end(), make_float4(0));
-    thrust::fill(d_correspondenceNormals.begin(), d_correspondenceNormals.end(), make_float4(0));
-    thrust::fill(d_residuals.begin(), d_residuals.end(), (float)0.0f);
+    //TODO All move all this to .cu file
+    //thrust::fill(d_correspondences.begin(), d_correspondences.end(), make_float4(0));
+    //thrust::fill(d_correspondenceNormals.begin(), d_correspondenceNormals.end(), make_float4(0));
+    //thrust::fill(d_residuals.begin(), d_residuals.end(), (float)0.0f);
 
 
 	  //We now have all data we need. find correspondence.
@@ -114,11 +112,14 @@ Eigen::Matrix4f CameraTracking::rigidAlignment(const float4* d_input, const floa
 
 CameraTracking::CameraTracking(int w, int h):width(w),height(h)
 {
-  //const int ARRAY_SIZE = width*height*sizeof(CoordPair);
-  //checkCudaErrors(cudaMalloc((void**)&d_correspondence, ARRAY_SIZE));
-  //checkCudaErrors(cudaMemset(d_correspondence, 0, ARRAY_SIZE));
-  //checkCudaErrors(cudaMalloc((void**)&d_correspondenceNormals, ARRAY_SIZE));
-  //checkCudaErrors(cudaMemset(d_correspondenceNormals, 0, ARRAY_SIZE));
+  const int F4_ARRAY_SIZE = width*height*sizeof(float4);
+  const int ARRAY_SIZE = width*height*sizeof(float);
+  checkCudaErrors(cudaMalloc((void**)&d_correspondences, F4_ARRAY_SIZE));
+  checkCudaErrors(cudaMemset(d_correspondences, 0, F4_ARRAY_SIZE));
+  checkCudaErrors(cudaMalloc((void**)&d_correspondenceNormals, F4_ARRAY_SIZE));
+  checkCudaErrors(cudaMemset(d_correspondenceNormals, 0, F4_ARRAY_SIZE));
+  checkCudaErrors(cudaMalloc((void**)&d_residuals, ARRAY_SIZE));
+  checkCudaErrors(cudaMemset(d_residuals, 0, ARRAY_SIZE));
   float arr[16] = { 1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1 };
   deltaTransform = Matrix4x4f(arr);
   const float intrinsics[] = {525.0, 0, 319.5, 0, 525.0, 239.5, 0, 0, 1}; //TODO: read from file
@@ -132,8 +133,9 @@ CameraTracking::CameraTracking(int w, int h):width(w),height(h)
 
 CameraTracking::~CameraTracking()
 {
-  //checkCudaErrors(cudaFree(d_correspondence));
-  //checkCudaErrors(cudaFree(d_correspondenceNormals));
+  checkCudaErrors(cudaFree(d_correspondences));
+  checkCudaErrors(cudaFree(d_correspondenceNormals));
+  checkCudaErrors(cudaFree(d_residuals));
 }
 
 

@@ -10,8 +10,8 @@
 #endif
 
 #include <cuda_runtime_api.h>
-#include <thrust/device_vector.h>
-#include <thrust/device_ptr.h>
+//#include <thrust/device_vector.h>
+//#include <thrust/device_ptr.h>
 
 //This is a simple vector library. Use this with CUDA instead of GLM.
 #include "cuda_helper/cuda_SimpleMatrixUtil.h"
@@ -28,8 +28,8 @@
 //  int dummy = -2; //padding
 //};
 
-using thrust::device_vector;
-using thrust::device_ptr;
+//using thrust::device_vector;
+//using thrust::device_ptr;
 
 class CameraTracking  {
 
@@ -38,12 +38,13 @@ private:
   //LinearSystem linearSystem;
   Solver solver;
   int maxIters = 20;
-  //float4* d_correspondenceNormals;
-  //float4* d_correspondence;
+  float4* d_correspondenceNormals;
+  float4* d_correspondences;
+  float* d_residuals;
   //thrust::device_vector<CorrPair> d_coordPair;
-  device_vector<float4> d_correspondences;
-  device_vector<float4> d_correspondenceNormals;
-  device_vector<float> d_residuals;
+  //device_vector<float4> d_correspondences;
+  //device_vector<float4> d_correspondenceNormals;
+  //device_vector<float> d_residuals;
   Matrix4x4f deltaTransform;
   float globalCorrespondenceError = 0.0f;
   Matrix4x4f delinearizeTransformation(const Vector6f & sol);

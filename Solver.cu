@@ -2,6 +2,7 @@
 #include <cublas_v2.h>
 #include "Solver.h"
 #include "cuda_helper/helper_math.h"
+#include <thrust/fill.h>
 
 #define numCols 640
 #define numRows 480
@@ -9,8 +10,8 @@
 dim3 blocks = dim3(20, 15, 1);
 dim3 threads = dim3(32, 32, 1);
 
-using FloatVec = thrust::device_vector<float>;
-using Float4Vec = thrust::device_vector<float4>;
+//using FloatVec = thrust::device_vector<float>;
+//using Float4Vec = thrust::device_vector<float4>;
 
 //using CorrPairVec = thrust::device_vector<CorrPair>;
 
@@ -51,16 +52,18 @@ void CalculateJacAndResKernel(const float4* d_src, const float4* d_dest, const f
 //__device__ inline
 //void CalculateJTJ
 
-extern "C" void CalculateJacobiansAndResidual(const float4* d_src, Float4Vec targ, Float4Vec targNormals, FloatVec Jac) {
+extern "C" void CalculateJacobiansAndResidual(const float4* d_src, const float4* d_targ, const float4* d_targNormals,
+    float* d_Jac) {
 
   //First calculate Jacobian and Residual matrices
-  float4* d_targ = thrust::raw_pointer_cast(&targ[0]);
-  float4* d_targNormals = thrust::raw_pointer_cast(&targNormals[0]);
-  float* d_jacobianMatrix = thrust::raw_pointer_cast(&Jac[0]);
+  //float4* d_targ = thrust::raw_pointer_cast(&targ[0]);
+  //float4* d_targNormals = thrust::raw_pointer_cast(&targNormals[0]);
+  //float* d_jacobianMatrix = thrust::raw_pointer_cast(&Jac[0]);
   //float* d_resVector = thrust::raw_pointer_cast(&residual[0]);
   //float* d_jtj = thrust::raw_pointer_cast(&JTJ[0]);
   //float* d_jtr = thrust::raw_pointer_cast(&JTr[0]);
-  CalculateJacAndResKernel<<<blocks, threads>>>(d_src, d_targ, d_targNormals, d_jacobianMatrix);
+  thrust::fill(d_Jac, d_Jac+(numCols*numRows*6), 0);  //TODO - is this redundant?
+  CalculateJacAndResKernel<<<blocks, threads>>>(d_src, d_targ, d_targNormals, d_Jac);
 
   //Then calculate Matrix-vector JTr and Matrix-matrix JTJ products
 }

@@ -7,17 +7,17 @@
 #include "cuda_helper/helper_cuda.h"
 #include <cublas_v2.h>
 #include <cuda_runtime.h>
-#include <thrust/device_vector.h>
-#include <thrust/device_ptr.h>
+//#include <thrust/device_vector.h>
+//#include <thrust/device_ptr.h>
 
 using namespace Eigen;
-using thrust::device_vector;
+//using thrust::device_vector;
 
 class Solver {
   public:
     uint numIters = 10;
 
-    void BuildLinearSystem(const float4* , const device_vector<float4>& , const device_vector<float4>& , const device_vector<float>& , int , int );
+    void BuildLinearSystem(const float4* , const float4* , const float4* , const float* , int , int );
 
     void PrintSystem();
 
@@ -29,6 +29,11 @@ class Solver {
     Matrix4x4f getTransform() {return SE3Exp(estimate);};
     double getError() {return TotalError;};
   private:
+    int JAC_SIZE;
+    int RES_SIZE;
+    int JTJ_SIZE;
+    int JTr_SIZE;
+    const int num_vars_in_jac = 6;
     Vector6f update, estimate; //Will hold solution
     bool solution_exists = false;
     //Matrix4x4f deltaT;  //intermediate estimated transform
@@ -47,14 +52,13 @@ class Solver {
     cudaError_t cudaStat;
     cublasStatus_t  stat;
     cublasHandle_t handle;
-    thrust::device_vector<float> d_Jac;  //Computed on device
+    //thrust::device_vector<float> d_Jac;  //Computed on device
     //thrust::device_vector<float> d_residual; //Computed on device
-    thrust::device_vector<float> d_JTr;  //then multiplied on device
-    thrust::device_vector<float> d_JTJ;  //finally this is computed
-    float* d_Jac_ptr = nullptr;
-    float* d_residual_ptr = nullptr;
-    float* d_JTr_ptr = nullptr;
-    float* d_JTJ_ptr = nullptr;
+    //thrust::device_vector<float> d_JTr;  //then multiplied on device
+    //thrust::device_vector<float> d_JTJ;  //finally this is computed
+    float* d_Jac = nullptr;
+    float* d_JTr = nullptr;
+    float* d_JTJ = nullptr;
 
 
 };
