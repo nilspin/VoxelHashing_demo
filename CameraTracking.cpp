@@ -7,6 +7,7 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <thrust/fill.h>
 #include "CameraTracking.h"
 #include "termcolor.hpp"
 #include "DebugHelper.hpp"
@@ -31,6 +32,8 @@ void CameraTracking::Align(float4* d_input, float4* d_inputNormals, float4* d_ta
   preProcess(d_input, d_inputNormals, d_depthInput);
   preProcess(d_target, d_targetNormals, d_depthTarget);
   //WriteDeviceArrayToFile(d_inputNormals, "sourceNormalsDevice", width*height);
+  int width = numCols;
+  int height = numRows;
 
   for (int iter = 0; iter < maxIters; iter++) {
     //globalCorrespondenceError = 0.0f;
@@ -39,6 +42,12 @@ void CameraTracking::Align(float4* d_input, float4* d_inputNormals, float4* d_ta
 
     //CUDA files cannot include any Eigen headers, don't know why. So convert eigen matrix to __device__ compatible float4x4.
 	  float4x4 deltaT = float4x4(deltaTransform.data());
+
+    //Clear previous data
+    thrust::fill(d_correspondences.begin(), d_correspondences.end(), make_float4(0));
+    thrust::fill(d_correspondenceNormals.begin(), d_correspondenceNormals.end(), make_float4(0));
+    thrust::fill(d_residuals.begin(), d_residuals.end(), (float)0.0f);
+
 
 	  //We now have all data we need. find correspondence.
 	  globalCorrespondenceError = computeCorrespondences(d_input, d_target, d_targetNormals, d_correspondences, d_correspondenceNormals, d_residuals, deltaT, width, height);
@@ -51,7 +60,7 @@ void CameraTracking::Align(float4* d_input, float4* d_inputNormals, float4* d_ta
     std::cout<<termcolor::green<<"Global correspondence error = "<<globalCorrespondenceError<<termcolor::reset<<" \n\n";
 	  //Matrix4x4f deltaT = Matrix4x4f(deltaTransform.data());
 
-    solver.BuildLinearSystem(d_coordPair);
+    solver.BuildLinearSystem(d_input, d_correspondences, d_correspondenceNormals, d_residuals, width, height);
 	  Matrix4x4f intermediateT = rigidAlignment(d_input, d_inputNormals, deltaTransform);
     deltaTransform = intermediateT;//intermediateT*deltaTransform;
   }
@@ -81,7 +90,7 @@ Matrix4x4f CameraTracking::delinearizeTransformation(const Vector6f& sol) {
 Eigen::Matrix4f CameraTracking::rigidAlignment(const float4* d_input, const float4* d_inputNormals, const Eigen::Matrix4f& deltaT) {
 	Matrix4x4f computedTransform = deltaT;
 	Matrix6x6f ATA; Vector6f ATb;
-	linearSystem.build(d_input, d_correspondence, d_correspondenceNormals, 0.0f, 0.0f, width, height, ATA, ATb);
+	//linearSystem.build(d_input, d_correspondence, d_correspondenceNormals, 0.0f, 0.0f, width, height, ATA, ATb);
 
 	//solve 6x7 matrix of linear equations
 	std::cout << termcolor::green <<"Filled matrix system ATA | ATb : \n"<< termcolor::reset;
@@ -105,8 +114,7 @@ Eigen::Matrix4f CameraTracking::rigidAlignment(const float4* d_input, const floa
 
 CameraTracking::CameraTracking(int w, int h):width(w),height(h)
 {
-  const int ARRAY_SIZE = width*height*sizeof(CoordPair);
-  d_coordPair.resize(width*height);
+  //const int ARRAY_SIZE = width*height*sizeof(CoordPair);
   //checkCudaErrors(cudaMalloc((void**)&d_correspondence, ARRAY_SIZE));
   //checkCudaErrors(cudaMemset(d_correspondence, 0, ARRAY_SIZE));
   //checkCudaErrors(cudaMalloc((void**)&d_correspondenceNormals, ARRAY_SIZE));
@@ -124,8 +132,8 @@ CameraTracking::CameraTracking(int w, int h):width(w),height(h)
 
 CameraTracking::~CameraTracking()
 {
-  checkCudaErrors(cudaFree(d_correspondence));
-  checkCudaErrors(cudaFree(d_correspondenceNormals));
+  //checkCudaErrors(cudaFree(d_correspondence));
+  //checkCudaErrors(cudaFree(d_correspondenceNormals));
 }
 
 

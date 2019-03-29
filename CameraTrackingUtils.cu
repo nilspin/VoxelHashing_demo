@@ -12,6 +12,7 @@
 #include <thrust/device_vector.h>
 #include <thrust/device_ptr.h>
 #include <thrust/fill.h>
+#include "common.h"
 
 //This is a simple vector library. Use this with CUDA instead of GLM.
 #include "cuda_helper/cuda_SimpleMatrixUtil.h"
@@ -26,12 +27,15 @@
 #define numCols 640
 #define numRows 480
 
-const float distThres = 5.0f;
-const float normalThres = -1.0f;
-const float idealError = 0.0f;
+//const float distThres = 5.0f;
+//const float normalThres = -1.0f;
+//const float idealError = 0.0f;
 //Since numCols = 640 and numRows = 480, we set blockDim according to 32x32 tile
 dim3 blocks = dim3(20, 15, 1);
 dim3 threads = dim3(32, 32, 1);
+
+using thrust::device_vector;
+using thrust::device_ptr;
 
 __device__ __constant__ float3x3 K;  //Camera intrinsic matrix
 __device__ __constant__ float3x3 K_inv;
@@ -124,7 +128,8 @@ extern "C" void preProcess(float4 *positions, float4* normals, const uint16_t *d
 
 __global__
 void FindCorrespondences(const float4* input,	const float4* target,
-    const float4* targetnormals, float4* correspondences, float4* correspondenceNormals,, float* residuals,	const float4x4 deltaT,
+    const float4* targetNormals, float4* correspondences, float4* correspondenceNormals,
+    float* residuals,	const float4x4 deltaT,
     float distThres, float normalThres, int width, int height)
 {
 
@@ -144,9 +149,10 @@ void FindCorrespondences(const float4* input,	const float4* target,
     pSrc.w = 1.0f;
     float4 transPSrc = deltaT * pSrc;
 
-		int2 projected = cam2screenPos(make_float3(transformedPos));
+		int2 projected = cam2screenPos(make_float3(transPSrc));
     int2 &sp = projected;
-    sp /= offset;
+    //sp.x = sp.x/offset;
+    //sp.y = sp.y/offset;
 
     if(sp.x > 0 && sp.y > 0 && sp.x < width && sp.y < height)
     {
@@ -169,14 +175,16 @@ void FindCorrespondences(const float4* input,	const float4* target,
 }
 
 extern "C" float computeCorrespondences(const float4* d_input, const float4* d_target,
-    const float4* d_targetNormals, thrust::device_vector<float4>& corres,
-    thrust::device_vector<float4>& corresNormals,thrust::device_vector<float>& residual,
+    const float4* d_targetNormals, device_vector<float4>& corres,
+    device_vector<float4>& corresNormals, device_vector<float>& residuals,
     const float4x4 deltaTransform, const int width, const int height)
 {
 	//First clear the previous correspondence calculation
-  CoordPair temp;
-  checkCudaErrors(thrust::fill(coordPairs.begin(), coordPairs.end(), temp));
   checkCudaErrors(cudaMemcpyToSymbol(globalError, &idealError, sizeof(float)));
+
+  float4* d_correspondences = thrust::raw_pointer_cast(&corres[0]);
+  float4* d_corresNormals = thrust::raw_pointer_cast(&corresNormals[0]);
+  float* d_residuals = thrust::raw_pointer_cast(&residuals[0]);
 
 	FindCorrespondences <<<blocks, threads>>>(d_input, d_target, d_targetNormals,
       d_correspondences, d_corresNormals, d_residuals,	deltaTransform, distThres, normalThres, width, height);

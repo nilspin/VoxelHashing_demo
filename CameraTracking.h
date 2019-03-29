@@ -28,6 +28,9 @@
 //  int dummy = -2; //padding
 //};
 
+using thrust::device_vector;
+using thrust::device_ptr;
+
 class CameraTracking  {
 
 private:
@@ -38,9 +41,9 @@ private:
   //float4* d_correspondenceNormals;
   //float4* d_correspondence;
   //thrust::device_vector<CorrPair> d_coordPair;
-  thrust::device_vector<float4> d_correspondences;
-  thrust::device_vector<float4> d_correspondenceNormals;
-  thrust::device_vector<float> d_residuals;
+  device_vector<float4> d_correspondences;
+  device_vector<float4> d_correspondenceNormals;
+  device_vector<float> d_residuals;
   Matrix4x4f deltaTransform;
   float globalCorrespondenceError = 0.0f;
   Matrix4x4f delinearizeTransformation(const Vector6f & sol);

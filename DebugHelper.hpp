@@ -37,13 +37,13 @@ using glm::quat;
 //using CoordPair = std::tuple<ivec2, ivec2, float>;
 //using CoordPair = std::tuple<int, int, float>;
 
-struct CorrPair  {
-  float3 src;
-  float3 targ;
-  float3 targNormal;
-  float distance = 0; //between two correspondences
-  int dummy = -2; //padding
-};
+//struct CorrPair  {
+//  float3 src;
+//  float3 targ;
+//  float3 targNormal;
+//  float distance = 0; //between two correspondences
+//  int dummy = -2; //padding
+//};
 
 //template<typename T>
 //void WriteArrayToFile(const vector<T> h_array, std::string filename) {
@@ -61,12 +61,12 @@ void ClearVector(vector<T>& V) {
   //for_each(V.begin(), V.end(), [](T& temp){temp=T(0);});
 }
 
-void ClearVector(vector<CoordPair>& V) {
-  //int minInt = std::numeric_limits<int>::min;
-  CoordPair temp = (std::make_tuple((INT_MIN), (INT_MIN), 0));
-  //CoordPair temp = (std::make_tuple(ivec2(INT_MIN), ivec2(INT_MIN), 0));
-  fill(V.begin(), V.end(), temp);
-}
+//void ClearVector(vector<CoordPair>& V) {
+//  //int minInt = std::numeric_limits<int>::min;
+//  CoordPair temp = (std::make_tuple((INT_MIN), (INT_MIN), 0));
+//  //CoordPair temp = (std::make_tuple(ivec2(INT_MIN), ivec2(INT_MIN), 0));
+//  fill(V.begin(), V.end(), temp);
+//}
 
 //template<typename T>
 //void PrintArray(const vector<T> h_array) {
@@ -83,13 +83,13 @@ T *PointerAt(const vector<T> &image, int u, int v) {
 }
 */
 
-template<typename T>
-void checkEquality(const vector<T>& A, const vector<T>& B)  {
-  for(auto i=0; i < A.size();  ++i) {
-    if(A[i]!=B[i]){
-      std::runtime_error("Mismatch at position "+std::to_string(i));
-    }
-  }
-  cout<<"Arrays are same.\n";
-}
+//template<typename T>
+//void checkEquality(const vector<T>& A, const vector<T>& B)  {
+//  for(auto i=0; i < A.size();  ++i) {
+//    if(A[i]!=B[i]){
+//      std::runtime_error("Mismatch at position "+std::to_string(i));
+//    }
+//  }
+//  cout<<"Arrays are same.\n";
+//}
 #endif

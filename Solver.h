@@ -4,18 +4,20 @@
 #include "common.h"
 #include "EigenUtil.h"
 #include "DebugHelper.hpp"
+#include "cuda_helper/helper_cuda.h"
 #include <cublas_v2.h>
 #include <cuda_runtime.h>
 #include <thrust/device_vector.h>
 #include <thrust/device_ptr.h>
 
 using namespace Eigen;
+using thrust::device_vector;
 
 class Solver {
   public:
     uint numIters = 10;
 
-    void BuildLinearSystem(const vector<CorrPair>&);
+    void BuildLinearSystem(const float4* , const device_vector<float4>& , const device_vector<float4>& , const device_vector<float>& , int , int );
 
     void PrintSystem();
 
@@ -46,13 +48,13 @@ class Solver {
     cublasStatus_t  stat;
     cublasHandle_t handle;
     thrust::device_vector<float> d_Jac;  //Computed on device
-    thrust::device_vector<float> d_residual; //Computed on device
+    //thrust::device_vector<float> d_residual; //Computed on device
     thrust::device_vector<float> d_JTr;  //then multiplied on device
     thrust::device_vector<float> d_JTJ;  //finally this is computed
-    float* d_Jac_ptr;
-    float* d_residual_ptr;
-    float* d_JTr_ptr;
-    float* d_JTJ_ptr;
+    float* d_Jac_ptr = nullptr;
+    float* d_residual_ptr = nullptr;
+    float* d_JTr_ptr = nullptr;
+    float* d_JTJ_ptr = nullptr;
 
 
 };

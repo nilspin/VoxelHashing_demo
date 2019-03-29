@@ -7,11 +7,13 @@
 float alpha = 1.0;
 float beta = 0.0f;
 
-inline
-float calculate_B(const vec3& n, const vec3& d, const vec3& s)  {
-  glm::vec3 p = vec3(d - s);
-  return glm::dot(p,n);
-}
+extern "C"
+void CalculateJacobiansAndResiduals(const float4* d_input, const device_vector<float4>& corres, const device_vector<float4>& d_corresNormals, device_vector<float>& d_Jac);
+//inline
+//float calculate_B(const vec3& n, const vec3& d, const vec3& s)  {
+//  glm::vec3 p = vec3(d - s);
+//  return glm::dot(p,n);
+//}
 
 inline
 void PrintMatrixDims(const MatrixXf& M, const std::string& s) {
@@ -44,13 +46,14 @@ void Solver::PrintSystem()  {
 //  JacMat.row(index) << n.x, n.y, n.z, T.x, T.y, T.z ;
 //}
 
-void Solver::BuildLinearSystem(const vector<CorrPair>& corrImageCoords) {
+void Solver::BuildLinearSystem(const float4* d_input, const device_vector<float4>& d_correspondences, const device_vector<float4>& d_correspondenceNormals, const device_vector<float>& d_residuals, int width, int height) {
 
-  numCorrPairs = corrImageCoords.size();
+  d_residual_ptr = thrust::raw_pointer_cast(&d_residuals[0]);
+  numCorrPairs = width*height;  //corrImageCoords.size();
   //d_Jac.resize(numCorrPairs*6); //Do we need to resize at runtime?
   //d_residual.resize(numCorrPairs);
   thrust::fill(d_Jac.begin(), d_Jac.end(), 0);
-  thrust::fill(d_residual.begin(), d_residual.end(), 0);
+  //thrust::fill(d_residual.begin(), d_residual.end(), 0);
   thrust::fill(d_JTJ.begin(), d_JTJ.end(), 0);
   thrust::fill(d_JTr.begin(), d_JTr.end(), 0);
   //Jac = MatrixXf(numCorrPairs,6);
@@ -69,10 +72,11 @@ void Solver::BuildLinearSystem(const vector<CorrPair>& corrImageCoords) {
 
   //Invoke kernel here
   std::cout<<"Calculating Jacobians and residuals\n";
-  //CalculateJacobiansAndResiduals(d_corrPairs, d_Jac, d_residual, d_JTr, d_JTJ);
+  CalculateJacobiansAndResiduals(d_input, d_correspondences, d_correspondenceNormals, d_Jac);
   //Now Jac and res are populated. Invoke cublas functions to calculate JTJ and JTr
   //JTr
   std::cout<<"Calculating JTr\n";
+  //TODO : Set this d_residual_ptr correctly
   stat = cublasSgemv(handle, CUBLAS_OP_N, 6, numCols*numRows, &alpha, d_Jac_ptr/*d_a*/, 6, d_residual_ptr/*d_x*/, 1, &beta, d_JTr_ptr/*d_y*/, 1);
   cudaMemcpy(JTr.data(), d_JTr_ptr, 6*sizeof(float), cudaMemcpyDeviceToHost); // copy back
   std::cout<<JTr<<"\n";
@@ -81,7 +85,7 @@ void Solver::BuildLinearSystem(const vector<CorrPair>& corrImageCoords) {
   stat = cublasSsyrk(handle, CUBLAS_FILL_MODE_LOWER, CUBLAS_OP_N, 6, numCols*numRows, &alpha, d_Jac_ptr/*d_a*/, 6, &beta, d_JTJ_ptr/*d_c*/, 6); //compute JJT in column-maj order
   cudaMemcpy(JTJ.data(), d_JTJ_ptr, 6*6*sizeof(float), cudaMemcpyDeviceToHost); // copy back
   std::cout<<JTJ<<"\n";
-
+  checkCudaErrors(cudaDeviceSynchronize());
 
   //for(auto const& iter : corrImageCoords)  {
   //  float3 s = std::get<0>(iter);
@@ -101,7 +105,7 @@ void Solver::BuildLinearSystem(const vector<CorrPair>& corrImageCoords) {
 
   //SolveJacobianSystem(JTJ, JTr);
 
-  TotalError = residual.transpose() * residual;
+  //TotalError = residual.transpose() * residual;
 
   //Print it
   //PrintMatrix(residual, "residual");
@@ -146,16 +150,16 @@ void Solver::SolveJacobianSystem(const Matrix6x6f& JTJ, const Vector6f& JTr)  {
 
 Solver::Solver() {
   d_Jac.resize(6*numCols*numRows);
-  d_residual.resize(numCols*numRows);
+  //d_residual.resize(numCols*numRows);
   d_JTr.resize(6);
   d_JTJ.resize(6*6);
 
-  thrust::fill(d_Jac.begin(), d_Jac.end(), 0);
-  thrust::fill(d_residual.begin(), d_residual.end(), 0);
+  thrust::fill(d_Jac.begin(), d_Jac.end(), (float)0.0f);
+  //thrust::fill(d_residual.begin(), d_residual.end(), 0);
   stat = cublasCreate(&handle);
 
   d_Jac_ptr = thrust::raw_pointer_cast(&d_Jac[0]);
-  d_residual_ptr = thrust::raw_pointer_cast(&d_residual[0]);
+  //d_residual_ptr = thrust::raw_pointer_cast(&d_residual[0]);
   d_JTr_ptr = thrust::raw_pointer_cast(&d_JTr[0]);
   d_JTJ_ptr = thrust::raw_pointer_cast(&d_JTJ[0]);
 

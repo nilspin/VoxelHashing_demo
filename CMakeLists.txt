@@ -6,9 +6,9 @@ PROJECT(ICP_Demo LANGUAGES C CXX CUDA)
 #set(CMAKE_CUDA_COMPILER "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v9.2/bin/nvcc")
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
-set(CMAKE_CXX_FLAGS "-std=c++11 -fpermissive")
+set(CMAKE_CXX_FLAGS "-std=c++11 -fpermissive -w")
 set(OpenGL_GL_PREFERENCE "GLVND")
-string(APPEND CMAKE_CUDA_FLAGS " -gencode arch=compute_30,code=sm_30")
+string(APPEND CMAKE_CUDA_FLAGS " -gencode arch=compute_30,code=sm_30 -w")
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON) #ensures CMake creates compile_commands.json
 #set(CUDA_NVCC_FLAGS_DEBUG ${CUDA_NVCC_FLAGS_DEBUG} "-G")
 
@@ -52,7 +52,7 @@ set(LIBS ${LIBS} ${OPENGL_LIBRARY} ${CUDA_LIBRARIES}  ${SDL2_LIBRARIES} ${Boost_
 #include_directories(${CMAKE_SOURCE_DIR} )
 include_directories(${INCLUDE_DIRS})
 
-set(SOURCES DepthMain.cpp camera.cpp Window.cpp Application.cpp Solver.cpp CameraTracking.cpp prereq.h ShaderProgram.hpp Frustum.cpp camera.h Window.h
+set(SOURCES common.h DepthMain.cpp camera.cpp Window.cpp Application.cpp Solver.cpp CameraTracking.cpp prereq.h ShaderProgram.hpp Frustum.cpp camera.h Window.h
   Application.h Frustum.h CameraTracking.h Solver.h EigenUtil.h termcolor.hpp DebugHelper.hpp ${GLAD_SRC})
 
 
