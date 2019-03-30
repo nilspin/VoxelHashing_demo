@@ -7,7 +7,7 @@
 #include "cuda_helper/helper_cuda.h"
 #include <cublas_v2.h>
 #include <cuda_runtime.h>
-#include "SE3.hpp"
+#include "SE3.h"
 
 //#include <thrust/device_vector.h>
 //#include <thrust/device_ptr.h>

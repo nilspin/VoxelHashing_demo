@@ -47,35 +47,38 @@ add_library(Camera STATIC camera.cpp)
 target_link_libraries(Camera SDL2)
 
 #Compile CameraTrackingUtils
-#add_library(CameraTrackingUtils STATIC LinearSystem.cu CameraTrackingUtils.cu)
-add_library(CameraTrackingUtils STATIC SE3.hpp Solver.cpp Solver.cu CameraTracking.cpp CameraTrackingUtils.cu)
+add_library(Solver STATIC SE3.cpp Solver.cpp Solver.cu)
+set_target_properties(Solver PROPERTIES LINKER_LANGUAGE CUDA)
+set_target_properties(Solver PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
+add_library(CameraTrackingUtils STATIC CameraTracking.cpp CameraTrackingUtils.cu)  #SE3.hpp
 set_target_properties(CameraTrackingUtils PROPERTIES LINKER_LANGUAGE CUDA)
 set_target_properties(CameraTrackingUtils PROPERTIES POSITION_INDEPENDENT_CODE ON)
+target_link_libraries(CameraTrackingUtils Solver)
 #set_target_properties(CameraTrackingUtils PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 
 add_library(Application STATIC Application.cpp)
 target_link_libraries(Application Camera)
 target_link_libraries(Application Window)
 #target_link_libraries(Application ShaderProgram)
-target_link_libraries(Application CameraTracking)
+target_link_libraries(Application CameraTrackingUtils)
 
 set(INCLUDE_DIRS  ${INCLUDE_DIRS} ${CUDA_INCLUDE_DIRS} ${CUHELPER_INCLUDE_DIR} ${EIGEN3_INCLUDE_DIR} ${GLM_INCLUDE_DIR}
                 ${OPENGL_INCLUDE_DIRS} ${SDL2_INCLUDE_DIRS} ${GLAD_INCLUDE_DIR} ${Boost_INCLUDE_DIRS})  #${ARMADILLO_INCLUDE_DIR}
-set(LIBS ${LIBS} ${OPENGL_LIBRARY} ${CUDA_LIBRARIES}  ${SDL2_LIBRARIES} ${Boost_LIBRARIES} ${GladLib} ${ShaderProgram}
-  ${Window} ${Camera} ${Application})  #${ARMADILLO_LIBRARY}
+set(LIBS ${LIBS} ${OPENGL_LIBRARY} ${CUDA_LIBRARIES}  ${SDL2_LIBRARIES} ${Boost_LIBRARIES} )  #${ARMADILLO_LIBRARY} ${GladLib} ${ShaderProgram} ${Window} ${Camera}
 
 #specify include directory
 #include_directories(${CMAKE_SOURCE_DIR} )
 include_directories(${INCLUDE_DIRS})
 
-set(HEADERS prereq.h common.h camera.h Window.h ShaderProgram.hpp Solver.h CameraTracking.h Application.h EigenUtil.h termcolor.hpp DebugHelper.hpp)
+#set(HEADERS prereq.h common.h camera.h Window.h ShaderProgram.hpp Solver.h CameraTracking.h Application.h EigenUtil.h termcolor.hpp DebugHelper.hpp)
 set(SOURCES DepthMain.cpp ${GLAD_SRC})  #Frustum.cpp Frustum.h Application.cpp camera.cpp Window.cpp
 
 
 add_executable(${PROJECT_NAME} ${SOURCES} ) #${HEADERS}
 
 #Link all obj files
-target_link_libraries(${PROJECT_NAME} ${LIBS} Application CameraTrackingUtils SDL2 -lcublas)  #SDL2::SDL2
+target_link_libraries(${PROJECT_NAME} ${LIBS} Application  SDL2 -lcublas)  #SDL2::SDL2  CameraTrackingUtils
 
 #Now copy shaders to build directory
 

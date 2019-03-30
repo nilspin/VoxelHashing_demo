@@ -7,8 +7,7 @@
 float alpha = 1.0;
 float beta = 0.0f;
 
-extern "C"
-void CalculateJacobiansAndResiduals(const float4* d_input, const float4* corres, const float4* d_corresNormals, const float* d_Jac, const float* d_res);
+extern "C" void CalculateJacobiansAndResiduals(const float4* d_input, const float4* corres, const float4* d_corresNormals, const float* d_Jac, const float* d_res);
 //inline
 //float calculate_B(const vec3& n, const vec3& d, const vec3& s)  {
 //  glm::vec3 p = vec3(d - s);

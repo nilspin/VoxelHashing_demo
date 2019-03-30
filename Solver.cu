@@ -7,8 +7,8 @@
 #define numCols 640
 #define numRows 480
 //Since numCols = 640 and numRows = 480, we set blockDim according to 32x32 tile
-dim3 blocks = dim3(20, 15, 1);
-dim3 threads = dim3(32, 32, 1);
+dim3 numBlocks = dim3(20, 15, 1);
+dim3 numThreads = dim3(32, 32, 1);
 
 //using FloatVec = thrust::device_vector<float>;
 //using Float4Vec = thrust::device_vector<float4>;
@@ -52,7 +52,7 @@ void CalculateJacAndResKernel(const float4* d_src, const float4* d_dest, const f
 //__device__ inline
 //void CalculateJTJ
 
-extern "C" void CalculateJacobiansAndResidual(const float4* d_src, const float4* d_targ, const float4* d_targNormals,
+extern "C" void CalculateJacobiansAndResiduals(const float4* d_src, const float4* d_targ, const float4* d_targNormals,
     float* d_Jac) {
 
   //First calculate Jacobian and Residual matrices
@@ -63,7 +63,7 @@ extern "C" void CalculateJacobiansAndResidual(const float4* d_src, const float4*
   //float* d_jtj = thrust::raw_pointer_cast(&JTJ[0]);
   //float* d_jtr = thrust::raw_pointer_cast(&JTr[0]);
   thrust::fill(d_Jac, d_Jac+(numCols*numRows*6), 0);  //TODO - is this redundant?
-  CalculateJacAndResKernel<<<blocks, threads>>>(d_src, d_targ, d_targNormals, d_Jac);
+  CalculateJacAndResKernel<<<numBlocks, numThreads>>>(d_src, d_targ, d_targNormals, d_Jac);
 
   //Then calculate Matrix-vector JTr and Matrix-matrix JTJ products
 }

@@ -1,7 +1,4 @@
-#ifndef SE3_HPP
-#define SE3_HPP
-
-#include "EigenUtil.h"
+#include "SE3.h"
 
 // Takes SE3 group object, linearly approximates rotation, returns projected matrix in real space
 Matrix4x4f SE3Exp(const Vector6f& twist) {
@@ -27,7 +24,3 @@ Vector6f SE3Log(const Matrix4x4f& transform)  {
 Vector6f updateTransform(const Vector6f& perturbation, const Vector6f prev_estimate)  {
   return SE3Log(SE3Exp(perturbation)*SE3Exp(prev_estimate));
 }
-
-
-
-#endif
