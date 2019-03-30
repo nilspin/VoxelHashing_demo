@@ -10,7 +10,7 @@
 #include "cuda_helper/helper_cuda.h"
 #include "cuda_helper/helper_math.h"
 //#include <thrust/device_vector.h>
-//#include <thrust/device_ptr.h>
+#include <thrust/device_ptr.h>
 #include <thrust/fill.h>
 #include "common.h"
 
@@ -182,11 +182,17 @@ extern "C" float computeCorrespondences(const float4* d_input, const float4* d_t
 	//First clear the previous correspondence calculation
   checkCudaErrors(cudaMemcpyToSymbol(globalError, &idealError, sizeof(float)));
 
-  //TODO All move all this to .cu file
-  thrust::fill(corres, corres + (width*height), float4{0});
-  thrust::fill(corresNormals, corresNormals+ (width*height), float4{0});
-  thrust::fill(residuals, residuals+ (width*height), (float)0.0f);
+  thrust::device_ptr<float4> corres_ptr = thrust::device_pointer_cast(corres);
+  thrust::device_ptr<float4> corresNormals_ptr = thrust::device_pointer_cast(corresNormals);
+  thrust::device_ptr<float> residuals_ptr = thrust::device_pointer_cast(residuals);
 
+  std::cerr<<"Before clearing prev correspondences\n";
+
+  (thrust::fill(corres_ptr, corres_ptr + (width*height), float4{0}));
+  (thrust::fill(corresNormals_ptr, corresNormals_ptr+ (width*height), float4{0}));
+  (thrust::fill(residuals_ptr, residuals_ptr+ (width*height), (float)0.0f));
+
+  std::cerr<<"After clearing prev correspondences\n";
 	FindCorrespondences <<<blocks, threads>>>(d_input, d_target, d_targetNormals,
       corres, corresNormals, residuals,	deltaTransform, distThres, normalThres, width, height);
 
