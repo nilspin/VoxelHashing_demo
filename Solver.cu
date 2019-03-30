@@ -3,6 +3,7 @@
 #include "Solver.h"
 #include "cuda_helper/helper_math.h"
 #include <thrust/fill.h>
+#include <thrust/device_ptr.h>
 
 #define numCols 640
 #define numRows 480
@@ -62,7 +63,8 @@ extern "C" void CalculateJacobiansAndResiduals(const float4* d_src, const float4
   //float* d_resVector = thrust::raw_pointer_cast(&residual[0]);
   //float* d_jtj = thrust::raw_pointer_cast(&JTJ[0]);
   //float* d_jtr = thrust::raw_pointer_cast(&JTr[0]);
-  thrust::fill(d_Jac, d_Jac+(numCols*numRows*6), 0);  //TODO - is this redundant?
+  thrust::device_ptr<float> d_Jac_ptr = thrust::device_pointer_cast(d_Jac);
+  thrust::fill(d_Jac_ptr, d_Jac_ptr+(numCols*numRows*6), 0);  //TODO - is this redundant?
   CalculateJacAndResKernel<<<numBlocks, numThreads>>>(d_src, d_targ, d_targNormals, d_Jac);
 
   //Then calculate Matrix-vector JTr and Matrix-matrix JTJ products

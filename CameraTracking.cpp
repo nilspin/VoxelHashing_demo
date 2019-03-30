@@ -38,6 +38,7 @@ void CameraTracking::Align(float4* d_input, float4* d_inputNormals, float4* d_ta
     //std::cout << termcolor::underline <<"                                               \n"<< termcolor::reset;
 
     //CUDA files cannot include any Eigen headers, don't know why. So convert eigen matrix to __device__ compatible float4x4.
+    cout<<"deltaTransform = \n"<<deltaTransform<<"\n";
 	  float4x4 deltaT = float4x4(deltaTransform.data());
 
     //Clear previous data
@@ -50,7 +51,7 @@ void CameraTracking::Align(float4* d_input, float4* d_inputNormals, float4* d_ta
 	  //We now have all data we need. find correspondence.
 	  globalCorrespondenceError = computeCorrespondences(d_input, d_target, d_targetNormals, d_correspondences, d_correspondenceNormals, d_residuals, deltaT, width, height);
 
-    if(globalCorrespondenceError <= 0.0f) {
+    if(globalCorrespondenceError == 0.0f) {
       std::cout<<"\n\n"<<termcolor::bold<<termcolor::grey<<termcolor::on_white<<"Correspondence error is zero. Stopping."<<termcolor::reset<<"\n\n";
       break;
     }
@@ -59,7 +60,8 @@ void CameraTracking::Align(float4* d_input, float4* d_inputNormals, float4* d_ta
 	  //Matrix4x4f deltaT = Matrix4x4f(deltaTransform.data());
 
     solver.BuildLinearSystem(d_input, d_correspondences, d_correspondenceNormals, d_residuals, width, height);
-	  Matrix4x4f intermediateT = rigidAlignment(d_input, d_inputNormals, deltaTransform);
+	  Matrix4x4f intermediateT = solver.getTransform();
+	  //Matrix4x4f intermediateT = rigidAlignment(d_input, d_inputNormals, deltaTransform);
     deltaTransform = intermediateT;//intermediateT*deltaTransform;
   }
 }

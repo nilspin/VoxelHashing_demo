@@ -6,6 +6,7 @@
 #endif
 
 #include <iostream>
+#include <cstdio>
 #include <cuda_runtime_api.h>
 #include "cuda_helper/helper_cuda.h"
 #include "cuda_helper/helper_math.h"
@@ -41,10 +42,10 @@ __device__ __constant__ float3x3 K;  //Camera intrinsic matrix
 __device__ __constant__ float3x3 K_inv;
 __device__ float globalError;
 
-__device__ inline
-bool isValid(float4 v) {
-	return v.w != MINF;
-}
+//__device__ inline
+//bool isValid(float4 v) {
+//	return v.w != MINF;
+//}
 
 __device__
 static inline int2 cam2screenPos(float3 p) {
@@ -67,16 +68,17 @@ void calculateVertexPositions(float4* d_vertexPositions, const uint16_t* d_depth
 	//find globalIdx row-major
 	const int idx = (yidx*numCols) + xidx;
 
-	float w = 1.0f; //flag to tell whether this is valid vertex or not
+	const float w = 1.0f; //flag to tell whether this is valid vertex or not
 	uint16_t d = d_depthBuffer[idx];
 	float depth = d / 5000.0f; //5000 units = 1meter. We're now dealing in meters.
-	if (depth == 0) {
-		w = 0.0f;
-	}
+	//if (depth == 0) {
+	//	w = 0.0f;
+	//}
 
   float3 imageCoord = make_float3(xidx, yidx, 1.0);
   float3 point = K_inv*imageCoord*depth;
-  float4 vertex = make_float4(point.x, -point.y, -point.z, w);
+  //float4 vertex = make_float4(point.x, -point.y, -point.z, w);
+  float4 vertex = make_float4(point.x, point.y, point.z, w);
   d_vertexPositions[idx] = vertex;
 }
 
@@ -93,7 +95,8 @@ void calculateNormals(const float4* d_positions, float4* d_normals)
 	//find globalIdx row-major
 	const int idx = (yidx*numCols) + xidx;
 
-	d_normals[idx] = make_float4(MINF, MINF, MINF, MINF);
+	//d_normals[idx] = make_float4(MINF, MINF, MINF, MINF);
+	d_normals[idx] = make_float4(0, 0, 0, 0);
 
 	if (xidx > 0 && xidx < numCols - 1 && yidx > 0 && yidx < numRows - 1) {
 		const float4 CC = d_positions[(yidx + 0)*numCols + (xidx + 0)];
@@ -102,7 +105,7 @@ void calculateNormals(const float4* d_positions, float4* d_normals)
 		const float4 MC = d_positions[(yidx - 1)*numCols + (xidx + 0)];
 		const float4 CM = d_positions[(yidx + 0)*numCols + (xidx - 1)];
 
-		if (CC.x != MINF && PC.x != MINF && CP.x != MINF && MC.x != MINF && CM.x != MINF)
+		if (CC.x != 0 && PC.x != 0 && CP.x != 0 && MC.x != 0 && CM.x != 0)
 		{
 			const float3 n = cross(make_float3(PC) - make_float3(MC), make_float3(CP) - make_float3(CM));
 			const float  l = length(n);
@@ -159,9 +162,12 @@ void FindCorrespondences(const float4* input,	const float4* target,
       int targetIndex = (sp.y * width) + sp.x;
       float4 pTar = target[targetIndex];
       float4 nTar = targetNormals[targetIndex];
+      if(pTar.x>0 && pTar.y>0 && pTar.z>0)
+      {
       float3 diff = make_float3(transPSrc - pTar);
       float d = dot(diff, make_float3(nTar));
       if (d < distThres)  {
+        //printf("%d) src- (%f, %f, %f), target- (%f, %f, %f), d= %f\n",idx, pSrc.x, pSrc.y, pSrc.z, pTar.x, pTar.y, pTar.z, d);
         atomicAdd(&globalError, d);
         correspondences[idx] = pTar;
         correspondenceNormals[idx] = nTar;
@@ -169,6 +175,7 @@ void FindCorrespondences(const float4* input,	const float4* target,
         //coordpairs[idx].srcindex = idx;
         //coordpairs[idx].targIndex = targetIndex;
         //coordpairs[idx].srcindex = d;
+        }
       }
     }
 	}
@@ -186,19 +193,19 @@ extern "C" float computeCorrespondences(const float4* d_input, const float4* d_t
   thrust::device_ptr<float4> corresNormals_ptr = thrust::device_pointer_cast(corresNormals);
   thrust::device_ptr<float> residuals_ptr = thrust::device_pointer_cast(residuals);
 
-  std::cerr<<"Before clearing prev correspondences\n";
+  //std::cerr<<"Before clearing prev correspondences\n";
 
-  (thrust::fill(corres_ptr, corres_ptr + (width*height), float4{0}));
-  (thrust::fill(corresNormals_ptr, corresNormals_ptr+ (width*height), float4{0}));
-  (thrust::fill(residuals_ptr, residuals_ptr+ (width*height), (float)0.0f));
+  thrust::fill(corres_ptr, corres_ptr + (width*height), float4{0});
+  thrust::fill(corresNormals_ptr, corresNormals_ptr+ (width*height), float4{0});
+  thrust::fill(residuals_ptr, residuals_ptr+ (width*height), (float)0.0f);
 
-  std::cerr<<"After clearing prev correspondences\n";
+  //std::cerr<<"After clearing prev correspondences\n";
 	FindCorrespondences <<<blocks, threads>>>(d_input, d_target, d_targetNormals,
       corres, corresNormals, residuals,	deltaTransform, distThres, normalThres, width, height);
 
   float globalErrorReadback = 0.0;
   checkCudaErrors(cudaMemcpyFromSymbol(&globalErrorReadback, globalError, sizeof(float)));
-  //std::cout<<"Global correspondence error = "<<globalErrorReadback<<" \n\n";
+  //std::cerr<<"Global correspondence error = "<<globalErrorReadback<<" \n\n";
 	checkCudaErrors(cudaDeviceSynchronize());
   return globalErrorReadback;
 }
