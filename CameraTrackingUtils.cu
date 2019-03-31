@@ -47,15 +47,6 @@ __device__ float globalError;
 //	return v.w != MINF;
 //}
 
-__device__
-static inline int2 cam2screenPos(float3 p) {
-  float3 sp = K*p;
-  //return make_int2(sp.x + 0.5, sp.y + 0.5);
-	//float x = ((p.x * fx) / p.z) + cx;
-	//float y = ((p.y * fy) / p.z) + cy;
-	return make_int2(sp.x/sp.z + 0.5, sp.y/sp.z + 0.5);
-}
-
 __global__
 void calculateVertexPositions(float4* d_vertexPositions, const uint16_t* d_depthBuffer) {
 	int xidx = blockDim.x*blockIdx.x + threadIdx.x;
@@ -113,7 +104,7 @@ void calculateNormals(const float4* d_positions, float4* d_normals)
 			if (l > 0.0f)
 			{
 				//float4 v = make_float4(n/-l, 1.0f);
-				float4 vert = make_float4(n/l, 1.0);
+				float4 vert = make_float4(n/l, 0.0);
 				d_normals[idx] = vert;
 				//printf("Normal for thread %d : %f %f %f", yidx*numRows+xidx, vert.x, vert.y, vert.z);
 			}
@@ -128,6 +119,14 @@ extern "C" void preProcess(float4 *positions, float4* normals, const uint16_t *d
 
 }
 
+__device__
+static inline int2 cam2screenPos(float3 p) {
+  float3 sp = K*p;
+  //return make_int2(sp.x + 0.5, sp.y + 0.5);
+	//float x = ((p.x * fx) / p.z) + cx;
+	//float y = ((p.y * fy) / p.z) + cy;
+	return make_int2(sp.x/sp.z + 0.5, sp.y/sp.z + 0.5);
+}
 
 __global__
 void FindCorrespondences(const float4* input,	const float4* target,
@@ -140,6 +139,9 @@ void FindCorrespondences(const float4* input,	const float4* target,
 	int xidx = blockDim.x*blockIdx.x + threadIdx.x;
 	int yidx = blockDim.y*blockIdx.y + threadIdx.y;
 
+  //if (threadIdx.x==0 && threadIdx.y ==0)  {
+  //  printf("Block is (%i, %i)\n",blockIdx.x, blockIdx.y);
+  //}
 	if (xidx >= numCols || yidx >= numRows) {
 		return;
 	}
@@ -159,15 +161,17 @@ void FindCorrespondences(const float4* input,	const float4* target,
 
     if(sp.x > 0 && sp.y > 0 && sp.x < width && sp.y < height)
     {
+      //printf("%i) sp.x = %i
       int targetIndex = (sp.y * width) + sp.x;
       float4 pTar = target[targetIndex];
       float4 nTar = targetNormals[targetIndex];
-      if(pTar.x>0 && pTar.y>0 && pTar.z>0)
-      {
       float3 diff = make_float3(transPSrc - pTar);
       float d = dot(diff, make_float3(nTar));
       if (d < distThres)  {
-        //printf("%d) src- (%f, %f, %f), target- (%f, %f, %f), d= %f\n",idx, pSrc.x, pSrc.y, pSrc.z, pTar.x, pTar.y, pTar.z, d);
+        //if (threadIdx.x ==0 && threadIdx.y ==0)
+        {
+          //printf("%i) src- (%f, %f, %f), target- (%f, %f, %f), d= %f\n",idx, pSrc.x, pSrc.y, pSrc.z, pTar.x, pTar.y, pTar.z, d);
+        }
         atomicAdd(&globalError, d);
         correspondences[idx] = pTar;
         correspondenceNormals[idx] = nTar;
@@ -175,7 +179,6 @@ void FindCorrespondences(const float4* input,	const float4* target,
         //coordpairs[idx].srcindex = idx;
         //coordpairs[idx].targIndex = targetIndex;
         //coordpairs[idx].srcindex = d;
-        }
       }
     }
 	}
@@ -195,13 +198,15 @@ extern "C" float computeCorrespondences(const float4* d_input, const float4* d_t
 
   //std::cerr<<"Before clearing prev correspondences\n";
 
-  thrust::fill(corres_ptr, corres_ptr + (width*height), float4{0});
-  thrust::fill(corresNormals_ptr, corresNormals_ptr+ (width*height), float4{0});
+  thrust::fill(corres_ptr, corres_ptr + (width*height), float4{0,0,0,0});
+  thrust::fill(corresNormals_ptr, corresNormals_ptr+ (width*height), float4{0,0,0,0});
   thrust::fill(residuals_ptr, residuals_ptr+ (width*height), (float)0.0f);
 
-  //std::cerr<<"After clearing prev correspondences\n";
+  checkCudaErrors(cudaDeviceSynchronize());
+  std::cerr<<"After clearing prev correspondences\n";
 	FindCorrespondences <<<blocks, threads>>>(d_input, d_target, d_targetNormals,
       corres, corresNormals, residuals,	deltaTransform, distThres, normalThres, width, height);
+  checkCudaErrors(cudaDeviceSynchronize());
 
   float globalErrorReadback = 0.0;
   checkCudaErrors(cudaMemcpyFromSymbol(&globalErrorReadback, globalError, sizeof(float)));

@@ -86,8 +86,9 @@ void Solver::BuildLinearSystem(const float4* d_input, const float4* d_correspond
   std::cout<<"\nCalculating JTJ\n";
   stat = cublasSsyrk(handle, CUBLAS_FILL_MODE_LOWER, CUBLAS_OP_N, 6, numCols*numRows, &alpha, d_Jac/*d_a*/, 6, &beta, d_JTJ/*d_c*/, 6); //compute JJT in column-maj order
   //Copy back
-  cudaMemcpy(JTJ.data(), d_JTJ, JTJ_SIZE, cudaMemcpyDeviceToHost);
+  cudaMemcpy(raw_JTJ_matrix.data(), d_JTJ, JTJ_SIZE, cudaMemcpyDeviceToHost);
   //fill upper matrix
+  JTJ = Eigen::Map<Matrix6x6f>(raw_JTJ_matrix.data(), 6,6);
   JTJ = JTJ.selfadjointView<Lower>();
   std::cout<<JTJ<<"\n";
   checkCudaErrors(cudaDeviceSynchronize());
@@ -182,6 +183,8 @@ Solver::Solver() {
   //d_JTr_ptr = thrust::raw_pointer_cast(&d_JTr[0]);
   //d_JTJ_ptr = thrust::raw_pointer_cast(&d_JTJ[0]);
 
+  estimate.setZero();
+  update.setZero();
   JTJ.setZero();
   JTr.setZero();
   JTJinv.setZero();

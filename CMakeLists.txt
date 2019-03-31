@@ -62,6 +62,7 @@ target_link_libraries(Application Camera)
 target_link_libraries(Application Window)
 #target_link_libraries(Application ShaderProgram)
 target_link_libraries(Application CameraTrackingUtils)
+target_link_libraries(Application GladLib)
 
 set(INCLUDE_DIRS  ${INCLUDE_DIRS} ${CUDA_INCLUDE_DIRS} ${CUHELPER_INCLUDE_DIR} ${EIGEN3_INCLUDE_DIR} ${GLM_INCLUDE_DIR}
                 ${OPENGL_INCLUDE_DIRS} ${SDL2_INCLUDE_DIRS} ${GLAD_INCLUDE_DIR} ${Boost_INCLUDE_DIRS})  #${ARMADILLO_INCLUDE_DIR}
@@ -72,7 +73,7 @@ set(LIBS ${LIBS} ${OPENGL_LIBRARY} ${CUDA_LIBRARIES}  ${SDL2_LIBRARIES} ${Boost_
 include_directories(${INCLUDE_DIRS})
 
 #set(HEADERS prereq.h common.h camera.h Window.h ShaderProgram.hpp Solver.h CameraTracking.h Application.h EigenUtil.h termcolor.hpp DebugHelper.hpp)
-set(SOURCES DepthMain.cpp ${GLAD_SRC})  #Frustum.cpp Frustum.h Application.cpp camera.cpp Window.cpp
+set(SOURCES DepthMain.cpp )  #Frustum.cpp Frustum.h Application.cpp camera.cpp Window.cpp
 
 
 add_executable(${PROJECT_NAME} ${SOURCES} ) #${HEADERS}

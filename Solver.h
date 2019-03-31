@@ -7,6 +7,7 @@
 #include "cuda_helper/helper_cuda.h"
 #include <cublas_v2.h>
 #include <cuda_runtime.h>
+#include <array>
 #include "SE3.h"
 
 //#include <thrust/device_vector.h>
@@ -36,6 +37,7 @@ class Solver {
     int JTJ_SIZE;
     int JTr_SIZE;
     const int num_vars_in_jac = 6;
+    std::array<float,36> raw_JTJ_matrix;
     Vector6f update, estimate; //Will hold solution
     bool solution_exists = false;
     //Matrix4x4f deltaT;  //intermediate estimated transform

@@ -63,6 +63,7 @@ void CameraTracking::Align(float4* d_input, float4* d_inputNormals, float4* d_ta
 	  Matrix4x4f intermediateT = solver.getTransform();
 	  //Matrix4x4f intermediateT = rigidAlignment(d_input, d_inputNormals, deltaTransform);
     deltaTransform = intermediateT;//intermediateT*deltaTransform;
+    //float4x4 transposed = deltaTransform.transpose(); //TODO : remove later
   }
 }
 
