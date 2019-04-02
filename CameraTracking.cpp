@@ -40,6 +40,7 @@ void CameraTracking::Align(float4* d_input, float4* d_inputNormals, float4* d_ta
     //CUDA files cannot include any Eigen headers, don't know why. So convert eigen matrix to __device__ compatible float4x4.
     cout<<"deltaTransform = \n"<<deltaTransform<<"\n";
 	  float4x4 deltaT = float4x4(deltaTransform.data());
+    deltaT.transpose();
 
     //Clear previous data
     //TODO All move all this to .cu file
