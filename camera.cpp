@@ -18,7 +18,7 @@ void Camera::rotate()
 	int ypos = event.motion.yrel;
 
 	// Compute new orientation
-	horizontalAngle += mouseSpeed * float(/*(1024 / 2) -*/ -xpos);
+	horizontalAngle += mouseSpeed * float(/*(1024 / 2) -*/ xpos);
 	verticalAngle += mouseSpeed * float(/*(768 / 2) -*/ -ypos);
 
 	// For the next frame, the "last time" will be "now"
@@ -109,7 +109,7 @@ void Camera::calcMatrices()
 void Camera::reset()
 {
 	position = InitialPos;
-	horizontalAngle = 3.14f;
-	verticalAngle = 0.0f;
+	horizontalAngle = 3.14f;//0.0f;//
+	verticalAngle = 3.14f;//0.0f;
 	calcMatrices();
 }

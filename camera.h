@@ -32,9 +32,9 @@ private :
 	// Initial position : on +Z
 	glm::vec3 position,InitialPos;
 	// Initial horizontal angle : toward -Z
-	float horizontalAngle = 3.14f;
+	float horizontalAngle = 3.14f;//0.0f;//
 	// Initial vertical angle : none
-	float verticalAngle = 0.0f;
+	float verticalAngle = 3.14f;//0.0f;//
 	// Initial Field of View
 	float initialFoV = 45.0f;
 	// Actual direction
@@ -47,7 +47,7 @@ private :
 //	glm::vec3 lookAt = glm::vec3(0, 0, -10);
 	// Time difference
 	float timeDifference = 0;
-	
+
 	float speed = 0.01f; // 3 units / second
 	float mouseSpeed = 0.01f;
 
@@ -61,7 +61,7 @@ public:
 	glm::vec3 getRightDir(){ return right; }
 	glm::vec3 getCamPos(){ return position; }
 	glm::vec3 getDirection(){ return direction; }	//return current direction we're looking at
-	
+
 	void setViewMat(glm::mat4 mat){ ViewMatrix = mat; }
 	void setPosition(glm::vec3);
 	void move(CameraDirection);
