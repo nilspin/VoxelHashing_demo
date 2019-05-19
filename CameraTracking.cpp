@@ -126,7 +126,7 @@ CameraTracking::CameraTracking(int w, int h):width(w),height(h)
   checkCudaErrors(cudaMemset(d_residuals, 0, ARRAY_SIZE));
   float arr[16] = { 1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1 };
   deltaTransform = Matrix4x4f(arr);
-  const float intrinsics[] = {525.0, 0, 319.5, 0, 525.0, 239.5, 0, 0, 1}; //TODO: read from file
+  //const float intrinsics[] = {525.0, 0, 319.5, 0, 525.0, 239.5, 0, 0, 1}; //TODO: read from file
   Matrix3x3f K{intrinsics}; //Camera intrinsic matrix
   Matrix3x3f K_inv = K.inverse();
   std::cout<< termcolor::on_blue<< "Intrinsic camera matrix :" <<termcolor::reset<<"\n";

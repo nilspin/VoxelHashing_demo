@@ -67,6 +67,8 @@ Application::Application() {
   deltaT = glm::make_mat4(tracker->getTransform().data());
   //deltaT = glm::transpose(deltaT);
   std::cout << termcolor::on_blue<< "Final rigid transform : \n" << termcolor::reset<< glm::to_string(deltaT) << "\n";
+
+  //TODO Depth integration into volume
   checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_input_resource, 0));
   checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_inputNormals_resource, 0));
   checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_target_resource, 0));

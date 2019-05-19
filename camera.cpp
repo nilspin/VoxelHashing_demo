@@ -55,12 +55,12 @@ void Camera::move(CameraDirection dir)
 		break;
 
 	case ROT_LEFT:
-		horizontalAngle += 0.1;
+		horizontalAngle -= 0.1;
 		break;
 
 
 	case ROT_RIGHT:
-		horizontalAngle -= 0.1;
+		horizontalAngle += 0.1;
 		break;
 
 
