@@ -4,8 +4,17 @@
 #include "cuda_helper/helper_math.h"
 #include "cuda_helper/helper_cuda.h"
 #include "VoxelDataStructures.h"
+#include "common.h"
+
+//This is a simple vector math library. Use this with CUDA instead of glm
+#include "cuda_helper/cuda_SimpleMatrixUtil.h"
+
+#define FREE_BLOCK -1
+#define LOCKED_BLOCK -2
+#define NO_OFFSET 0
 
 __constant__ HashTableParams d_hashtableParams;
+__device__ __constant__ float4x4 kinectProjectionMatrix;
 
 VoxelEntry *d_hashTable;
 VoxelEntry *d_compactifiedHashTable;
@@ -14,6 +23,33 @@ unsigned int *d_arena;	//Arena that manages free memory
 unsigned int *d_arenaCounter;	//single element; points to next free block (atomic counter)
 Voxel *d_voxelBlocks;
 int *d_hashTableBucketMutex;	//mutex for locking particular bin while inserting/deleting
+
+__host__
+void calculateKinectProjectionMatrix()	{
+	float m[4][4];
+	m[0][0] = 2.0 * fx / imgWidth;
+    m[0][1] = 0.0;
+    m[0][2] = 0.0;
+    m[0][3] = 0.0;
+
+    m[1][0] = 0.0;
+    m[1][1] = -2.0 * fy / imgHeight;
+    m[1][2] = 0.0;
+    m[1][3] = 0.0;
+
+    m[2][0] = 1.0 - 2.0 * cx / imgWidth;
+    m[2][1] = 2.0 * cy / imgHeight - 1.0;
+    m[2][2] = (kinZFar + kinZNear) / (kinZNear - kinZFar);
+    m[2][3] = -1.0;
+
+    m[3][0] = 0.0;
+    m[3][1] = 0.0;
+    m[3][2] = 2.0 * kinZFar * kinZNear / (kinZNear - kinZFar);
+    m[3][3] = 0.0;
+
+	//Now upload to device
+	cudaCheckErrors(cudaMemcpyToSymbol(kinectProjectionMatrix, m, sizeof(m)));
+}
 
 
 void updateConstantHashTableParams(const HashTableParams &params)	{
@@ -112,4 +148,117 @@ int3 delinearizeVoxelPos(const unsigned int& index)	{
 	unsigned int y = (index % (size * size)) / size;
 	unsigned int z = index / (size * size);
 	return make_int3(x,y,z);
+}
+
+
+//what follows is IMO coolest code in project so far
+__device__
+VoxelEntry getVoxelEntry4Block(const int3& pos)	{
+	const unsigned int hash = calculateHash(pos);
+	const unsigned int bucketSize = d_hashtableParams.bucketSize;
+	const unsigned int numBuckets = d_hashtableParams.numBuckets;
+	const unsigned int startIndex = hash * bucketSize;
+
+	VoxelEntry temp;
+	temp.pos = pos;
+	temp.offset = 0;
+	temp.ptr = FREE_BLOCK;
+
+	int i=0;
+	//[1] Iterate all bucketSize entries
+	for(i=0; i < bucketSize ; ++i)	{
+		VoxelEntry& curr = d_hashTable[startIndex + i];
+		if((curr.pos.x == pos.x) && (curr.pos.y == pos.y) &&(curr.pos.z == pos.z)
+				&& (curr.ptr != FREE_BLOCK)) {
+			return curr;
+		}
+	}
+	//[2] block not found. handle collisions by traversing tail linked list
+	const int lastEntryInBucket = (hash+1)*bucketSize -1;
+	i = lastEntryInBucket;
+	//memorize idx at list end and memorize offset from last
+	//element of bucket to list end
+	int iter = 0;
+	const int maxIter = d_hashtableParams.attachedLinkedListSize;
+	while(iter < maxIter)	{
+
+		VoxelEntry curr = d_hashTable[i];
+		if((curr.pos.x == pos.x) && (curr.pos.y == pos.y) &&(curr.pos.z == pos.z)
+				&& (curr.ptr != FREE_BLOCK)) {
+			return curr;
+		}
+
+		if(curr.offset == 0)	{ //we've found end of list
+			break;
+		}
+		i = lastEntryInBucket + curr.offset;
+
+		i %= (numBuckets * bucketSize);
+
+		iter++;
+	}
+	return temp;
+}
+
+
+__device__
+bool insertVoxelEntry(const int3& pos)	{
+
+	unsigned int hash = calculateHash(pos);
+	const unsigned int bucketSize = d_hashtableParams.bucketSize;
+	const unsigned int numBuckets = d_hashtableParams.numBuckets;
+	const unsigned int startIndex = hash * bucketSize;
+
+	VoxelEntry temp;
+	temp.offset=0;
+	temp.ptr = FREE_BLOCK;
+	temp.pos = pos;
+
+	//[1] iterate current bucket, try inserting at first empty block we see.
+	int i=0;
+	for(i=0; i<bucketSize; ++i)	{
+		const int idx = startIndex+i;
+		VoxelEntry &curr = d_hashTable[idx];
+		if(curr.pos.x == pos.x && curr.pos.y == pos.y && curr.pos.z == pos.z
+				&& curr.ptr != FREE_BLOCK)	return false;
+		if(curr.ptr == FREE_BLOCK)	{
+			int prevVal = atomicExch(&d_hashTableBucketMutex[idx], LOCKED_BLOCK);
+			if(prevVal != LOCKED_BLOCK)	{	//means we can lock current bucket
+				VoxelEntry &entry = d_hashTable[idx];
+				entry.pos = pos;
+				entry.offset = NO_OFFSET;
+				entry.ptr = allocSingleBlockInHeap();
+				return true;
+			}
+		}
+	}
+	//[2] bucket is full. Append to list.
+	const int lastEntryInBucket = (hash+1)*bucketSize - 1;
+
+	i = lastEntryInBucket;
+	int offset=0;
+	//memorize idx at list end and memorize offset from last
+	//element of bucket to list end
+	int iter = 0;
+	const int maxIter = d_hashtableParams.attachedLinkedListSize;
+	while(iter < maxIter)	{
+		offset++;
+		i = (lastEntryInBucket + offset)%(numBuckets*bucketSize);
+		VoxelEntry &curr = d_hashTable[i];
+		//if(curr.offset == 0)	continue;	//cannot insert in last bucket element
+		if(curr.pos.x == pos.x && curr.pos.y == pos.y && curr.pos.z == pos.z
+				&& curr.ptr != FREE_BLOCK)	return false;	//block already exists
+		if(curr.ptr == FREE_BLOCK)	{	//first free entry
+			//lock parent bucket
+			int prevVal = atomicExch(&d_hashTableBucketMutex[hash], LOCKED_BLOCK);
+			if(prevVal != LOCKED_BLOCK)	{
+				hash = i/bucketSize;
+				//lock bucket where free entry actually exists
+				prevVal = atomicExch(&d_hashTableBucketMutex[hash], LOCKED_BLOCK);
+				if(prevVal != LOCKED_BLOCK)	{
+					curr.pos = pos;
+					curr.offset = d_hashTable[lastEntryInBucket].offset;
+					curr.ptr = allocSingleBlockInHeap();
+					d_hashTable[lastEntryInBucket].offset = offset;
+				}
 }

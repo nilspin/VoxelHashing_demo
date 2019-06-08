@@ -16,6 +16,9 @@ const float intrinsics[] = {fx, 0, cx, 0, fy, cy, 0, 0, 1};
 //const float intrinsics[] = {fx, 0, 0, 0, fy, 0, cx, cy, 1};
 const int numCols =  640;
 const int numRows =  480;
+const int& imgWidth = numCols;
+const int& imgHeight = numRows;
+
 
 //const float MAXF = std::numeric_limits<float>::max();
 //const float MINF = std::numeric_limits<float>::quiet_NaN();
@@ -25,5 +28,9 @@ const int pyramid_iters[pyramid_size+1] = {4,5,10};
 
 //#define MINF 0xff800000
 //#define MAXF 0x7F7FFFFF
+
+/*-----Kinect related------*/
+const int kinZNear = 1.0f;
+const float kinZFar = 1000.0f;
 
 #endif
