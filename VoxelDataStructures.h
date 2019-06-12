@@ -15,8 +15,8 @@ struct Voxel	{
 __align__(16)
 struct VoxelEntry	{
 	int3 pos;
-	unsigned int ptr;
-	unsigned int offset;
+	int ptr;
+	int offset;
 };
 
 __align__(16)
