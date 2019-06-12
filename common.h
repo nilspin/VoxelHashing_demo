@@ -16,8 +16,8 @@ const float intrinsics[] = {fx, 0, cx, 0, fy, cy, 0, 0, 1};
 //const float intrinsics[] = {fx, 0, 0, 0, fy, 0, cx, cy, 1};
 const int numCols =  640;
 const int numRows =  480;
-const int& imgWidth = numCols;
-const int& imgHeight = numRows;
+const int imgWidth = numCols;
+const int imgHeight = numRows;
 
 
 //const float MAXF = std::numeric_limits<float>::max();
