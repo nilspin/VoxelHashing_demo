@@ -3,8 +3,7 @@
 #include <cuda_runtime.h>
 
 #include <thrust/device_vector.h>
-#include "cuda_helper/helper_math.h"
-#include "cuda_helper/helper_cuda.h"
+#include <thrust/device_ptr.h>
 #include "VoxelDataStructures.h"
 #include "common.h"
 
@@ -17,26 +16,42 @@
 
 __constant__ HashTableParams d_hashtableParams;
 __device__ __constant__ float4x4 kinectProjectionMatrix;
+__device__ PtrContainer ptrHldr;
 
+/*----------(Raw)STORAGE---------------*/
 //VoxelEntry *d_hashTable;
 //VoxelEntry *d_compactifiedHashTable;
+//int* d_compactifiedHashCounter;
 //unsigned int *d_compactifiedHashCounter;
-//unsigned int *d_arena;	//Arena that manages free memory
-//unsigned int *d_arenaCounter;	//single element; points to next free block (atomic counter)
+//int *d_heap;	//Arena that manages free memory
+//int *d_heapCounter;	//single element; points to next free block (atomic counter)
+//__device__ int d_heapCounter;
 //Voxel *d_voxelBlocks;
 //int *d_hashTableBucketMutex;	//mutex for locking particular bin while inserting/deleting
+/*------------------------------------*/
 
-/*---------STORAGE--------------*/
+/*---------(Thrust)STORAGE--------------*/
+
 //hashtable
-thrust::device_vector<VoxelEntry> d_hashTable;
-thrust::device_vector<VoxelEntry> d_compactifiedHashTable;
-thrust::device_vector<int> d_hashTableBucketMutex;
-__device__ int d_compactifiedHashCounter;
+//thrust::device_vector<VoxelEntry> d_hashTable_vec;
+//thrust::device_vector<VoxelEntry> d_compactifiedHashTable_vec;
+//thrust::device_vector<int> d_hashTableBucketMutex_vec;
+//__device__ int d_compactifiedHashCounter;
+
+//VoxelEntry* d_hashTable;
+//VoxelEntry* d_compactifiedHashTable;
+//int* d_hashTableBucketMutex;
+
 //heap management
-thrust::device_vector<int> d_heap;	//heap that manages free memory
-__device__ int d_heapCounter;
+//thrust::device_vector<int> d_heap_vec;	//heap that manages free memory
+//__device__ int d_heapCounter;
+
+//int* d_heap;
+
 //actual voxelblocks
-thrust::device_vector<Voxel> d_SDFBlocks;	//main heap holding tsdf blocks
+//thrust::device_vector<Voxel> d_SDFBlocks_vec;	//main heap holding tsdf blocks
+
+//Voxel* d_SDFBlocks;
 /*------------------------------*/
 
 
@@ -46,41 +61,47 @@ void updateConstantHashTableParams(const HashTableParams &params)	{
 	checkCudaErrors(cudaMemcpyToSymbol(d_hashtableParams, &params, size, 0, cudaMemcpyHostToDevice));
 }
 
-__host__
-void allocate(const HashTableParams& params)	{
-	const int initVal = 0;
-	d_hashTable.resize(params.numBuckets * params.bucketSize);
-	d_compactifiedHashTable.resize(params.numBuckets * params.bucketSize);
-	d_hashTableBucketMutex.resize(params.numBuckets * params.bucketSize);
-	d_heap.resize(params.numBuckets * params.bucketSize);
-	d_SDFBlocks.resize(params.numBuckets * params.bucketSize * 512);
-	cudaCheckErrors(cudaMemcpyToSymbol(d_heapCounter, &initVal, sizeof(int),
-			0, cudaMemcpyHostToDevice);
-	cudaCheckErrors(cudaMemcpyToSymbol(d_compactifiedHashCounter, &initVal,
-			sizeof(int), 0, cudaMemcpyHostToDevice);
-}
+//__host__
+//void allocate(const HashTableParams& params)	{
+//	const int initVal = 0;
+//	d_hashTable_vec.resize(params.numBuckets * params.bucketSize);
+//	d_compactifiedHashTable_vec.resize(params.numBuckets * params.bucketSize);
+//	d_hashTableBucketMutex_vec.resize(params.numBuckets * params.bucketSize);
+//	d_heap_vec.resize(params.numBuckets * params.bucketSize);
+//	d_SDFBlocks_vec.resize(params.numBuckets * params.bucketSize * 512);
+//	checkCudaErrors(cudaMemcpyToSymbol(ptrHldr.d_heapCounter, &initVal, sizeof(int),
+//			0, cudaMemcpyHostToDevice));
+//	checkCudaErrors(cudaMemcpyToSymbol(ptrHldr.d_compactifiedHashCounter, &initVal,
+//			sizeof(int), 0, cudaMemcpyHostToDevice));
+//	//init raw pointers
+//	ptrHldr.d_heap = thrust::raw_pointer_cast(&d_heap_vec[0]);
+//	ptrHldr.d_hashTable = thrust::raw_pointer_cast(&d_hashTable_vec[0]);
+//	ptrHldr.d_compactifiedHashTable = thrust::raw_pointer_cast(&d_compactifiedHashTable_vec[0]);
+//	ptrHldr.d_hashTableBucketMutex = thrust::raw_pointer_cast(&d_hashTableBucketMutex_vec[0]);
+//	ptrHldr.d_SDFBlocks = thrust::raw_pointer_cast(&d_SDFBlocks_vec[0]);
+//}
 
 //TODO do this using thrust instead
-//__host__
-//void allocate(const HashTableParams &params)	{
-//	checkCudaErrors(cudaMalloc(&d_hashTable, sizeof(VoxelEntry) * params.numBuckets * params.bucketSize));
-//	checkCudaErrors(cudaMalloc(&d_arena, sizeof(unsigned int) * params.numVoxelBlocks));
-//	checkCudaErrors(cudaMalloc(&d_arenaCounter, sizeof(unsigned int)));
-//	checkCudaErrors(cudaMalloc(&d_compactifiedHashTable, sizeof(VoxelEntry) * params.numBuckets * params.bucketSize));
-//	checkCudaErrors(cudaMalloc(&d_voxelBlocks, sizeof(unsigned int) * params.numVoxelBlocks * params.voxelBlockSize * params.voxelBlockSize * params.voxelBlockSize));
-//	checkCudaErrors(cudaMalloc(&d_hashTableBucketMutex, sizeof(int) * params.numBuckets));
-//}
+__host__
+void allocate(const HashTableParams &params)	{
+	checkCudaErrors(cudaMalloc(&ptrHldr.d_hashTable, sizeof(VoxelEntry) * params.numBuckets * params.bucketSize));
+	checkCudaErrors(cudaMalloc(&ptrHldr.d_heap, sizeof(unsigned int) * params.numVoxelBlocks));
+	checkCudaErrors(cudaMalloc(&ptrHldr.d_heapCounter, sizeof(unsigned int)));
+	checkCudaErrors(cudaMalloc(&ptrHldr.d_compactifiedHashTable, sizeof(VoxelEntry) * params.numBuckets * params.bucketSize));
+	checkCudaErrors(cudaMalloc(&ptrHldr.d_SDFBlocks, sizeof(unsigned int) * params.numVoxelBlocks * params.voxelBlockSize * params.voxelBlockSize * params.voxelBlockSize));
+	checkCudaErrors(cudaMalloc(&ptrHldr.d_hashTableBucketMutex, sizeof(int) * params.numBuckets));
+}
 
-//__host__
-//void free()	{
-//	checkCudaErrors(cudaFree(d_hashTable));
-//	checkCudaErrors(cudaFree(d_arena));
-//	checkCudaErrors(cudaFree(d_arenaCounter));
-//	checkCudaErrors(cudaFree(d_compactifiedHashTable));
-//	checkCudaErrors(cudaFree(d_compactifiedHashCounter));
-//	checkCudaErrors(cudaFree(d_voxelBlocks));
-//	checkCudaErrors(cudaFree(d_hashTableBucketMutex));
-//}
+__host__
+void free()	{
+	checkCudaErrors(cudaFree(ptrHldr.d_hashTable));
+	checkCudaErrors(cudaFree(ptrHldr.d_heap));
+	checkCudaErrors(cudaFree(ptrHldr.d_heapCounter));
+	checkCudaErrors(cudaFree(ptrHldr.d_compactifiedHashTable));
+	checkCudaErrors(cudaFree(ptrHldr.d_compactifiedHashCounter));
+	checkCudaErrors(cudaFree(ptrHldr.d_SDFBlocks));
+	checkCudaErrors(cudaFree(ptrHldr.d_hashTableBucketMutex));
+}
 
 __host__
 void calculateKinectProjectionMatrix()	{
@@ -106,7 +127,7 @@ void calculateKinectProjectionMatrix()	{
     m[3][3] = 0.0;
 
 	//Now upload to device
-	cudaCheckErrors(cudaMemcpyToSymbol(kinectProjectionMatrix, m, sizeof(m)));
+	checkCudaErrors(cudaMemcpyToSymbol(kinectProjectionMatrix, m, sizeof(m)));
 }
 
 
@@ -140,7 +161,7 @@ __device__
 int3 world2Voxel(const float3& point)	{
 	const int size = d_hashtableParams.voxelBlockSize;
 	float3 p = point/size;
-	return make_int3(p + make_int3(signbit(p))*0.5);//return center
+	return make_int3(p + make_float3(signbit(p.x), signbit(p.y),signbit(p.z))*0.5);//return center
 }
 
 __device__
@@ -181,17 +202,17 @@ int3 delinearizeVoxelPos(const unsigned int& index)	{
 }
 
 __device__
-void allocSingleBlockInHeap(int ptr)	{
-	int delIdx = ptr / 512;
-	uint addr = atomicSub(&d_heapCounter, 1);
-	return d_heap[addr];
+int allocSingleBlockInHeap()	{	//int ptr
+	//int delIdx = ptr / 512;
+	uint addr = atomicSub(&ptrHldr.d_heapCounter[0], 1);
+	return ptrHldr.d_heap[addr];
 }
 
 __device__
 void removeSingleBlockInHeap(int ptr)	{
-	int delIdx = ptr / 512;
-	uint addr = atomicAdd(&d_heapCounter, 1);
-	d_heap[addr + 1] = ptr;
+	//int delIdx = ptr / 512;
+	uint addr = atomicAdd(&ptrHldr.d_heapCounter[0], 1);
+	ptrHldr.d_heap[addr + 1] = ptr;
 }
 
 
@@ -211,7 +232,7 @@ VoxelEntry getVoxelEntry4Block(const int3& pos)	{
 	int i=0;
 	//[1] Iterate all bucketSize entries
 	for(i=0; i < bucketSize ; ++i)	{
-		VoxelEntry& curr = d_hashTable[startIndex + i];
+		VoxelEntry& curr = ptrHldr.d_hashTable[startIndex + i];
 		if((curr.pos.x == pos.x) && (curr.pos.y == pos.y) &&(curr.pos.z == pos.z)
 				&& (curr.ptr != FREE_BLOCK)) {
 			return curr;
@@ -226,7 +247,7 @@ VoxelEntry getVoxelEntry4Block(const int3& pos)	{
 	const int maxIter = d_hashtableParams.attachedLinkedListSize;
 	while(iter < maxIter)	{
 
-		VoxelEntry curr = d_hashTable[i];
+		VoxelEntry curr = ptrHldr.d_hashTable[i];
 		if((curr.pos.x == pos.x) && (curr.pos.y == pos.y) &&(curr.pos.z == pos.z)
 				&& (curr.ptr != FREE_BLOCK)) {
 			return curr;
@@ -263,12 +284,12 @@ bool insertVoxelEntry(const int3& data)	{
 	int i=0;
 	for(i=0; i<bucketSize; ++i)	{
 		const int idx = startIndex+i;
-		VoxelEntry &curr = d_hashTable[idx];
+		VoxelEntry &curr = ptrHldr.d_hashTable[idx];
 		if(curr.pos.x == data.x && curr.pos.y == data.y && curr.pos.z == data.z
 				&& curr.ptr != FREE_BLOCK)	return false;
 		if(curr.ptr == FREE_BLOCK)	{
 			//TODO shouldn't the following be [hash] instead of [idx] ?
-			int prevVal = atomicExch(&d_hashTableBucketMutex[hash], LOCKED_BLOCK);
+			int prevVal = atomicExch(&ptrHldr.d_hashTableBucketMutex[hash], LOCKED_BLOCK);
 			if(prevVal != LOCKED_BLOCK)	{	//means we can lock current bucket
 				curr.pos = data;
 				curr.offset = NO_OFFSET;
@@ -288,7 +309,7 @@ bool insertVoxelEntry(const int3& data)	{
 	const int maxIter = d_hashtableParams.attachedLinkedListSize;
 	while(iter < maxIter)	{
 		i = i%(numBuckets*bucketSize);
-		VoxelEntry& curr = d_hashTable[i];
+		VoxelEntry& curr = ptrHldr.d_hashTable[i];
 		if(curr.ptr != FREE_BLOCK)	{
 			if(curr.pos.x == data.x && curr.pos.y == data.y &&
 					curr.pos.z == data.z && curr.ptr != FREE_BLOCK)	{
@@ -297,12 +318,12 @@ bool insertVoxelEntry(const int3& data)	{
 			if(curr.offset == 0)	{//end of list, lookahead till we find empty slot
 				int j=1;
 				//[1] lock the parent block
-				int prevVal = atomicExch(&d_hashTableBucketMutex[hash],
+				int prevVal = atomicExch(&ptrHldr.d_hashTableBucketMutex[hash],
 						LOCKED_BLOCK);
 				if(prevVal != LOCKED_BLOCK)	{//if we got the lock
 					//[2] then lookahead for empty block in new bucket
 					while(j<10)	{
-						if(d_hashTable[i+j].ptr == FREE_BLOCK)	break;
+						if(ptrHldr.d_hashTable[i+j].ptr == FREE_BLOCK)	break;
 						j++;
 					}
 					if(j==10)	{
@@ -310,10 +331,10 @@ bool insertVoxelEntry(const int3& data)	{
 						return false;
 					}
 					//[3] now lock this new bucket and insert the block
-					prevVal = atomicExch(&d_hashTableBucketMutex[(i+j)/numBuckets],
+					prevVal = atomicExch(&ptrHldr.d_hashTableBucketMutex[(i+j)/numBuckets],
 							LOCKED_BLOCK);
 					if(prevVal != LOCKED_BLOCK)	{
-						VoxelEntry& next = d_hashTable[i+j];
+						VoxelEntry& next = ptrHldr.d_hashTable[i+j];
 						//TODO maybe we can do away with this check
 						if(next.ptr == FREE_BLOCK)	{
 							next.ptr = allocSingleBlockInHeap();
@@ -329,14 +350,14 @@ bool insertVoxelEntry(const int3& data)	{
 			if(curr.offset != 0)	{	//traversing nodes in linked list
 				int j = i;
 				while(j <= (i+curr.offset))	{
-					if(d_hashTable[j].ptr == FREE_BLOCK)	{
+					if(ptrHldr.d_hashTable[j].ptr == FREE_BLOCK)	{
 						//[a] free space found. first lock bucket with curr
-						int prevVal = atomicExch(&d_hashTableBucketMutex[hash/numBuckets], LOCKED_BLOCK);
+						int prevVal = atomicExch(&ptrHldr.d_hashTableBucketMutex[hash/numBuckets], LOCKED_BLOCK);
 						if(prevVal != LOCKED_BLOCK)	{
 							//[b] then lock bucket with new space
-							prevVal = atomicExch(&d_hashTableBucketMutex[j/numBuckets], LOCKED_BLOCK);
+							prevVal = atomicExch(&ptrHldr.d_hashTableBucketMutex[j/numBuckets], LOCKED_BLOCK);
 							if(prevVal != LOCKED_BLOCK)	{
-								VoxelEntry& ins = d_hashTable[j];
+								VoxelEntry& ins = ptrHldr.d_hashTable[j];
 								ins.offset = i + curr.offset - j;
 								ins.ptr = allocSingleBlockInHeap();
 								ins.pos = data;
@@ -363,12 +384,12 @@ int beforeThis(int3 data)	{
 	const unsigned int numBuckets = d_hashtableParams.numBuckets;
 	const unsigned int lastEntryInBucket = (hash+1) * bucketSize - 1;
 
-	int iter = 0; const int maxiter = 7;
+	int iter = 0; const int maxIter = 7;
 	int i = lastEntryInBucket;
-	if(d_hashTable[lastEntryInBucket].offset != 0)	{
+	if(ptrHldr.d_hashTable[lastEntryInBucket].offset != 0)	{
 		while(iter < maxIter)	{
-			const VoxelEntry& curr = d_hashTable[i];
-			const VoxelEntry& next = d_hashTable[i + curr.offset];
+			const VoxelEntry& curr = ptrHldr.d_hashTable[i];
+			const VoxelEntry& next = ptrHldr.d_hashTable[i + curr.offset];
 			if((next.pos.x==data.x) && (next.pos.y==data.y) &&
 					(next.pos.z==data.z))	{return i;}
 			i += curr.offset;
@@ -379,7 +400,7 @@ int beforeThis(int3 data)	{
 }
 
 __device__
-void deleteVoxelEntry(int3 data)	{
+bool deleteVoxelEntry(int3 data)	{
 	//TODO : iterate over entire bucket
 	unsigned int hash = calculateHash(data);
 	const unsigned int bucketSize = d_hashtableParams.bucketSize;
@@ -395,13 +416,13 @@ void deleteVoxelEntry(int3 data)	{
 	int i=0;
 	for(i=0; i<bucketSize; ++i)	{
 		const int idx = startIndex+i;
-		VoxelEntry &curr = d_hashTable[idx];
+		VoxelEntry &curr = ptrHldr.d_hashTable[idx];
 		if(curr.pos.x == data.x && curr.pos.y == data.y && curr.pos.z == data.z
 				&& curr.ptr != FREE_BLOCK)	{return false;}
 		if(curr.ptr == FREE_BLOCK)	{
 			//TODO shouldn't the following be [hash] instead of [idx] ?
 			//try locking current bucket
-			int prevVal = atomicExch(&d_hashTableBucketMutex[hash], LOCKED_BLOCK);
+			int prevVal = atomicExch(&ptrHldr.d_hashTableBucketMutex[hash], LOCKED_BLOCK);
 			if(prevVal != LOCKED_BLOCK)	{	//means we can lock current bucket
 				curr.pos = make_int3(0);
 				curr.offset = NO_OFFSET;
@@ -413,13 +434,13 @@ void deleteVoxelEntry(int3 data)	{
 	}
 	//deletion in linked list
 	int lastEntry = beforeThis(data);
-	if(lastEntry == -1)	{return;}	//error
-	VoxelEntry& prev = d_hashTable[lastEntry];
-	VoxelEntry& curr = d_hashTable[lastEntry + prev.offset];
+	if(lastEntry == -1)	{return false;}	//error
+	VoxelEntry& prev = ptrHldr.d_hashTable[lastEntry];
+	VoxelEntry& curr = ptrHldr.d_hashTable[lastEntry + prev.offset];
 	//lock the bucket with curr
-	int prevVal = atomicExch(&d_hashTableBucketMutex[hash], LOCKED_BLOCK);
+	int prevVal = atomicExch(&ptrHldr.d_hashTableBucketMutex[hash], LOCKED_BLOCK);
 	if(prevVal!=LOCKED_BLOCK)	{	//lock acquired
-		prevVal = atomicExch(&d_hashTableBucketMutex[lastEntry / numBuckets],
+		prevVal = atomicExch(&ptrHldr.d_hashTableBucketMutex[lastEntry / numBuckets],
 				LOCKED_BLOCK);
 		if(prevVal != LOCKED_BLOCK)	{
 			//TODO FINISH THIS!!!
@@ -428,6 +449,24 @@ void deleteVoxelEntry(int3 data)	{
 		}
 	}
 
+	return false;//delete didn't happen :(
+
+}
+
+__inline__ __device__
+bool blockInFrustum(const int3& blockId)	{
+	float4 pos = make_float4(blockId.x, blockId.y, blockId.z, 1);
+	pos = d_hashtableParams.global_transform * pos;
+	pos = kinectProjectionMatrix * pos;
+
+	if((pos.x > -pos.w) && (pos.x < pos.w) &&
+		(pos.y > -pos.w) && (pos.y < pos.w) &&
+		(pos.z > -pos.w) && (pos.z < pos.w))	{
+		return true;
+	}
+	else {
+		return false;
+	}
 }
 
 __device__
@@ -454,13 +493,15 @@ void allocBlocksKernel(const float4* verts, const float4* normals)	{	//Do we nee
 	int3 endBlock = world2Block(rayEnd);
 	float3 rayDir = normalize(rayEnd - rayStart);
 
-	int3 step = make_int3(signbit(rayDir));	//block stepping size
+	int3 step = make_int3(signbit(rayDir.x),signbit(rayDir.y),signbit(rayDir.z));	//block stepping size
 	float3 next_boundary = (rayStart + make_float3(step));
 
 	//calculate distance to next barrier
-	float3 tMax = (make_float3(next_boundary - rayStart)) / rayDir;
+	float3 tMax = ((next_boundary - rayStart)) / rayDir;
 	float3 tDelta = (voxSize / rayDir);
-	tDelta *= step;
+	tDelta.x *= step.x;
+	tDelta.y *= step.y;
+	tDelta.z *= step.z;
 
 	//convert to voxel-blocks
 	int3 idStart = world2Block(rayStart);
@@ -477,9 +518,14 @@ void allocBlocksKernel(const float4* verts, const float4* normals)	{	//Do we nee
 	if (next_boundary.z - rayStart.z == 0.0f) { tMax.z = INF; tDelta.z = INF; }
 
 	//first insert idStart block into the hashtable
-	insertVoxelEntry(temp);
+	//insertVoxelEntry(temp);
 
-	while(temp != idEnd)	{
+	while((temp.x != idEnd.x) && (temp.y != idEnd.y) && (temp.z != idEnd.z))	{
+		//check if block is in view, then insert into table
+		if(blockInFrustum(temp))	{
+			insertVoxelEntry(temp);
+		}
+
 		if(tMax.x < tMax.y && tMax.x < tMax.z)	{
 			temp.x += step.x;
 			//if(temp.x == idEnd.x) break;
@@ -496,28 +542,9 @@ void allocBlocksKernel(const float4* verts, const float4* normals)	{	//Do we nee
 			tMax.y += tDelta.y;
 		}
 
-		//check if block is in view, then insert into table
-		if(blockInFrustum(temp))	{
-			insertVoxelEntry(temp);
-		}
 		//cout<<"\nVisited "<<glm::to_string(temp);
-		iter++;
+		//iter++;
 	}
 	//By now all necessary blocks should have been allocated
 }
 
-__inline__ __device__
-bool blockInFrustum(const int3& blockId)	{
-	float4 pos = make_float4(blockId);
-	pos = d_hashtableParams.global_transform * pos;
-	pos = kinectProjectionMatrix * pos;
-
-	if((pos.x > -pos.w) && (pos.x < pos.w) &&
-		(pos.y > -pos.w) && (pos.y < pos.w) &&
-		(pos.z > -pos.w) && (pos.z < pos.w))	{
-		return true;
-	}
-	else {
-		return false;
-	}
-}

@@ -45,5 +45,13 @@ struct HashTableParams	{
 
 };
 
+struct PtrContainer	{
+	int* d_heap;
+	VoxelEntry* d_hashTable;
+	VoxelEntry* d_compactifiedHashTable;
+	int* d_hashTableBucketMutex;
+	Voxel* d_SDFBlocks;
 
-
+	int* d_heapCounter;
+	int* d_compactifiedHashCounter;
+};
