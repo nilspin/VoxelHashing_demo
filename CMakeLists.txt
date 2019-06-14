@@ -62,6 +62,9 @@ add_library(IntegrationUtils STATIC VoxelDataStructures.h VoxelUtils.cu)
 set_target_properties(IntegrationUtils PROPERTIES LINKER_LANGUAGE CUDA)
 set_target_properties(IntegrationUtils PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
+add_library(SDFModule STATIC SDF_Hashtable.h SDF_Hashtable.cpp)
+target_link_libraries(SDFModule IntegrationUtils)
+
 
 add_library(Application STATIC Application.cpp)
 target_link_libraries(Application Camera)
@@ -69,6 +72,7 @@ target_link_libraries(Application Window)
 #target_link_libraries(Application ShaderProgram)
 target_link_libraries(Application CameraTrackingUtils)
 target_link_libraries(Application IntegrationUtils)
+target_link_libraries(Application SDFModule)
 target_link_libraries(Application GladLib)
 
 set(INCLUDE_DIRS  ${INCLUDE_DIRS} ${CUDA_INCLUDE_DIRS} ${CUHELPER_INCLUDE_DIR} ${EIGEN3_INCLUDE_DIR} ${GLM_INCLUDE_DIR}

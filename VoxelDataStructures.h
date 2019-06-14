@@ -1,4 +1,6 @@
 //Defines data structures for voxel, hashtable-entry, hashtable-params, voxel-block
+#ifndef VOXEL_DATASTRUCTURES_H
+#define VOXEL_DATASTRUCTURES_H
 
 #include<cuda.h>
 #include<cuda_runtime_api.h>
@@ -21,27 +23,27 @@ struct VoxelEntry	{
 
 __align__(16)
 struct HashTableParams	{
-	HashTableParams()	{
-	}
+	//HashTableParams()	{
+	//}
 
 	float4x4 global_transform;
 	float4x4 inv_global_transform;
 
-	unsigned int numBuckets;
-	unsigned int bucketSize;
-	unsigned int attachedLinkedListSize;
-	unsigned int numVoxelBlocks;
+	unsigned int numBuckets;	//= 500000;
+	unsigned int bucketSize;	// = 10;
+	unsigned int attachedLinkedListSize;	// = 7;
+	unsigned int numVoxelBlocks;	// =1000000;
 
-	int voxelBlockSize;
-	float voxelSize;
-	unsigned int numOccupiedBlocks;	//occupied blocks in view frustum
+	int voxelBlockSize;	// = 8;
+	float voxelSize;	// = 0.05f;
+	unsigned int numOccupiedBlocks;	// = 0;	//occupied blocks in view frustum
 
-	float maxIntegrationDistance;
-	float truncScale;
-	float truncation;
+	float maxIntegrationDistance;	// = 4.0f;
+	float truncScale;	// = 0.01f;
+	float truncation;	// = 0.02f;
 
-	unsigned int integrationWeightSample;
-	unsigned int integrationWeightMax;
+	unsigned int integrationWeightSample;	// = 10;
+	unsigned int integrationWeightMax;	// = 255;
 
 };
 
@@ -55,3 +57,5 @@ struct PtrContainer	{
 	int* d_heapCounter;
 	int* d_compactifiedHashCounter;
 };
+
+#endif

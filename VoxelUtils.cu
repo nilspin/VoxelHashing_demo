@@ -5,6 +5,7 @@
 #include <thrust/device_vector.h>
 #include <thrust/device_ptr.h>
 #include "VoxelDataStructures.h"
+#include "VoxelUtils.h"
 #include "common.h"
 
 //This is a simple vector math library. Use this with CUDA instead of glm
@@ -15,7 +16,7 @@
 #define NO_OFFSET 0
 
 __constant__ HashTableParams d_hashtableParams;
-__device__ __constant__ float4x4 kinectProjectionMatrix;
+__constant__ float4x4 kinectProjectionMatrix;
 __device__ PtrContainer ptrHldr;
 
 /*----------(Raw)STORAGE---------------*/
@@ -54,7 +55,7 @@ __device__ PtrContainer ptrHldr;
 //Voxel* d_SDFBlocks;
 /*------------------------------*/
 
-
+//! Make rigid transform available on the device
 void updateConstantHashTableParams(const HashTableParams &params)	{
 	size_t size;
 	checkCudaErrors(cudaGetSymbolSize(&size, d_hashtableParams));
@@ -384,7 +385,7 @@ int beforeThis(int3 data)	{
 	const unsigned int numBuckets = d_hashtableParams.numBuckets;
 	const unsigned int lastEntryInBucket = (hash+1) * bucketSize - 1;
 
-	int iter = 0; const int maxIter = 7;
+	int iter = 0; const int maxIter = d_hashtableParams.attachedLinkedListSize;
 	int i = lastEntryInBucket;
 	if(ptrHldr.d_hashTable[lastEntryInBucket].offset != 0)	{
 		while(iter < maxIter)	{
@@ -444,8 +445,11 @@ bool deleteVoxelEntry(int3 data)	{
 				LOCKED_BLOCK);
 		if(prevVal != LOCKED_BLOCK)	{
 			//TODO FINISH THIS!!!
-			uint linBlock = 512;
-			//int toDelete =
+			prev.offset += curr.offset;
+			curr.pos = make_int3(0);
+			curr.offset = NO_OFFSET;
+			removeSingleBlockInHeap(curr.ptr);
+			curr.ptr = FREE_BLOCK;
 		}
 	}
 
@@ -469,7 +473,7 @@ bool blockInFrustum(const int3& blockId)	{
 	}
 }
 
-__device__
+__global__
 void allocBlocksKernel(const float4* verts, const float4* normals)	{	//Do we need normal data here?
 
 	const int voxSize = d_hashtableParams.voxelSize;
@@ -483,7 +487,9 @@ void allocBlocksKernel(const float4* verts, const float4* normals)	{	//Do we nee
 	//find globalIdx row-major
 	const int idx = (yidx*numCols) + xidx;
 
-	float3 p = make_float3(verts[idx]);
+	float4 tempPos = verts[idx];
+	tempPos = d_hashtableParams.global_transform * tempPos;	//transform to global frame
+	float3 p = make_float3(tempPos);
 	float3 pn = make_float3(normals[idx]);
 	float3 rayStart = p - (d_hashtableParams.truncation * pn);
 	float3 rayEnd = p + (d_hashtableParams.truncation * pn);
@@ -518,13 +524,11 @@ void allocBlocksKernel(const float4* verts, const float4* normals)	{	//Do we nee
 	if (next_boundary.z - rayStart.z == 0.0f) { tMax.z = INF; tDelta.z = INF; }
 
 	//first insert idStart block into the hashtable
-	//insertVoxelEntry(temp);
+	if(blockInFrustum(temp))	{
+		insertVoxelEntry(temp);
+	}
 
 	while((temp.x != idEnd.x) && (temp.y != idEnd.y) && (temp.z != idEnd.z))	{
-		//check if block is in view, then insert into table
-		if(blockInFrustum(temp))	{
-			insertVoxelEntry(temp);
-		}
 
 		if(tMax.x < tMax.y && tMax.x < tMax.z)	{
 			temp.x += step.x;
@@ -542,9 +546,23 @@ void allocBlocksKernel(const float4* verts, const float4* normals)	{	//Do we nee
 			tMax.y += tDelta.y;
 		}
 
+		//check if block is in view, then insert into table
+		if(blockInFrustum(temp))	{
+			insertVoxelEntry(temp);
+		}
 		//cout<<"\nVisited "<<glm::to_string(temp);
 		//iter++;
 	}
 	//By now all necessary blocks should have been allocated
 }
+
+//! Allocate all hash blocks which are corresponding to depth map entries
+extern "C" void allocBlocks(const float4* verts, const float4* normals)	{
+
+	const dim3 blocks(640/8, 480/8, 1);
+	const dim3 threads(8, 8, 1);
+	allocBlocksKernel <<<blocks, threads>>>(verts, normals);
+	checkCudaErrors(cudaDeviceSynchronize());
+}
+
 
