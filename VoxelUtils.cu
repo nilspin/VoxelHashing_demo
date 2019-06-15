@@ -89,6 +89,7 @@ void allocate(const HashTableParams &params)	{
 	checkCudaErrors(cudaMalloc(&ptrHldr.d_heap, sizeof(unsigned int) * params.numVoxelBlocks));
 	checkCudaErrors(cudaMalloc(&ptrHldr.d_heapCounter, sizeof(unsigned int)));
 	checkCudaErrors(cudaMalloc(&ptrHldr.d_compactifiedHashTable, sizeof(VoxelEntry) * params.numBuckets * params.bucketSize));
+	checkCudaErrors(cudaMalloc(&ptrHldr.d_compactifiedHashCounter, sizeof(int)));
 	checkCudaErrors(cudaMalloc(&ptrHldr.d_SDFBlocks, sizeof(unsigned int) * params.numVoxelBlocks * params.voxelBlockSize * params.voxelBlockSize * params.voxelBlockSize));
 	checkCudaErrors(cudaMalloc(&ptrHldr.d_hashTableBucketMutex, sizeof(int) * params.numBuckets));
 }
@@ -565,4 +566,52 @@ extern "C" void allocBlocks(const float4* verts, const float4* normals)	{
 	checkCudaErrors(cudaDeviceSynchronize());
 }
 
+//! Generate a linear hash-array with only occupied entries
+__global__
+void flattenKernel()	{
+	const int idx = (blockDim.x * blockIdx.x) + threadIdx.x;
+
+	if(idx < (d_hashtableParams.bucketSize * d_hashtableParams.numBuckets)) return;
+
+	__shared__ int localCounter;
+	if(threadIdx.x == 0) localCounter = 0;
+	__syncthreads();
+
+	//local address within block
+	int localAddr = -1;
+	VoxelEntry& entry = ptrHldr.d_hashTable[idx];
+	if(entry.ptr != FREE_BLOCK && blockInFrustum(entry.pos))	{
+		localAddr = atomicAdd(&localCounter, 1);
+	}
+	__syncthreads();
+
+	//update global count of occupied blocks
+	__shared__ int globalAddr;
+	if(threadIdx.x==0 && localCounter > 0)	{
+		globalAddr = atomicAdd(ptrHldr.d_compactifiedHashCounter, localCounter);
+	}
+	__syncthreads();
+
+	//assign local address and copy
+	if(localAddr != -1)	{
+		const unsigned int addr = globalAddr + localAddr;
+		ptrHldr.d_compactifiedHashTable[addr] = entry;
+	}
+}
+
+extern "C" int flattenIntoBuffer()	{
+	//first set numOccupiedBlocks = 0
+	//first clear previously flattened hashtable buffer
+	checkCudaErrors(cudaMemset(ptrHldr.d_compactifiedHashCounter, 0, sizeof(int)));
+	checkCudaErrors(cudaMemset(ptrHldr.d_compactifiedHashTable, 0, sizeof(VoxelEntry) * d_hashtableParams.numOccupiedBlocks));
+
+	dim3 blocks = dim3((d_hashtableParams.numBuckets * d_hashtableParams.bucketSize + 256 -1)/256, 1, 1);
+	dim3 threads = dim3(256, 1, 1);
+	flattenKernel<<<blocks, threads>>>();
+	checkCudaErrors(cudaDeviceSynchronize());
+	int occupiedBlocks = 0;
+	checkCudaErrors(cudaMemcpy(&occupiedBlocks, ptrHldr.d_compactifiedHashCounter, sizeof(int), cudaMemcpyDeviceToHost));
+
+	return occupiedBlocks;
+}
 

@@ -15,6 +15,11 @@ void SDF_Hashtable::integrate(const float4x4& viewMat, const float4* verts, cons
 	//launch kernel to insert voxelentries into hashtable
 	allocBlocks(verts, normals);
 
+	//consolidate visible entries into a flat buffer
+	int occupiedBlockCount = flattenIntoBuffer();
+	h_hashtableParams.numOccupiedBlocks = occupiedBlockCount;
+	updateConstantHashTableParams(h_hashtableParams);
+
 }
 
 SDF_Hashtable::SDF_Hashtable()	{
