@@ -26,6 +26,7 @@ Application::Application() {
   if(image1 == nullptr) {cout<<"could not read first image file!"<<endl; exit(0);}
   if(image2 == nullptr) {cout<<"could not read second image file!"<<endl; exit(0);}
   tracker = unique_ptr<CameraTracking>(new CameraTracking(DepthWidth, DepthHeight));
+  fusionModule = unique_ptr<SDF_Hashtable>(new SDF_Hashtable());
 
   //put into cuda device buffer
   const int DEPTH_SIZE = sizeof(uint16_t)*DepthHeight*DepthWidth;
@@ -69,6 +70,8 @@ Application::Application() {
   std::cout << termcolor::on_blue<< "Final rigid transform : \n" << termcolor::reset<< glm::to_string(deltaT) << "\n";
 
   //TODO Depth integration into volume
+  float4x4 global_transform = float4x4(tracker->getTransform().data());
+  fusionModule->integrate(global_transform, d_input, d_inputNormals);
   checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_input_resource, 0));
   checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_inputNormals_resource, 0));
   checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_target_resource, 0));

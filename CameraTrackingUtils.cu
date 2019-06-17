@@ -203,7 +203,7 @@ extern "C" float computeCorrespondences(const float4* d_input, const float4* d_t
   thrust::fill(residuals_ptr, residuals_ptr+ (width*height), (float)0.0f);
 
   checkCudaErrors(cudaDeviceSynchronize());
-  std::cerr<<"After clearing prev correspondences\n";
+  //std::cerr<<"After clearing prev correspondences\n";
 	FindCorrespondences <<<blocks, threads>>>(d_input, d_target, d_targetNormals,
       corres, corresNormals, residuals,	deltaTransform, distThres, normalThres, width, height);
   checkCudaErrors(cudaDeviceSynchronize());

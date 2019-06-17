@@ -1,6 +1,7 @@
 #include <cuda.h>
 #include <cuda_runtime_api.h>
 #include <cuda_runtime.h>
+#include <iostream>
 
 #include <thrust/device_vector.h>
 #include <thrust/device_ptr.h>
@@ -84,18 +85,18 @@ void updateConstantHashTableParams(const HashTableParams &params)	{
 
 //TODO do this using thrust instead
 __host__
-void allocate(const HashTableParams &params)	{
-	checkCudaErrors(cudaMalloc(&ptrHldr.d_hashTable, sizeof(VoxelEntry) * params.numBuckets * params.bucketSize));
+void deviceAllocate(const HashTableParams &params)	{
 	checkCudaErrors(cudaMalloc(&ptrHldr.d_heap, sizeof(unsigned int) * params.numVoxelBlocks));
-	checkCudaErrors(cudaMalloc(&ptrHldr.d_heapCounter, sizeof(unsigned int)));
+	checkCudaErrors(cudaMalloc(&ptrHldr.d_hashTable, sizeof(VoxelEntry) * params.numBuckets * params.bucketSize));
 	checkCudaErrors(cudaMalloc(&ptrHldr.d_compactifiedHashTable, sizeof(VoxelEntry) * params.numBuckets * params.bucketSize));
-	checkCudaErrors(cudaMalloc(&ptrHldr.d_compactifiedHashCounter, sizeof(int)));
-	checkCudaErrors(cudaMalloc(&ptrHldr.d_SDFBlocks, sizeof(unsigned int) * params.numVoxelBlocks * params.voxelBlockSize * params.voxelBlockSize * params.voxelBlockSize));
 	checkCudaErrors(cudaMalloc(&ptrHldr.d_hashTableBucketMutex, sizeof(int) * params.numBuckets));
+	checkCudaErrors(cudaMalloc(&ptrHldr.d_SDFBlocks, sizeof(Voxel) * params.numVoxelBlocks * params.voxelBlockSize * params.voxelBlockSize * params.voxelBlockSize));
+	checkCudaErrors(cudaMalloc(&ptrHldr.d_heapCounter, sizeof(unsigned int)));
+	checkCudaErrors(cudaMalloc(&ptrHldr.d_compactifiedHashCounter, sizeof(int)));
 }
 
 __host__
-void free()	{
+void deviceFree()	{
 	checkCudaErrors(cudaFree(ptrHldr.d_hashTable));
 	checkCudaErrors(cudaFree(ptrHldr.d_heap));
 	checkCudaErrors(cudaFree(ptrHldr.d_heapCounter));
@@ -562,6 +563,7 @@ extern "C" void allocBlocks(const float4* verts, const float4* normals)	{
 
 	const dim3 blocks(640/8, 480/8, 1);
 	const dim3 threads(8, 8, 1);
+	std::cout<<"Running AllocBlocksKernel\n";
 	allocBlocksKernel <<<blocks, threads>>>(verts, normals);
 	checkCudaErrors(cudaDeviceSynchronize());
 }
@@ -602,8 +604,8 @@ void flattenKernel()	{
 extern "C" int flattenIntoBuffer()	{
 	//first set numOccupiedBlocks = 0
 	//first clear previously flattened hashtable buffer
-	checkCudaErrors(cudaMemset(ptrHldr.d_compactifiedHashCounter, 0, sizeof(int)));
 	checkCudaErrors(cudaMemset(ptrHldr.d_compactifiedHashTable, 0, sizeof(VoxelEntry) * d_hashtableParams.numOccupiedBlocks));
+	checkCudaErrors(cudaMemset(ptrHldr.d_compactifiedHashCounter, 0, sizeof(int)));
 
 	dim3 blocks = dim3((d_hashtableParams.numBuckets * d_hashtableParams.bucketSize + 256 -1)/256, 1, 1);
 	dim3 threads = dim3(256, 1, 1);

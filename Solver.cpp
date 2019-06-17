@@ -70,27 +70,27 @@ void Solver::BuildLinearSystem(const float4* d_input, const float4* d_correspond
   //uint idx = 0;
 
   //Invoke kernel here
-  std::cout<<"\nCalculating Jacobians and residuals\n";
+  //std::cout<<"\nCalculating Jacobians and residuals\n";
   CalculateJacobiansAndResiduals(d_input, d_correspondences, d_correspondenceNormals, d_Jac, d_residuals);
   checkCudaErrors(cudaDeviceSynchronize());
   //Now Jac and res are populated. Invoke cublas functions to calculate JTJ and JTr
   //------------------JTr-------------
-  std::cout<<"\nCalculating JTr\n";
+  //std::cout<<"\nCalculating JTr\n";
   //TODO : Set this d_residual_ptr correctly
   stat = cublasSgemv(handle, CUBLAS_OP_N, 6, numCols*numRows, &alpha, d_Jac/*d_a*/, 6, d_residuals/*d_x*/, 1, &beta, d_JTr/*d_y*/, 1);
   //copy back
   cudaMemcpy(JTr.data(), d_JTr, JTr_SIZE, cudaMemcpyDeviceToHost);
-  std::cout<<JTr<<"\n";
+  //std::cout<<JTr<<"\n";
 
   //------------------JTJ-------------
-  std::cout<<"\nCalculating JTJ\n";
+  //std::cout<<"\nCalculating JTJ\n";
   stat = cublasSsyrk(handle, CUBLAS_FILL_MODE_LOWER, CUBLAS_OP_N, 6, numCols*numRows, &alpha, d_Jac/*d_a*/, 6, &beta, d_JTJ/*d_c*/, 6); //compute JJT in column-maj order
   //Copy back
   cudaMemcpy(raw_JTJ_matrix.data(), d_JTJ, JTJ_SIZE, cudaMemcpyDeviceToHost);
   //fill upper matrix
   JTJ = Eigen::Map<Matrix6x6f>(raw_JTJ_matrix.data(), 6,6);
   JTJ = JTJ.selfadjointView<Lower>();
-  std::cout<<JTJ<<"\n";
+  //std::cout<<JTJ<<"\n";
   checkCudaErrors(cudaDeviceSynchronize());
   //---------------------------------
 

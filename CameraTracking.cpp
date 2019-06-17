@@ -34,11 +34,11 @@ void CameraTracking::Align(float4* d_input, float4* d_inputNormals, float4* d_ta
 
   for (int iter = 0; iter < maxIters; iter++) {
     //globalCorrespondenceError = 0.0f;
-    std::cout<< "\n"<<termcolor::on_red<< "Iteration : "<<iter << termcolor::reset << "\n";
+    //std::cout<< "\n"<<termcolor::on_red<< "Iteration : "<<iter << termcolor::reset << "\n";
     //std::cout << termcolor::underline <<"                                               \n"<< termcolor::reset;
 
     //CUDA files cannot include any Eigen headers, don't know why. So convert eigen matrix to __device__ compatible float4x4.
-    cout<<"deltaTransform = \n"<<deltaTransform<<"\n";
+    //cout<<"deltaTransform = \n"<<deltaTransform<<"\n";
 	  float4x4 deltaT = float4x4(deltaTransform.data());
     deltaT.transpose();
 
@@ -57,7 +57,7 @@ void CameraTracking::Align(float4* d_input, float4* d_inputNormals, float4* d_ta
       break;
     }
 
-    std::cout<<termcolor::green<<"Global correspondence error = "<<globalCorrespondenceError<<termcolor::reset<<" \n\n";
+    //std::cout<<termcolor::green<<"Global correspondence error = "<<globalCorrespondenceError<<termcolor::reset<<" \n\n";
 	  //Matrix4x4f deltaT = Matrix4x4f(deltaTransform.data());
 
     solver.BuildLinearSystem(d_input, d_correspondences, d_correspondenceNormals, d_residuals, width, height);
@@ -108,8 +108,8 @@ Eigen::Matrix4f CameraTracking::rigidAlignment(const float4* d_input, const floa
 
 	//then delinearize the computed matrix to extract transform matrix
 	Matrix4x4f newTransform = delinearizeTransformation(x);
-	std::cout << termcolor::green<< "Calculated transform : \n"<<termcolor::reset;
-  std::cout << newTransform << "\n";
+	//std::cout << termcolor::green<< "Calculated transform : \n"<<termcolor::reset;
+  //std::cout << newTransform << "\n";
 
 	return newTransform;
 }

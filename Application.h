@@ -7,6 +7,7 @@
 #include "camera.h"
 //#include "Frustum.h"
 #include "CameraTracking.h"
+#include "SDF_Hashtable.h"
 #include "helper_cuda.h"
 
 #define BUFFER_OFFSET(i) ((char*)NULL + (i))
@@ -27,7 +28,7 @@ private:
 	//Window and events
 	Window window;
 	//SDL_Event event;
-	
+
 	bool quit=false;
 
 	//Camera & transforms
@@ -43,15 +44,18 @@ private:
 
 	//Shader
 	unique_ptr<ShaderProgram> drawVertexMap;
-	
-  //CameraTracker
-  unique_ptr<CameraTracking> tracker;
-	
+
+	//CameraTracker
+	unique_ptr<CameraTracking> tracker;
+
+  	//GPU-hashtable
+	unique_ptr<SDF_Hashtable> fusionModule;
+
 	//Texture & images
 	GLuint depthTexture1, depthTexture2;
 	uint16_t *image1=nullptr;
 	uint16_t *image2=nullptr;
-	
+
 	//OpenGL Buffer objects
 	GLuint inputVBO;
   GLuint inputNormalVBO;
