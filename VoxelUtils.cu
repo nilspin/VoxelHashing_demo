@@ -304,7 +304,7 @@ VoxelEntry getVoxelEntry4Block(const int3& pos)	{
 
 
 //TODO incomplete function
-__device__
+__inline__ __device__
 bool insertVoxelEntry(const int3& data)	{
 
 	unsigned int hash = calculateHash(data);
@@ -319,6 +319,9 @@ bool insertVoxelEntry(const int3& data)	{
 
 	//[1] iterate current bucket, try inserting at first empty block we see.
 	int i=0;
+	if(FIRST_THREAD())	{
+		printf("Insertion : before bucket iteration\n");
+	}
 	for(i=0; i<bucketSize; ++i)	{
 		const int idx = startIndex+i;
 		VoxelEntry &curr = ptrHldr.d_hashTable[idx];
@@ -334,6 +337,9 @@ bool insertVoxelEntry(const int3& data)	{
 				return true;
 			}
 		}
+	}
+	if(FIRST_THREAD())	{
+		printf("Insertion: Empty slot not found in native bucket. Appending list\n");
 	}
 	//[2] bucket is full. Append to list.
 	const int lastEntryInBucket = (hash+1)*bucketSize - 1;
@@ -599,7 +605,10 @@ void allocBlocksKernel(const float4* verts, const float4* normals)	{	//Do we nee
 				//printf("Block in frustum : ");
 				//printf(blockInFrustum(temp) ? "true\n" : "false\n");
 			}
-			insertVoxelEntry(temp);
+			bool status = insertVoxelEntry(temp);
+			if(status && FIRST_THREAD())	{
+				printf("Succsful insertion\n");
+			}
 		}
 		//cout<<"\nVisited "<<glm::to_string(temp);
 		//iter++;
@@ -610,7 +619,8 @@ void allocBlocksKernel(const float4* verts, const float4* normals)	{	//Do we nee
 //! Allocate all hash blocks which are corresponding to depth map entries
 extern "C" void allocBlocks(const float4* verts, const float4* normals)	{
 
-	const dim3 blocks(640/8, 480/8, 1);
+	//const dim3 blocks(640/8, 480/8, 1);
+	const dim3 blocks(1, 1, 1);
 	const dim3 threads(8, 8, 1);
 	std::cout<<"Running AllocBlocksKernel\n";
 	allocBlocksKernel <<<blocks, threads>>>(verts, normals);
