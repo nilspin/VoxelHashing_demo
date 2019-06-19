@@ -58,7 +58,7 @@ target_link_libraries(CameraTrackingUtils Solver)
 #set_target_properties(CameraTrackingUtils PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 
 #Compile IntegrationUtils
-add_library(IntegrationUtils STATIC VoxelDataStructures.h VoxelUtils.cu)
+add_library(IntegrationUtils STATIC VoxelDataStructures.h VoxelUtils.h VoxelUtils.cu)
 set_target_properties(IntegrationUtils PROPERTIES LINKER_LANGUAGE CUDA)
 set_target_properties(IntegrationUtils PROPERTIES POSITION_INDEPENDENT_CODE ON)
 

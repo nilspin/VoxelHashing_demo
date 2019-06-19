@@ -17,9 +17,30 @@
 #define NO_OFFSET 0
 
 __constant__ HashTableParams d_hashtableParams;
-__constant__ float4x4 kinectProjectionMatrix;
+__constant__ float3x3 kinectProjectionMatrix;
 __device__ PtrContainer ptrHldr;
 
+
+__inline__ __device__
+bool FIRST_THREAD()	{
+	if(threadIdx.x == 0 && threadIdx.y == 0 && blockIdx.x == 0 && blockIdx.y == 0)	{
+		return true;
+	}
+	return false;
+}
+
+__inline__ __device__
+void printDeviceMatrix(const float3x3& mat)	{
+
+	printf("Printing device matrix...\n");
+	for(int i=0;i<3;++i)	{
+		for(int j=0;j<3;++j)	{
+			printf("%f\t", mat.entries2[i][j]);
+		}
+		printf("\n");
+	}
+	printf("\n");
+}
 /*----------(Raw)STORAGE---------------*/
 //VoxelEntry *d_hashTable;
 //VoxelEntry *d_compactifiedHashTable;
@@ -108,29 +129,42 @@ void deviceFree()	{
 
 __host__
 void calculateKinectProjectionMatrix()	{
-	float m[4][4];
-	m[0][0] = 2.0 * fx / imgWidth;
-    m[0][1] = 0.0;
-    m[0][2] = 0.0;
-    m[0][3] = 0.0;
 
-    m[1][0] = 0.0;
-    m[1][1] = -2.0 * fy / imgHeight;
-    m[1][2] = 0.0;
-    m[1][3] = 0.0;
-
-    m[2][0] = 1.0 - 2.0 * cx / imgWidth;
-    m[2][1] = 2.0 * cy / imgHeight - 1.0;
-    m[2][2] = (kinZFar + kinZNear) / (kinZNear - kinZFar);
-    m[2][3] = -1.0;
-
-    m[3][0] = 0.0;
-    m[3][1] = 0.0;
-    m[3][2] = 2.0 * kinZFar * kinZNear / (kinZNear - kinZFar);
-    m[3][3] = 0.0;
-
+	float3x3 m(intrinsics);
 	//Now upload to device
-	checkCudaErrors(cudaMemcpyToSymbol(kinectProjectionMatrix, m, sizeof(m)));
+	std::cout<<"Uploading projection matrix to device..\n";
+	checkCudaErrors(cudaMemcpyToSymbol(kinectProjectionMatrix, &m, sizeof(m)));
+}
+
+//TODO : Remove this function later
+__inline__ __device__
+bool vertexInFrustum(float4 point)	{
+	point = d_hashtableParams.global_transform * point;
+	float3 pos = make_float3(point.x, point.y, point.z);
+	pos = kinectProjectionMatrix * pos;
+	pos = pos/pos.z;	//normalize, and get screen coordinates
+	int x = __float2int_rz(pos.x);
+	int y = __float2int_rz(pos.y);
+	if(x < 640 && x >=0 && y < 480 && y >= 0)	{
+		return true;
+	}
+	return false;
+}
+
+__inline__ __device__
+bool blockInFrustum(int3 blockId)	{
+	float4 pos = make_float4(blockId.x, blockId.y, blockId.z, 1);
+	pos = d_hashtableParams.global_transform * pos;
+	float3 projected = make_float3(blockId.x, blockId.y, blockId.z);
+	projected = kinectProjectionMatrix * projected;
+	projected = projected/projected.z;
+
+	int x = __float2int_rz(projected.x);
+	int y = __float2int_rz(projected.y);
+	if(x < 640 && x >=0 && y < 480 && y >= 0)	{
+		return true;
+	}
+	return false;
 }
 
 
@@ -459,22 +493,6 @@ bool deleteVoxelEntry(int3 data)	{
 
 }
 
-__inline__ __device__
-bool blockInFrustum(const int3& blockId)	{
-	float4 pos = make_float4(blockId.x, blockId.y, blockId.z, 1);
-	pos = d_hashtableParams.global_transform * pos;
-	pos = kinectProjectionMatrix * pos;
-
-	if((pos.x > -pos.w) && (pos.x < pos.w) &&
-		(pos.y > -pos.w) && (pos.y < pos.w) &&
-		(pos.z > -pos.w) && (pos.z < pos.w))	{
-		return true;
-	}
-	else {
-		return false;
-	}
-}
-
 __global__
 void allocBlocksKernel(const float4* verts, const float4* normals)	{	//Do we need normal data here?
 
@@ -490,7 +508,23 @@ void allocBlocksKernel(const float4* verts, const float4* normals)	{	//Do we nee
 	const int idx = (yidx*numCols) + xidx;
 
 	float4 tempPos = verts[idx];
+	if(tempPos.z == 0.0f) return;
 	tempPos = d_hashtableParams.global_transform * tempPos;	//transform to global frame
+	float3 projTemp = make_float3(tempPos.x, tempPos.y, tempPos.z);
+	projTemp = kinectProjectionMatrix * projTemp;
+	projTemp = projTemp/projTemp.z;
+	//TODO : Erase this later
+	//if(idx==153600)	{
+	//	printf("Middle vertex (%f, %f, %f, %f)\n",verts[idx].x, verts[idx].y, verts[idx].z, verts[idx].w);
+	//}
+	if(FIRST_THREAD())	{
+		printf("First vertex (%f, %f, %f, %f)\n",verts[idx].x, verts[idx].y, verts[idx].z, verts[idx].w);
+		printf("First  transformed vertex (%f, %f, %f)\n",tempPos.x, tempPos.y, tempPos.z);
+		printf("First  projected vertex (%f, %f, %f)\n",projTemp.x, projTemp.y, projTemp.z);
+		printf("Vertex in frustum : ");
+		printf(vertexInFrustum(tempPos) ? "true\n" : "false\n");
+		//printDeviceMatrix(kinectProjectionMatrix);
+	}
 	float3 p = make_float3(tempPos);
 	float3 pn = make_float3(normals[idx]);
 	float3 rayStart = p - (d_hashtableParams.truncation * pn);
@@ -525,8 +559,18 @@ void allocBlocksKernel(const float4* verts, const float4* normals)	{	//Do we nee
 	if (rayDir.z == 0.0f) { tMax.z = INF; tDelta.z = INF; }
 	if (next_boundary.z - rayStart.z == 0.0f) { tMax.z = INF; tDelta.z = INF; }
 
+
+	if(FIRST_THREAD())	{
+		printf("Starting insertion now\n");
+	}
 	//first insert idStart block into the hashtable
 	if(blockInFrustum(temp))	{
+		//TODO : ease this later
+		if(FIRST_THREAD())	{
+			printf("Inserting block (%d, %d, %d)\n",temp.x, temp.y, temp.z);
+			//printf("Block in frustum : ");
+			//printf(blockInFrustum(temp) ? "true\n" : "false\n");
+		}
 		insertVoxelEntry(temp);
 	}
 
@@ -550,6 +594,11 @@ void allocBlocksKernel(const float4* verts, const float4* normals)	{	//Do we nee
 
 		//check if block is in view, then insert into table
 		if(blockInFrustum(temp))	{
+			if(FIRST_THREAD())	{
+				printf("Inserting block (%d, %d, %d)\n",temp.x, temp.y, temp.z);
+				//printf("Block in frustum : ");
+				//printf(blockInFrustum(temp) ? "true\n" : "false\n");
+			}
 			insertVoxelEntry(temp);
 		}
 		//cout<<"\nVisited "<<glm::to_string(temp);

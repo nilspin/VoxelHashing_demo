@@ -40,6 +40,9 @@ SDF_Hashtable::SDF_Hashtable()	{
 
 	deviceAllocate(h_tempParams);
 	std::cout<<"GPU memory allocated\n";
+
+	calculateKinectProjectionMatrix();
+	std::cout<<"Kinect projection matrix calculated\n";
 }
 
 SDF_Hashtable::~SDF_Hashtable()	{
