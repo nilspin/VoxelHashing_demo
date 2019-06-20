@@ -1,3 +1,7 @@
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 #include "SDF_Hashtable.h"
 #include "VoxelUtils.h"
 

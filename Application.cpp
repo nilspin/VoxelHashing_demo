@@ -21,15 +21,15 @@ using glm::mat4;
 Application::Application() {
   //frustum.setFromVectors(vec3(0,0,-1), vec3(0,0,0), vec3(1,0,0), vec3(0,1,0), 5.0, 700.0, 45, 1.3333);
   //stbi_set_flip_vertically_on_load(true); //Keep commented for now
-  image1 = stbi_load_16("assets/0000.png", &DepthWidth, &DepthHeight, &channels, 0);
-  image2 = stbi_load_16("assets/0001.png", &DepthWidth, &DepthHeight, &channels, 0);
+  image1 = stbi_load_16("assets/T0.png", &DepthWidth, &DepthHeight, &channels, 0);
+  image2 = stbi_load_16("assets/T1.png", &DepthWidth, &DepthHeight, &channels, 0);
   if(image1 == nullptr) {cout<<"could not read first image file!"<<endl; exit(0);}
   if(image2 == nullptr) {cout<<"could not read second image file!"<<endl; exit(0);}
   tracker = unique_ptr<CameraTracking>(new CameraTracking(DepthWidth, DepthHeight));
   fusionModule = unique_ptr<SDF_Hashtable>(new SDF_Hashtable());
 
   //put into cuda device buffer
-  const int DEPTH_SIZE = sizeof(uint16_t)*DepthHeight*DepthWidth;
+  const int DEPTH_SIZE = sizeof(std::uint16_t)*DepthHeight*DepthWidth;
   checkCudaErrors(cudaMalloc((void**)&d_depthInput, DEPTH_SIZE));
   checkCudaErrors(cudaMalloc((void**)&d_depthTarget, DEPTH_SIZE));
   checkCudaErrors(cudaMemcpy(d_depthInput, image1, DEPTH_SIZE, cudaMemcpyHostToDevice));
@@ -73,7 +73,7 @@ Application::Application() {
   float4x4 global_transform = float4x4(tracker->getTransform().data());
   float4x4 identity;
   identity.setIdentity();
-  fusionModule->integrate(identity, d_input, d_inputNormals);
+  //fusionModule->integrate(identity, d_input, d_inputNormals);
   //fusionModule->integrate(global_transform, d_target, d_targetNormals);
   checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_input_resource, 0));
   checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_inputNormals_resource, 0));

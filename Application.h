@@ -12,6 +12,8 @@
 
 #define BUFFER_OFFSET(i) ((char*)NULL + (i))
 
+using uint16_t = std::uint16_t;
+
 class Application
 {
 public:
@@ -53,8 +55,8 @@ private:
 
 	//Texture & images
 	GLuint depthTexture1, depthTexture2;
-	uint16_t *image1=nullptr;
-	uint16_t *image2=nullptr;
+	std::uint16_t *image1=nullptr;
+	std::uint16_t *image2=nullptr;
 
 	//OpenGL Buffer objects
 	GLuint inputVBO;
@@ -79,7 +81,7 @@ private:
   struct cudaGraphicsResource *cuda_targetNormals_resource;
 
 
-  uint16_t *d_depthInput, *d_depthTarget;
+  std::uint16_t *d_depthInput, *d_depthTarget;
   float4* d_input;
   float4* d_inputNormals;
   float4* d_target;

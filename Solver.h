@@ -18,7 +18,7 @@ using namespace Eigen;
 
 class Solver {
   public:
-    uint numIters = 10;
+    unsigned int numIters = 10;
 
     void BuildLinearSystem(const float4* , const float4* , const float4* , const float* , int , int );
 

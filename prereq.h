@@ -4,6 +4,7 @@
 //std stuff
 #include<iostream>
 #include<cstring>
+#include<cstdint>
 #include<string>
 #include<sstream>
 #include<vector>
@@ -13,13 +14,14 @@
 //OpenGL loader on Windows
 #if defined(_WIN32)
   #include "opengl_win.h"
+  #include<SDL.h>
+  #include<SDL_opengl.h>
 #elif defined(__linux__)
   #include "opengl_linux.h"
+  //SDL
+  #include <SDL2/SDL.h>
+  #include <SDL2/SDL_opengl.h>
 #endif
-
-//SDL
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_opengl.h>
 
 //Make Eigen use Intel's MKL
 //#define EIGEN_USE_MKL_ALL

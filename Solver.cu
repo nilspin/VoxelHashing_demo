@@ -1,6 +1,6 @@
 #include <cuda_runtime_api.h>
 #include <cublas_v2.h>
-#include "Solver.h"
+//#include "Solver.h"
 #include "cuda_helper/helper_math.h"
 #include <thrust/fill.h>
 #include <thrust/device_ptr.h>

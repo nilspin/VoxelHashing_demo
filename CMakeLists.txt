@@ -58,22 +58,22 @@ target_link_libraries(CameraTrackingUtils Solver)
 #set_target_properties(CameraTrackingUtils PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 
 #Compile IntegrationUtils
-add_library(IntegrationUtils STATIC VoxelDataStructures.h VoxelUtils.h VoxelUtils.cu)
+add_library(IntegrationUtils STATIC VoxelUtils.cu)	#VoxelDataStructures.h VoxelUtils.h 
 set_target_properties(IntegrationUtils PROPERTIES LINKER_LANGUAGE CUDA)
 set_target_properties(IntegrationUtils PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
-add_library(SDFModule STATIC SDF_Hashtable.h SDF_Hashtable.cpp)
+add_library(SDFModule STATIC SDF_Hashtable.cpp)	# VoxelUtils.h SDF_Hashtable.h
 target_link_libraries(SDFModule IntegrationUtils)
 
 
 add_library(Application STATIC Application.cpp)
+target_link_libraries(Application GladLib)
 target_link_libraries(Application Camera)
 target_link_libraries(Application Window)
+target_link_libraries(Application SDFModule)
 #target_link_libraries(Application ShaderProgram)
 target_link_libraries(Application CameraTrackingUtils)
-target_link_libraries(Application IntegrationUtils)
-target_link_libraries(Application SDFModule)
-target_link_libraries(Application GladLib)
+#target_link_libraries(Application IntegrationUtils)
 
 set(INCLUDE_DIRS  ${INCLUDE_DIRS} ${CUDA_INCLUDE_DIRS} ${CUHELPER_INCLUDE_DIR} ${EIGEN3_INCLUDE_DIR} ${GLM_INCLUDE_DIR}
                 ${OPENGL_INCLUDE_DIRS} ${SDL2_INCLUDE_DIRS} ${GLAD_INCLUDE_DIR} ${Boost_INCLUDE_DIRS})  #${ARMADILLO_INCLUDE_DIR}
@@ -83,14 +83,14 @@ set(LIBS ${LIBS} ${OPENGL_LIBRARY} ${CUDA_LIBRARIES}  ${SDL2_LIBRARIES} ${Boost_
 #include_directories(${CMAKE_SOURCE_DIR} )
 include_directories(${INCLUDE_DIRS})
 
-#set(HEADERS prereq.h common.h camera.h Window.h ShaderProgram.hpp Solver.h CameraTracking.h Application.h EigenUtil.h termcolor.hpp DebugHelper.hpp)
+#set(HEADERS prereq.h common.h camera.h Window.h ShaderProgram.hpp Solver.h SE3.hpp CameraTracking.h VoxelUtils.h VoxelDataStructures.h SDF_Hashtable.h Application.h EigenUtil.h termcolor.hpp DebugHelper.hpp)
 set(SOURCES DepthMain.cpp )  #Frustum.cpp Frustum.h Application.cpp camera.cpp Window.cpp
 
 
 add_executable(${PROJECT_NAME} ${SOURCES} ) #${HEADERS}
 
 #Link all obj files
-target_link_libraries(${PROJECT_NAME} ${LIBS} Application  SDL2 -lcublas)  #SDL2::SDL2  CameraTrackingUtils
+target_link_libraries(${PROJECT_NAME} ${LIBS} Application)  #SDL2::SDL2  CameraTrackingUtils
 
 #Now copy shaders to build directory
 

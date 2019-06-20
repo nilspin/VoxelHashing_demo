@@ -1,3 +1,7 @@
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 #include <cuda.h>
 #include <cuda_runtime_api.h>
 #include <cuda_runtime.h>
