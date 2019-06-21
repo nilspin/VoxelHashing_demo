@@ -506,7 +506,7 @@ bool deleteVoxelEntry(int3 data)	{
 __global__
 void allocBlocksKernel(const float4* verts, const float4* normals)	{	//Do we need normal data here?
 
-	const int voxSize = d_hashtableParams.voxelSize;
+	const float voxSize = d_hashtableParams.voxelSize;
 	int xidx = blockDim.x*blockIdx.x + threadIdx.x;
 	int yidx = blockDim.y*blockIdx.y + threadIdx.y;
 

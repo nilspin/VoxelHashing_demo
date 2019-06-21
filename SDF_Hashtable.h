@@ -19,6 +19,8 @@ extern HashTableParams d_hashtableParams;
 
 class SDF_Hashtable {
 
+private:
+	HashTableParams h_hashtableParams;
 public:
 
 	SDF_Hashtable();

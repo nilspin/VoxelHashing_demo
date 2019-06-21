@@ -18,6 +18,9 @@ using glm::vec4;
 using glm::mat4;
 //using namespace glm;
 
+//Takes device pointers, calculates correct position and normals
+extern "C" void preProcess(float4 *positions, float4* normals, const std::uint16_t *depth);
+
 Application::Application() {
   //frustum.setFromVectors(vec3(0,0,-1), vec3(0,0,0), vec3(1,0,0), vec3(0,1,0), 5.0, 700.0, 45, 1.3333);
   //stbi_set_flip_vertically_on_load(true); //Keep commented for now
@@ -64,7 +67,9 @@ Application::Application() {
   checkCudaErrors(cudaMemset(d_input, 0, returnedBufferSize));
 
   std::cout<<"\nAllocated input VBO size: "<<returnedBufferSize<<"\n";
-  tracker->Align(d_input, d_inputNormals, d_target, d_targetNormals, d_depthInput, d_depthTarget);
+  preProcess(d_input, d_inputNormals, d_depthInput);
+  preProcess(d_target, d_targetNormals, d_depthTarget);
+  //tracker->Align(d_input, d_inputNormals, d_target, d_targetNormals, d_depthInput, d_depthTarget);
   deltaT = glm::make_mat4(tracker->getTransform().data());
   //deltaT = glm::transpose(deltaT);
   std::cout << termcolor::on_blue<< "Final rigid transform : \n" << termcolor::reset<< glm::to_string(deltaT) << "\n";
@@ -73,7 +78,7 @@ Application::Application() {
   float4x4 global_transform = float4x4(tracker->getTransform().data());
   float4x4 identity;
   identity.setIdentity();
-  //fusionModule->integrate(identity, d_input, d_inputNormals);
+  fusionModule->integrate(identity, d_input, d_inputNormals);
   //fusionModule->integrate(global_transform, d_target, d_targetNormals);
   checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_input_resource, 0));
   checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_inputNormals_resource, 0));

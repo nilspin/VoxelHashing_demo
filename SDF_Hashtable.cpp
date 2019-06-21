@@ -7,7 +7,6 @@
 
 void SDF_Hashtable::integrate(const float4x4& viewMat, const float4* verts, const float4* normals)	{
 	//first update the device HashParams variable
-	HashTableParams h_hashtableParams;
 	float4x4 inv_global_transform = viewMat.getInverse();
 
 	h_hashtableParams.global_transform = viewMat;
@@ -28,21 +27,20 @@ void SDF_Hashtable::integrate(const float4x4& viewMat, const float4* verts, cons
 }
 
 SDF_Hashtable::SDF_Hashtable()	{
-	HashTableParams h_tempParams;
-	h_tempParams.numBuckets = 500000;
-	h_tempParams.bucketSize = 10;
-	h_tempParams.attachedLinkedListSize = 7;
-	h_tempParams.numVoxelBlocks = 100000;
-	h_tempParams.voxelBlockSize = 8;
-	h_tempParams.voxelSize = 0.05f;
-	h_tempParams.numOccupiedBlocks = 0;
-	h_tempParams.maxIntegrationDistance = 4.0f;
-	h_tempParams.truncScale = 0.01f;
-	h_tempParams.truncation = 0.02f;
-	h_tempParams.integrationWeightSample = 10;
-	h_tempParams.integrationWeightMax = 255;
+	h_hashtableParams.numBuckets = 500000;
+	h_hashtableParams.bucketSize = 10;
+	h_hashtableParams.attachedLinkedListSize = 7;
+	h_hashtableParams.numVoxelBlocks = 100000;
+	h_hashtableParams.voxelBlockSize = 8;
+	h_hashtableParams.voxelSize = 0.05f;
+	h_hashtableParams.numOccupiedBlocks = 0;
+	h_hashtableParams.maxIntegrationDistance = 4.0f;
+	h_hashtableParams.truncScale = 0.01f;
+	h_hashtableParams.truncation = 0.02f;
+	h_hashtableParams.integrationWeightSample = 10;
+	h_hashtableParams.integrationWeightMax = 255;
 
-	deviceAllocate(h_tempParams);
+	deviceAllocate(h_hashtableParams);
 	std::cout<<"GPU memory allocated\n";
 
 	calculateKinectProjectionMatrix();

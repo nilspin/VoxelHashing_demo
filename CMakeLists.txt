@@ -52,7 +52,7 @@ add_library(Camera STATIC camera.cpp)
 target_link_libraries(Camera ${SDL2_LIBRARIES})
 
 #Compile CameraTrackingUtils
-add_library(Solver STATIC SE3.cpp Solver.cpp Solver.cu)
+add_library(Solver STATIC SE3.h SE3.cpp Solver.cpp Solver.cu)
 set_target_properties(Solver PROPERTIES LINKER_LANGUAGE CUDA)
 set_target_properties(Solver PROPERTIES POSITION_INDEPENDENT_CODE ON)
 target_link_libraries(Solver ${CUDA_CUBLAS_LIBRARIES})
@@ -64,11 +64,11 @@ target_link_libraries(CameraTrackingUtils Solver)
 #set_target_properties(CameraTrackingUtils PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 
 #Compile IntegrationUtils
-add_library(IntegrationUtils STATIC VoxelUtils.cu)	#VoxelDataStructures.h VoxelUtils.h 
+add_library(IntegrationUtils STATIC VoxelDataStructures.h VoxelUtils.h VoxelUtils.cu)	#VoxelDataStructures.h VoxelUtils.h 
 set_target_properties(IntegrationUtils PROPERTIES LINKER_LANGUAGE CUDA)
 set_target_properties(IntegrationUtils PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
-add_library(SDFModule STATIC SDF_Hashtable.cpp)	# VoxelUtils.h SDF_Hashtable.h
+add_library(SDFModule STATIC VoxelUtils.h SDF_Hashtable.h SDF_Hashtable.cpp)	# VoxelUtils.h SDF_Hashtable.h
 target_link_libraries(SDFModule IntegrationUtils)
 
 

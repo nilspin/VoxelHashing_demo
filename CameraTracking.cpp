@@ -16,7 +16,7 @@ extern "C" float computeCorrespondences(const float4* d_input, const float4* d_t
 
 extern "C" bool SetCameraIntrinsic(const float* intrinsic, const float* invIntrinsic);
 //Takes device pointers, calculates correct position and normals
-extern "C" void preProcess(float4 *positions, float4* normals, const uint16_t *depth);
+//extern "C" void preProcess(float4 *positions, float4* normals, const uint16_t *depth);
 
 //extern "C" void Allocate();
 //extern "C" void Deallocate();
@@ -26,8 +26,8 @@ extern "C" void preProcess(float4 *positions, float4* normals, const uint16_t *d
 void CameraTracking::Align(float4* d_input, float4* d_inputNormals, float4* d_target,
   float4* d_targetNormals, const uint16_t* d_depthInput, const uint16_t* d_depthTarget) {
 
-  preProcess(d_input, d_inputNormals, d_depthInput);
-  preProcess(d_target, d_targetNormals, d_depthTarget);
+  //preProcess(d_input, d_inputNormals, d_depthInput);
+  //preProcess(d_target, d_targetNormals, d_depthTarget);
   //WriteDeviceArrayToFile(d_inputNormals, "sourceNormalsDevice", width*height);
   int width = numCols;
   int height = numRows;
