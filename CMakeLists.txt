@@ -9,6 +9,11 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_CXX_FLAGS "-std=c++11 -fpermissive -w")
 set(OpenGL_GL_PREFERENCE "GLVND")
 string(APPEND CMAKE_CUDA_FLAGS " -gencode arch=compute_30,code=sm_30 -w")
+#if( CMAKE_BUILD_TYPE MATCHES "Debug" )
+string( APPEND CMAKE_CUDA_FLAGS " -g -G" )  #TODO : Remove these 3 lines later
+string( APPEND CMAKE_CUDA_FLAGS " -lineinfo" )
+string( APPEND CMAKE_CUDA_FLAGS " -fmad=false" )
+#endif()
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON) #ensures CMake creates compile_commands.json
 #set(CUDA_NVCC_FLAGS_DEBUG ${CUDA_NVCC_FLAGS_DEBUG} "-G")
 
@@ -20,13 +25,13 @@ IF( EXISTS "${CMAKE_CURRENT_BINARY_DIR}/compile_commands.json" )
 ENDIF()
 
 find_package(CUDA REQUIRED)
-#find_package(Armadillo REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(SDL2 REQUIRED)
 find_package(glm REQUIRED)
 message(STATUS "GLM included at ${GLM_INCLUDE_DIR}")
 find_package(Boost COMPONENTS filesystem REQUIRED)  #only need this till nvcc starts supporting c++17 compiler
+
 
 set(CUHELPER_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cuda_helper")
 
@@ -41,15 +46,16 @@ set_target_properties(ShaderProgram PROPERTIES LINKER_LANGUAGE CXX)
 target_link_libraries(ShaderProgram GladLib)
 
 add_library(Window STATIC Window.cpp)
-target_link_libraries(Window SDL2)
+target_link_libraries(Window ${SDL2_LIBRARIES})
 
 add_library(Camera STATIC camera.cpp)
-target_link_libraries(Camera SDL2)
+target_link_libraries(Camera ${SDL2_LIBRARIES})
 
 #Compile CameraTrackingUtils
 add_library(Solver STATIC SE3.cpp Solver.cpp Solver.cu)
 set_target_properties(Solver PROPERTIES LINKER_LANGUAGE CUDA)
 set_target_properties(Solver PROPERTIES POSITION_INDEPENDENT_CODE ON)
+target_link_libraries(Solver ${CUDA_CUBLAS_LIBRARIES})
 
 add_library(CameraTrackingUtils STATIC CameraTracking.cpp CameraTrackingUtils.cu)  #SE3.hpp
 set_target_properties(CameraTrackingUtils PROPERTIES LINKER_LANGUAGE CUDA)
@@ -76,8 +82,8 @@ target_link_libraries(Application CameraTrackingUtils)
 #target_link_libraries(Application IntegrationUtils)
 
 set(INCLUDE_DIRS  ${INCLUDE_DIRS} ${CUDA_INCLUDE_DIRS} ${CUHELPER_INCLUDE_DIR} ${EIGEN3_INCLUDE_DIR} ${GLM_INCLUDE_DIR}
-                ${OPENGL_INCLUDE_DIRS} ${SDL2_INCLUDE_DIRS} ${GLAD_INCLUDE_DIR} ${Boost_INCLUDE_DIRS})  #${ARMADILLO_INCLUDE_DIR}
-set(LIBS ${LIBS} ${OPENGL_LIBRARY} ${CUDA_LIBRARIES}  ${SDL2_LIBRARIES} ${Boost_LIBRARIES} )  #${ARMADILLO_LIBRARY} ${GladLib} ${ShaderProgram} ${Window} ${Camera}
+                ${OPENGL_INCLUDE_DIRS} ${SDL2_INCLUDE_DIRS} ${GLAD_INCLUDE_DIR} ${Boost_INCLUDE_DIRS})  
+set(LIBS ${LIBS} ${OPENGL_LIBRARY} ${CUDA_LIBRARIES}  ${SDL2_LIBRARIES} ${Boost_LIBRARIES} )  # ${GladLib} ${ShaderProgram} ${Window} ${Camera}
 
 #specify include directory
 #include_directories(${CMAKE_SOURCE_DIR} )
