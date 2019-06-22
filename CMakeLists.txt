@@ -72,7 +72,7 @@ add_library(SDFModule STATIC VoxelUtils.h SDF_Hashtable.h SDF_Hashtable.cpp)	# V
 target_link_libraries(SDFModule IntegrationUtils)
 
 
-add_library(Application STATIC Application.cpp)
+add_library(Application STATIC Application.h Application.cpp)
 target_link_libraries(Application GladLib)
 target_link_libraries(Application Camera)
 target_link_libraries(Application Window)

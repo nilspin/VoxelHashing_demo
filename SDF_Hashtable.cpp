@@ -40,6 +40,7 @@ SDF_Hashtable::SDF_Hashtable()	{
 	h_hashtableParams.integrationWeightSample = 10;
 	h_hashtableParams.integrationWeightMax = 255;
 
+	updateConstantHashTableParams(h_hashtableParams);
 	deviceAllocate(h_hashtableParams);
 	std::cout<<"GPU memory allocated\n";
 
