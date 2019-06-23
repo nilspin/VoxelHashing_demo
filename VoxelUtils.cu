@@ -23,6 +23,7 @@
 __constant__ HashTableParams d_hashtableParams;
 __constant__ float3x3 kinectProjectionMatrix;
 __constant__ PtrContainer d_ptrHldr;
+PtrContainer h_ptrHldr;
 
 
 __inline__ __device__
@@ -89,6 +90,13 @@ void updateConstantHashTableParams(const HashTableParams &params)	{
 	checkCudaErrors(cudaMemcpyToSymbol(d_hashtableParams, &params, size, 0, cudaMemcpyHostToDevice));
 }
 
+void updateDevicePointers() {
+	size_t size;
+	checkCudaErrors(cudaGetSymbolSize(&size, d_ptrHldr));
+	checkCudaErrors(cudaMemcpyToSymbol(d_ptrHldr, &h_ptrHldr, size, 0, cudaMemcpyHostToDevice));
+	std::cout << "h_ptrHldr supposedly copied to device\n";
+}
+
 //__host__
 //void allocate(const HashTableParams& params)	{
 //	const int initVal = 0;
@@ -110,22 +118,18 @@ void updateConstantHashTableParams(const HashTableParams &params)	{
 //}
 
 __global__
-void initKernel() {
+void resetHashTableKernel(VoxelEntry* table) {
 	const int idx = blockIdx.x*blockDim.x + threadIdx.x;
 	if (idx >= d_hashtableParams.bucketSize*d_hashtableParams.numBuckets) return;
-	d_ptrHldr.d_hashTable[idx].offset = NO_OFFSET;
-	d_ptrHldr.d_hashTable[idx].ptr = FREE_BLOCK;
-	d_ptrHldr.d_hashTable[idx].pos = make_int3(0, 0, 0);
-
-	d_ptrHldr.d_compactifiedHashTable[idx].offset = NO_OFFSET;
-	d_ptrHldr.d_compactifiedHashTable[idx].ptr = FREE_BLOCK;
-	d_ptrHldr.d_compactifiedHashTable[idx].pos = make_int3(0, 0, 0);
-
+	table[idx].offset = NO_OFFSET;
+	table[idx].ptr = FREE_BLOCK;
+	table[idx].pos = make_int3(INF, INF, INF);
 }
+
 //TODO do this using thrust instead
 __host__
 void deviceAllocate(const HashTableParams &params)	{
-	PtrContainer h_ptrHldr;
+	//PtrContainer h_ptrHldr;
 	checkCudaErrors(cudaMalloc((void**)&h_ptrHldr.d_heap, sizeof(unsigned int) * params.numVoxelBlocks));
 	checkCudaErrors(cudaMalloc((void**)&h_ptrHldr.d_hashTable, sizeof(VoxelEntry) * params.numBuckets * params.bucketSize));
 	checkCudaErrors(cudaMalloc((void**)&h_ptrHldr.d_compactifiedHashTable, sizeof(VoxelEntry) * params.numBuckets * params.bucketSize));
@@ -134,18 +138,19 @@ void deviceAllocate(const HashTableParams &params)	{
 	checkCudaErrors(cudaMalloc((void**)&h_ptrHldr.d_heapCounter, sizeof(unsigned int)));
 	checkCudaErrors(cudaMalloc((void**)&h_ptrHldr.d_compactifiedHashCounter, sizeof(int)));
 
-	//TODO : Remove later
-	size_t size;
-	checkCudaErrors(cudaGetSymbolSize(&size, d_ptrHldr));
-	checkCudaErrors(cudaMemcpyToSymbol(d_ptrHldr, &h_ptrHldr, size, 0, cudaMemcpyHostToDevice));
-	std::cout << "h_ptrHldr supposedly copied to device\n";
+	updateDevicePointers();
 
 	//init with correct values
 	const int totalThreads = params.numBuckets*params.bucketSize;
 	int blocks = (totalThreads / 1024) + 1;
 	int threads = 1024;
-	//fill buffers with 0
-	initKernel <<<blocks, threads >>> ();
+	//init buffers with default values. TODO: Launch following two kernels asynchronously
+	resetHashTableKernel<<<blocks, threads >>> (h_ptrHldr.d_hashTable);
+	checkCudaErrors(cudaDeviceSynchronize());
+	resetHashTableKernel<<<blocks, threads >>> (h_ptrHldr.d_compactifiedHashTable);
+	checkCudaErrors(cudaDeviceSynchronize());
+
+	//set rest of data 0
 	checkCudaErrors(cudaMemset(h_ptrHldr.d_heap, 0, sizeof(unsigned int)*params.numVoxelBlocks));
 	checkCudaErrors(cudaMemset(h_ptrHldr.d_hashTableBucketMutex, 0, sizeof(int)*params.numBuckets));
 	checkCudaErrors(cudaMemset(h_ptrHldr.d_SDFBlocks, 0, sizeof(Voxel) * params.numVoxelBlocks * 
@@ -153,11 +158,11 @@ void deviceAllocate(const HashTableParams &params)	{
 	checkCudaErrors(cudaMemset(h_ptrHldr.d_heapCounter, 0, sizeof(unsigned int)));
 	checkCudaErrors(cudaMemset(h_ptrHldr.d_compactifiedHashCounter, 0, sizeof(int)));
 
-	//now copy this struct to device
-//	size_t size;
-	checkCudaErrors(cudaGetSymbolSize(&size, d_ptrHldr));
-	checkCudaErrors(cudaMemcpyToSymbol(d_ptrHldr, &h_ptrHldr, size, 0, cudaMemcpyHostToDevice));
-	std::cout << "h_ptrHldr supposedly copied to device\n";
+	//set d_heapCounter = numVoxelBlocks -1;
+	int heapCounterInitVal = params.numVoxelBlocks - 1;
+	checkCudaErrors(cudaMemcpy(&h_ptrHldr.d_heapCounter[0], &heapCounterInitVal, sizeof(unsigned int), cudaMemcpyHostToDevice));
+	//now copy this struct back to device
+	updateDevicePointers();
 }
 
 __host__
@@ -284,7 +289,7 @@ int3 delinearizeVoxelPos(const unsigned int& index)	{
 
 __device__
 int allocSingleBlockInHeap()	{	//int ptr
-	//int delIdx = ptr / 512;
+	//decrement total available blocks by 1
 	uint addr = atomicSub(&d_ptrHldr.d_heapCounter[0], 1);
 	return d_ptrHldr.d_heap[addr];
 }
@@ -373,17 +378,15 @@ bool insertVoxelEntry(const int3& data)	{
 				&& curr.ptr != FREE_BLOCK)	return false;
 		if(curr.ptr == FREE_BLOCK)	{
 			//TODO shouldn't the following be [hash] instead of [idx] ?
-			int prevVal = atomicExch(&d_ptrHldr.d_hashTableBucketMutex[hash], LOCKED_BLOCK);
-			if(prevVal != LOCKED_BLOCK)	{	//means we can lock current bucket
+			//int prevVal = atomicExch(&d_ptrHldr.d_hashTableBucketMutex[hash], LOCKED_BLOCK);
+			//if(prevVal != LOCKED_BLOCK)	{	//means we can lock current bucket
+			{
 				curr.pos = data;
 				curr.offset = NO_OFFSET;
-				curr.ptr = allocSingleBlockInHeap();
+				curr.ptr = allocSingleBlockInHeap() * 512;
 				return true;
 			}
 		}
-	}
-	if(FIRST_THREAD())	{
-		printf("Insertion: Empty slot not found in native bucket. Appending list\n");
 	}
 	//[2] bucket is full. Append to list.
 	const int lastEntryInBucket = (hash+1)*bucketSize - 1;
@@ -424,7 +427,7 @@ bool insertVoxelEntry(const int3& data)	{
 						VoxelEntry& next = d_ptrHldr.d_hashTable[i+j];
 						//TODO maybe we can do away with this check
 						if(next.ptr == FREE_BLOCK)	{
-							next.ptr = allocSingleBlockInHeap();
+							next.ptr = allocSingleBlockInHeap() * 512;
 							next.pos = data;
 							curr.offset = j;
 							break;
@@ -446,7 +449,7 @@ bool insertVoxelEntry(const int3& data)	{
 							if(prevVal != LOCKED_BLOCK)	{
 								VoxelEntry& ins = d_ptrHldr.d_hashTable[j];
 								ins.offset = i + curr.offset - j;
-								ins.ptr = allocSingleBlockInHeap();
+								ins.ptr = allocSingleBlockInHeap() * 512;
 								ins.pos = data;
 								curr.offset = j - i;
 								return true;
@@ -513,7 +516,7 @@ bool deleteVoxelEntry(int3 data)	{
 			if(prevVal != LOCKED_BLOCK)	{	//means we can lock current bucket
 				curr.pos = make_int3(0);
 				curr.offset = NO_OFFSET;
-				removeSingleBlockInHeap(curr.ptr);
+				removeSingleBlockInHeap(curr.ptr/512);
 				curr.ptr = FREE_BLOCK;
 				return true;
 			}
@@ -534,7 +537,7 @@ bool deleteVoxelEntry(int3 data)	{
 			prev.offset += curr.offset;
 			curr.pos = make_int3(0);
 			curr.offset = NO_OFFSET;
-			removeSingleBlockInHeap(curr.ptr);
+			removeSingleBlockInHeap(curr.ptr/512);
 			curr.ptr = FREE_BLOCK;
 		}
 	}
@@ -546,7 +549,7 @@ bool deleteVoxelEntry(int3 data)	{
 __global__
 void allocBlocksKernel(const float4* verts, const float4* normals)	{	//Do we need normal data here?
 
-	const float voxSize = d_hashtableParams.voxelSize;
+	const float voxelSize = d_hashtableParams.voxelSize;
 	int xidx = blockDim.x*blockIdx.x + threadIdx.x;
 	int yidx = blockDim.y*blockIdx.y + threadIdx.y;
 
@@ -590,7 +593,7 @@ void allocBlocksKernel(const float4* verts, const float4* normals)	{	//Do we nee
 
 	//calculate distance to next barrier
 	float3 tMax = ((next_boundary - rayStart)) / rayDir;
-	float3 tDelta = (voxSize / rayDir);
+	float3 tDelta = (voxelSize / rayDir);
 	tDelta.x *= step.x;
 	tDelta.y *= step.y;
 	tDelta.z *= step.z;
@@ -610,17 +613,8 @@ void allocBlocksKernel(const float4* verts, const float4* normals)	{	//Do we nee
 	if (next_boundary.z - rayStart.z == 0.0f) { tMax.z = INF; tDelta.z = INF; }
 
 
-	if(FIRST_THREAD())	{
-		printf("Starting insertion now\n");
-	}
 	//first insert idStart block into the hashtable
 	if(blockInFrustum(temp))	{
-		//TODO : ease this later
-		if(FIRST_THREAD())	{
-			printf("Inserting block (%d, %d, %d)\n",temp.x, temp.y, temp.z);
-			//printf("Block in frustum : ");
-			//printf(blockInFrustum(temp) ? "true\n" : "false\n");
-		}
 		insertVoxelEntry(temp);
 	}
 
@@ -644,15 +638,7 @@ void allocBlocksKernel(const float4* verts, const float4* normals)	{	//Do we nee
 
 		//check if block is in view, then insert into table
 		if(blockInFrustum(temp))	{
-			if(FIRST_THREAD())	{
-				printf("Inserting block (%d, %d, %d)\n",temp.x, temp.y, temp.z);
-				//printf("Block in frustum : ");
-				//printf(blockInFrustum(temp) ? "true\n" : "false\n");
-			}
 			bool status = insertVoxelEntry(temp);
-			if(status && FIRST_THREAD())	{
-				printf("Succsful insertion\n");
-			}
 		}
 		//cout<<"\nVisited "<<glm::to_string(temp);
 		//iter++;
@@ -663,9 +649,9 @@ void allocBlocksKernel(const float4* verts, const float4* normals)	{	//Do we nee
 //! Allocate all hash blocks which are corresponding to depth map entries
 extern "C" void allocBlocks(const float4* verts, const float4* normals)	{
 
-	//const dim3 blocks(640/8, 480/8, 1);
-	const dim3 blocks(1, 1, 1);
-	const dim3 threads(8, 8, 1);
+	const dim3 blocks(640/16, 480/16, 1);
+	//const dim3 blocks(1, 1, 1);
+	const dim3 threads(16, 16, 1);
 	std::cout<<"Running AllocBlocksKernel\n";
 	allocBlocksKernel <<<blocks, threads>>>(verts, normals);
 	checkCudaErrors(cudaDeviceSynchronize());
@@ -704,18 +690,22 @@ void flattenKernel()	{
 	}
 }
 
-extern "C" int flattenIntoBuffer()	{
+extern "C" int flattenIntoBuffer(const HashTableParams& params)	{
 	//first set numOccupiedBlocks = 0
 	//first clear previously flattened hashtable buffer
-	checkCudaErrors(cudaMemset(&d_ptrHldr.d_compactifiedHashTable[0], 0, sizeof(VoxelEntry) * d_hashtableParams.numOccupiedBlocks));
-	checkCudaErrors(cudaMemset(&d_ptrHldr.d_compactifiedHashCounter[0], 0, sizeof(int)));
+	const int totalThreads = params.numBuckets*params.bucketSize;
+	int resetBlocks = (totalThreads / 1024) + 1;
+	int resetThreads = 1024;
+	resetHashTableKernel <<<resetBlocks, resetThreads >>> (h_ptrHldr.d_compactifiedHashTable);
+	checkCudaErrors(cudaDeviceSynchronize());
+	checkCudaErrors(cudaMemset(h_ptrHldr.d_compactifiedHashCounter, 0, sizeof(int)));
 
 	dim3 blocks = dim3((d_hashtableParams.numBuckets * d_hashtableParams.bucketSize + 256 -1)/256, 1, 1);
 	dim3 threads = dim3(256, 1, 1);
 	flattenKernel<<<blocks, threads>>>();
 	checkCudaErrors(cudaDeviceSynchronize());
 	int occupiedBlocks = 0;
-	checkCudaErrors(cudaMemcpy(&occupiedBlocks, &d_ptrHldr.d_compactifiedHashCounter[0], sizeof(int), cudaMemcpyDeviceToHost));
+	checkCudaErrors(cudaMemcpy(&occupiedBlocks, &h_ptrHldr.d_compactifiedHashCounter[0], sizeof(int), cudaMemcpyDeviceToHost));
 
 	return occupiedBlocks;
 }
