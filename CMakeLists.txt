@@ -8,7 +8,8 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_CXX_FLAGS "-std=c++11 -fpermissive -w")
 set(OpenGL_GL_PREFERENCE "GLVND")
-string(APPEND CMAKE_CUDA_FLAGS " -gencode arch=compute_30,code=sm_30 -w")
+string(APPEND CMAKE_CUDA_FLAGS " -gencode arch=compute_61,code=sm_61 -w") #new laptop
+#string(APPEND CMAKE_CUDA_FLAGS " -gencode arch=compute_30,code=sm_30 -w")  #old, main laptop
 #if( CMAKE_BUILD_TYPE MATCHES "Debug" )
 string( APPEND CMAKE_CUDA_FLAGS " -g -G" )  #TODO : Remove these 3 lines later
 string( APPEND CMAKE_CUDA_FLAGS " -lineinfo" )

@@ -126,6 +126,14 @@ void resetHashTableKernel(VoxelEntry* table) {
 	table[idx].pos = make_int3(INF, INF, INF);
 }
 
+//Call this only once!!!
+__global__
+void resetHeapKernel(unsigned int* d_heap) {
+	const int idx = blockIdx.x*blockDim.x + threadIdx.x;
+	if (idx >= d_hashtableParams.numVoxelBlocks) return;
+	d_heap[idx] = idx;
+}
+
 //TODO do this using thrust instead
 __host__
 void deviceAllocate(const HashTableParams &params)	{
@@ -135,7 +143,7 @@ void deviceAllocate(const HashTableParams &params)	{
 	checkCudaErrors(cudaMalloc((void**)&h_ptrHldr.d_compactifiedHashTable, sizeof(VoxelEntry) * params.numBuckets * params.bucketSize));
 	checkCudaErrors(cudaMalloc((void**)&h_ptrHldr.d_hashTableBucketMutex, sizeof(int) * params.numBuckets));
 	checkCudaErrors(cudaMalloc((void**)&h_ptrHldr.d_SDFBlocks, sizeof(Voxel) * params.numVoxelBlocks * params.voxelBlockSize * params.voxelBlockSize * params.voxelBlockSize));
-	checkCudaErrors(cudaMalloc((void**)&h_ptrHldr.d_heapCounter, sizeof(unsigned int)));
+	checkCudaErrors(cudaMalloc((void**)&h_ptrHldr.d_heapCounter, sizeof(int)));
 	checkCudaErrors(cudaMalloc((void**)&h_ptrHldr.d_compactifiedHashCounter, sizeof(int)));
 
 	updateDevicePointers();
@@ -149,18 +157,22 @@ void deviceAllocate(const HashTableParams &params)	{
 	checkCudaErrors(cudaDeviceSynchronize());
 	resetHashTableKernel<<<blocks, threads >>> (h_ptrHldr.d_compactifiedHashTable);
 	checkCudaErrors(cudaDeviceSynchronize());
+	
+	int heapBlocks = (params.numVoxelBlocks / threads) + 1;
+	resetHeapKernel<<<heapBlocks, threads>>>(h_ptrHldr.d_heap);
+	checkCudaErrors(cudaDeviceSynchronize());
 
 	//set rest of data 0
-	checkCudaErrors(cudaMemset(h_ptrHldr.d_heap, 0, sizeof(unsigned int)*params.numVoxelBlocks));
+	//checkCudaErrors(cudaMemset(h_ptrHldr.d_heap, 0, sizeof(int)*params.numVoxelBlocks));	//don't need this anymore
 	checkCudaErrors(cudaMemset(h_ptrHldr.d_hashTableBucketMutex, 0, sizeof(int)*params.numBuckets));
 	checkCudaErrors(cudaMemset(h_ptrHldr.d_SDFBlocks, 0, sizeof(Voxel) * params.numVoxelBlocks * 
 		params.voxelBlockSize * params.voxelBlockSize * params.voxelBlockSize));
-	checkCudaErrors(cudaMemset(h_ptrHldr.d_heapCounter, 0, sizeof(unsigned int)));
+	checkCudaErrors(cudaMemset(h_ptrHldr.d_heapCounter, 0, sizeof(int)));
 	checkCudaErrors(cudaMemset(h_ptrHldr.d_compactifiedHashCounter, 0, sizeof(int)));
 
 	//set d_heapCounter = numVoxelBlocks -1;
 	int heapCounterInitVal = params.numVoxelBlocks - 1;
-	checkCudaErrors(cudaMemcpy(&h_ptrHldr.d_heapCounter[0], &heapCounterInitVal, sizeof(unsigned int), cudaMemcpyHostToDevice));
+	checkCudaErrors(cudaMemcpy(&h_ptrHldr.d_heapCounter[0], &heapCounterInitVal, sizeof(int), cudaMemcpyHostToDevice));
 	//now copy this struct back to device
 	updateDevicePointers();
 }
@@ -200,22 +212,6 @@ bool vertexInFrustum(float4 point)	{
 	return false;
 }
 
-__inline__ __device__
-bool blockInFrustum(int3 blockId)	{
-	float4 pos = make_float4(blockId.x, blockId.y, blockId.z, 1);
-	pos = d_hashtableParams.global_transform * pos;
-	float3 projected = make_float3(blockId.x, blockId.y, blockId.z);
-	projected = kinectProjectionMatrix * projected;
-	projected = projected/projected.z;
-
-	int x = __float2int_rz(projected.x);
-	int y = __float2int_rz(projected.y);
-	if(x < 640 && x >=0 && y < 480 && y >= 0)	{
-		return true;
-	}
-	return false;
-}
-
 
 //Now actual GPU code
 __device__
@@ -245,7 +241,7 @@ int3 voxel2Block(int3 voxel) 	{
 
 __device__
 int3 world2Voxel(const float3& point)	{
-	const int size = d_hashtableParams.voxelBlockSize;
+	const float size = d_hashtableParams.voxelSize;
 	float3 p = point/size;
 	return make_int3(p + make_float3(signbit(p.x), signbit(p.y),signbit(p.z))*0.5);//return center
 }
@@ -287,20 +283,37 @@ int3 delinearizeVoxelPos(const unsigned int& index)	{
 	return make_int3(x,y,z);
 }
 
-__device__
+__inline__ __device__
 int allocSingleBlockInHeap()	{	//int ptr
 	//decrement total available blocks by 1
-	uint addr = atomicSub(&d_ptrHldr.d_heapCounter[0], 1);
+	int addr = atomicSub(&d_ptrHldr.d_heapCounter[0], 1);	//TODO: make this uint 
 	return d_ptrHldr.d_heap[addr];
 }
 
 __device__
 void removeSingleBlockInHeap(int ptr)	{
 	//int delIdx = ptr / 512;
-	uint addr = atomicAdd(&d_ptrHldr.d_heapCounter[0], 1);
+	int addr = atomicAdd(&d_ptrHldr.d_heapCounter[0], 1);	//TODO: make this uint
 	d_ptrHldr.d_heap[addr + 1] = ptr;
 }
 
+//Frustum culling
+__inline__ __device__
+bool blockInFrustum(int3 blockId) {
+	float3 worldPos = block2World(blockId);
+	float4 pos = make_float4(worldPos.x, worldPos.y, worldPos.z, 1);
+	//pos = d_hashtableParams.global_transform * pos;	//TODO : shouldn't this be inv_global_transform?
+	float3 projected = make_float3(pos.x, pos.y, pos.z);
+	projected = kinectProjectionMatrix * projected;
+	projected = projected / projected.z;
+
+	int x = __float2int_rz(projected.x);
+	int y = __float2int_rz(projected.y);
+	if (x < 640 && x >= 0 && y < 480 && y >= 0) {
+		return true;
+	}
+	return false;
+}
 
 //Hacky but cool code below
 __device__
@@ -324,6 +337,9 @@ VoxelEntry getVoxelEntry4Block(const int3& pos)	{
 			return curr;
 		}
 	}
+
+#ifdef LINKED_LIST_ENABLED
+
 	//[2] block not found. handle collisions by traversing tail linked list
 	const int lastEntryInBucket = (hash+1)*bucketSize -1;
 	i = lastEntryInBucket;
@@ -348,6 +364,9 @@ VoxelEntry getVoxelEntry4Block(const int3& pos)	{
 
 		iter++;
 	}
+
+#endif // LINKED_LIST_ENABLED
+
 	return temp;
 }
 
@@ -388,6 +407,9 @@ bool insertVoxelEntry(const int3& data)	{
 			}
 		}
 	}
+
+#ifdef LINKED_LIST_ENABLED
+
 	//[2] bucket is full. Append to list.
 	const int lastEntryInBucket = (hash+1)*bucketSize - 1;
 
@@ -463,31 +485,10 @@ bool insertVoxelEntry(const int3& data)	{
 		}
 		iter++;
 	}
+#endif // LINKED_LIST_ENABLED
+
 }
 
-
-__device__
-int beforeThis(int3 data)	{
-
-	unsigned int hash = calculateHash(data);
-	const unsigned int bucketSize = d_hashtableParams.bucketSize;
-	const unsigned int numBuckets = d_hashtableParams.numBuckets;
-	const unsigned int lastEntryInBucket = (hash+1) * bucketSize - 1;
-
-	int iter = 0; const int maxIter = d_hashtableParams.attachedLinkedListSize;
-	int i = lastEntryInBucket;
-	if(d_ptrHldr.d_hashTable[lastEntryInBucket].offset != 0)	{
-		while(iter < maxIter)	{
-			const VoxelEntry& curr = d_ptrHldr.d_hashTable[i];
-			const VoxelEntry& next = d_ptrHldr.d_hashTable[i + curr.offset];
-			if((next.pos.x==data.x) && (next.pos.y==data.y) &&
-					(next.pos.z==data.z))	{return i;}
-			i += curr.offset;
-			iter++;
-		}
-	}
-	return -1;	//error; should not happen
-}
 
 __device__
 bool deleteVoxelEntry(int3 data)	{
@@ -522,6 +523,9 @@ bool deleteVoxelEntry(int3 data)	{
 			}
 		}
 	}
+
+#ifdef LINKED_LIST_ENABLED
+
 	//deletion in linked list
 	int lastEntry = beforeThis(data);
 	if(lastEntry == -1)	{return false;}	//error
@@ -544,6 +548,8 @@ bool deleteVoxelEntry(int3 data)	{
 
 	return false;//delete didn't happen :(
 
+#endif // LINKED_LIST_ENABLED
+
 }
 
 __global__
@@ -563,21 +569,13 @@ void allocBlocksKernel(const float4* verts, const float4* normals)	{	//Do we nee
 	float4 tempPos = verts[idx];
 	if(tempPos.z == 0.0f) return;
 	tempPos = d_hashtableParams.global_transform * tempPos;	//transform to global frame
-	float3 projTemp = make_float3(tempPos.x, tempPos.y, tempPos.z);
-	projTemp = kinectProjectionMatrix * projTemp;
-	projTemp = projTemp/projTemp.z;
+	//float3 projTemp = make_float3(tempPos.x, tempPos.y, tempPos.z);
+	//projTemp = kinectProjectionMatrix * projTemp;
+	//projTemp = projTemp/projTemp.z;
 	//TODO : Erase this later
 	//if(idx==153600)	{
 	//	printf("Middle vertex (%f, %f, %f, %f)\n",verts[idx].x, verts[idx].y, verts[idx].z, verts[idx].w);
 	//}
-	if(FIRST_THREAD())	{
-		printf("First vertex (%f, %f, %f, %f)\n",verts[idx].x, verts[idx].y, verts[idx].z, verts[idx].w);
-		printf("First  transformed vertex (%f, %f, %f)\n",tempPos.x, tempPos.y, tempPos.z);
-		printf("First  projected vertex (%f, %f, %f)\n",projTemp.x, projTemp.y, projTemp.z);
-		printf("Vertex in frustum : ");
-		printf(vertexInFrustum(tempPos) ? "true\n" : "false\n");
-		//printDeviceMatrix(kinectProjectionMatrix);
-	}
 	float3 p = make_float3(tempPos);
 	float3 pn = make_float3(normals[idx]);
 	float3 rayStart = p - (d_hashtableParams.truncation * pn);
@@ -614,6 +612,8 @@ void allocBlocksKernel(const float4* verts, const float4* normals)	{	//Do we nee
 
 
 	//first insert idStart block into the hashtable
+	bool status = vertexInFrustum(tempPos);
+
 	if(blockInFrustum(temp))	{
 		insertVoxelEntry(temp);
 	}
@@ -662,7 +662,7 @@ __global__
 void flattenKernel()	{
 	const int idx = (blockDim.x * blockIdx.x) + threadIdx.x;
 
-	if(idx < (d_hashtableParams.bucketSize * d_hashtableParams.numBuckets)) return;
+	if(idx >= (d_hashtableParams.bucketSize * d_hashtableParams.numBuckets)) return;
 
 	__shared__ int localCounter;
 	if(threadIdx.x == 0) localCounter = 0;
@@ -700,8 +700,8 @@ extern "C" int flattenIntoBuffer(const HashTableParams& params)	{
 	checkCudaErrors(cudaDeviceSynchronize());
 	checkCudaErrors(cudaMemset(h_ptrHldr.d_compactifiedHashCounter, 0, sizeof(int)));
 
-	dim3 blocks = dim3((d_hashtableParams.numBuckets * d_hashtableParams.bucketSize + 256 -1)/256, 1, 1);
-	dim3 threads = dim3(256, 1, 1);
+	int blocks = (d_hashtableParams.numBuckets * d_hashtableParams.bucketSize/256) + 1;
+	int threads = 256;
 	flattenKernel<<<blocks, threads>>>();
 	checkCudaErrors(cudaDeviceSynchronize());
 	int occupiedBlocks = 0;

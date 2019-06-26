@@ -28,8 +28,8 @@ void SDF_Hashtable::integrate(const float4x4& viewMat, const float4* verts, cons
 
 SDF_Hashtable::SDF_Hashtable()	{
 	h_hashtableParams.numBuckets = 500000;
-	h_hashtableParams.bucketSize = 10;
-	h_hashtableParams.attachedLinkedListSize = 7;
+	h_hashtableParams.bucketSize = 5;	//10
+	h_hashtableParams.attachedLinkedListSize = 4;	//7
 	h_hashtableParams.numVoxelBlocks = 100000;
 	h_hashtableParams.voxelBlockSize = 8;
 	h_hashtableParams.voxelSize = 0.05f;

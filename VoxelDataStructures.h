@@ -48,13 +48,13 @@ struct HashTableParams	{
 };
 
 struct PtrContainer	{
-	int* d_heap;
-	VoxelEntry* d_hashTable;
+	unsigned int* d_heap;	//linear buffer with indices to all unallocated blocks
+	VoxelEntry* d_hashTable;	//actual hashtable
 	VoxelEntry* d_compactifiedHashTable;
-	int* d_hashTableBucketMutex;
-	Voxel* d_SDFBlocks;
+	int* d_hashTableBucketMutex;	//mutex that'll decide wheter further allocations in bucket can be made or not 
+	Voxel* d_SDFBlocks;	//Actual underlying 3D geometry in TSDF form. Very important.
 
-	int* d_heapCounter;
+	int* d_heapCounter;	//single int keeping track of numBlocks allocated
 	int* d_compactifiedHashCounter;
 };
 
