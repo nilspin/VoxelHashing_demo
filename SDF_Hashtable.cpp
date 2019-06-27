@@ -15,6 +15,8 @@ void SDF_Hashtable::integrate(const float4x4& viewMat, const float4* verts, cons
 	//upload to device
 	updateConstantHashTableParams(h_hashtableParams);
 
+	//TODO : reset hash-table mutexes
+
 	//launch kernel to insert voxelentries into hashtable
 	allocBlocks(verts, normals);
 
@@ -24,6 +26,9 @@ void SDF_Hashtable::integrate(const float4x4& viewMat, const float4* verts, cons
 	h_hashtableParams.numOccupiedBlocks = occupiedBlockCount;
 	updateConstantHashTableParams(h_hashtableParams);
 
+	//integrate vertices into SDF volume
+	integrateDepthMap(h_hashtableParams, verts);
+	std::cout << "depth map integrated into volume! \n";
 }
 
 SDF_Hashtable::SDF_Hashtable()	{

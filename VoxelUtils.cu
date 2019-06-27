@@ -280,7 +280,7 @@ unsigned int linearizeVoxelPos(const int3& pos)	{
 }
 
 __device__
-int3 delinearizeVoxelPos(const unsigned int& index)	{
+int3 delinearizeVoxelPos(const unsigned int index)	{
 	const int size = d_hashtableParams.voxelBlockSize;
 	unsigned int x = index % size;
 	unsigned int y = (index % (size * size)) / size;
@@ -712,14 +712,12 @@ extern "C" int flattenIntoBuffer(const HashTableParams& params)	{
 	//first set numOccupiedBlocks = 0
 	//first clear previously flattened hashtable buffer
 	const int totalThreads = params.numBuckets*params.bucketSize;
-	int resetBlocks = (totalThreads / 1024) + 1;
-	int resetThreads = 1024;
-	resetHashTableKernel <<<resetBlocks, resetThreads >>> (h_ptrHldr.d_compactifiedHashTable);
+	int blocks = (totalThreads / 1024) + 1;
+	int threads = 1024;
+	resetHashTableKernel <<<blocks, threads >>> (h_ptrHldr.d_compactifiedHashTable);
 	checkCudaErrors(cudaDeviceSynchronize());
 	checkCudaErrors(cudaMemset(h_ptrHldr.d_compactifiedHashCounter, 0, sizeof(int)));
 
-	int blocks = (params.numBuckets * params.bucketSize/256) + 1;
-	int threads = 256;
 	flattenKernel<<<blocks, threads>>>();
 	checkCudaErrors(cudaDeviceSynchronize());
 	int occupiedBlocks = 0;
@@ -728,3 +726,79 @@ extern "C" int flattenIntoBuffer(const HashTableParams& params)	{
 	return occupiedBlocks;
 }
 
+__inline__ __device__
+int2 project(float4 point) {
+	float3 pos = make_float3(point.x, point.y, point.z);
+	pos = kinectProjectionMatrix * pos;
+	pos = pos / pos.z;
+	return make_int2(pos.x, pos.y);
+}
+
+__inline __device__
+Voxel combineVoxel(const Voxel& oldVox, const Voxel& currVox) {
+	//TODO: add color later
+	Voxel newVox;
+	newVox.sdf = ((oldVox.sdf * (float)oldVox.weight) + (currVox.sdf * (float)currVox.weight)) / ((float)oldVox.weight + (float)currVox.weight);
+	newVox.weight = min(d_hashtableParams.integrationWeightMax, (unsigned int)oldVox.weight + (unsigned int)currVox.weight);
+	
+	return newVox;
+}
+
+//Implementation of Curless & Levoy paper(1996)
+__global__
+void integrateDepthMapKernel(const float4* verts) {
+	const VoxelEntry& entry = d_ptrHldr.d_compactifiedHashTable[blockIdx.x];
+	int3 base_voxel = block2Voxel(entry.pos);
+	
+	uint i = threadIdx.x;
+	int3 curr_voxel = base_voxel + delinearizeVoxelPos(i);
+	float4 curr_voxel_float = make_float4(curr_voxel.x, curr_voxel.y, curr_voxel.z, 1.0);
+	curr_voxel_float = d_hashtableParams.inv_global_transform * curr_voxel_float;
+	int2 screenPos = project(curr_voxel_float);
+
+	if ((screenPos.x < 0) || (screenPos.x >= 640) || (screenPos.y < 0) || (screenPos.y >= 480)) return;
+	const int idx = (screenPos.y * 640) + screenPos.x;
+	float depth = verts[idx].z;
+	if (depth <= 0)	return;
+
+	//TODO : define these explicitly, somewhere safe outside of here!
+	float depthRangeMin = 0.5;	//metres
+	float depthRangeMax = 5.0;
+	float depthZeroOne = (depth - depthRangeMin) / (depthRangeMax - depthRangeMin);	//normalize current depth
+
+	float sdf = depth - curr_voxel_float.z;
+	float truncation = d_hashtableParams.truncation + (d_hashtableParams.truncScale*depth);
+	//i.e calculate truncation of the SDF for given depth value
+
+	if (sdf > -truncation) {
+		if (sdf >= 0) {
+			sdf = fminf(truncation, sdf);
+		}
+		else {
+			sdf = fmaxf(-truncation, sdf);
+		}
+
+		//not really sure about following line. Copied from prof. Niessner's implementation
+		float weightUpdate = fmaxf(d_hashtableParams.integrationWeightSample * 1.5 * (1.0 - depthZeroOne), 1.0f);
+
+		Voxel curr;
+		curr.sdf = sdf;
+		curr.weight = weightUpdate;
+		//curr.color = make_uchar3(0, 255, 0);	//TODO : later
+
+		const int oldVoxIdx = entry.ptr + i;
+
+		Voxel fusedVoxel = combineVoxel(d_ptrHldr.d_SDFBlocks[oldVoxIdx], curr);
+		d_ptrHldr.d_SDFBlocks[oldVoxIdx] = fusedVoxel;	//replace old voxel with new fused one
+	}
+}
+
+extern "C" void integrateDepthMap(const HashTableParams& params, const float4* verts) {
+	int threads = params.voxelBlockSize * params.voxelBlockSize * params.voxelBlockSize;
+	int blocks = params.numOccupiedBlocks;
+
+	if (params.numOccupiedBlocks > 0) {
+		integrateDepthMapKernel<<<blocks, threads>>>(verts);
+		checkCudaErrors(cudaDeviceSynchronize());
+	}
+}
