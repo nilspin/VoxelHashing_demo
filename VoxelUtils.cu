@@ -232,11 +232,16 @@ float getTruncation(float z)	{
 
 __device__
 int3 voxel2Block(int3 voxel) 	{
-	const int size = d_hashtableParams.voxelBlockSize;
-	if(voxel.x < 0) voxel.x -= size-1;	//i.e voxelBlockSize -1
-	if(voxel.y < 0) voxel.y -= size-1;
-	if(voxel.z < 0) voxel.z -= size-1;
-	return make_int3(voxel.x/size, voxel.y/size, voxel.z/size);
+	const float size = d_hashtableParams.voxelBlockSize;
+	float3 vx = make_float3(voxel);
+	int x = __float2int_rz(vx.x / size);
+	int y = __float2int_rz(vx.y / size);
+	int z = __float2int_rz(vx.z / size);
+	return make_int3(x, y, z);
+	//if(voxel.x < 0) voxel.x -= size-1;	//i.e voxelBlockSize -1
+	//if(voxel.y < 0) voxel.y -= size-1;
+	//if(voxel.z < 0) voxel.z -= size-1;
+	//return make_int3(voxel.x/size, voxel.y/size, voxel.z/size);
 }
 
 __device__
@@ -287,6 +292,7 @@ __inline__ __device__
 int allocSingleBlockInHeap()	{	//int ptr
 	//decrement total available blocks by 1
 	int addr = atomicSub(&d_ptrHldr.d_heapCounter[0], 1);	//TODO: make this uint 
+	if (addr < 0) return -1;	//negative index shouldn't, but still happens :(
 	return d_ptrHldr.d_heap[addr];
 }
 
@@ -391,18 +397,22 @@ bool insertVoxelEntry(const int3& data)	{
 		printf("Insertion : before bucket iteration\n");
 	}
 	for(i=0; i<bucketSize; ++i)	{
-		const int idx = startIndex+i;
+		int idx = startIndex+i;
+		idx = idx % (numBuckets * bucketSize);
 		VoxelEntry &curr = d_ptrHldr.d_hashTable[idx];
 		if(curr.pos.x == data.x && curr.pos.y == data.y && curr.pos.z == data.z
 				&& curr.ptr != FREE_BLOCK)	return false;
 		if(curr.ptr == FREE_BLOCK)	{
 			//TODO shouldn't the following be [hash] instead of [idx] ?
-			//int prevVal = atomicExch(&d_ptrHldr.d_hashTableBucketMutex[hash], LOCKED_BLOCK);
-			//if(prevVal != LOCKED_BLOCK)	{	//means we can lock current bucket
-			{
+			int prevVal = atomicExch(&d_ptrHldr.d_hashTableBucketMutex[hash], LOCKED_BLOCK);
+			if(prevVal != LOCKED_BLOCK)	{	//means we can lock current bucket
+			//{
 				curr.pos = data;
 				curr.offset = NO_OFFSET;
-				curr.ptr = allocSingleBlockInHeap() * 512;
+				int ptrIdx = allocSingleBlockInHeap() * 512;
+				if (ptrIdx < 0)	return false;	//all VoxelBlocks occupied
+				curr.ptr = ptrIdx;
+				printf("Inserted block : (%d, %d, %d) at idx %d\n", data.x, data.y, data.z, ptrIdx/512);
 				return true;
 			}
 		}
@@ -449,7 +459,9 @@ bool insertVoxelEntry(const int3& data)	{
 						VoxelEntry& next = d_ptrHldr.d_hashTable[i+j];
 						//TODO maybe we can do away with this check
 						if(next.ptr == FREE_BLOCK)	{
-							next.ptr = allocSingleBlockInHeap() * 512;
+							int ptrIdx = allocSingleBlockInHeap() * 512;
+							if (ptrIdx < 0)	return false;
+							next.ptr = ptrIdx;
 							next.pos = data;
 							curr.offset = j;
 							break;
@@ -471,7 +483,9 @@ bool insertVoxelEntry(const int3& data)	{
 							if(prevVal != LOCKED_BLOCK)	{
 								VoxelEntry& ins = d_ptrHldr.d_hashTable[j];
 								ins.offset = i + curr.offset - j;
-								ins.ptr = allocSingleBlockInHeap() * 512;
+								int ptrIdx = allocSingleBlockInHeap() * 512;
+								if (ptrIdx < 0)	return false;
+								ins.ptr = ptrIdx;
 								ins.pos = data;
 								curr.offset = j - i;
 								return true;
@@ -598,6 +612,9 @@ void allocBlocksKernel(const float4* verts, const float4* normals)	{	//Do we nee
 
 	//convert to voxel-blocks
 	int3 idStart = world2Block(rayStart);
+	float3 wrldPos = block2World(idStart);
+	//printf("Vertex = (%f, %f, %f) idStart : (%d, %d, %d) and back (%f, %f, %f)\n",verts[idx].x, verts[idx].y, verts[idx].z, idStart.x, idStart.y, idStart.z, wrldPos.x, wrldPos.y, wrldPos.z);
+
 	int3 idEnd = world2Block(rayEnd);
 	int3 temp = idStart;
 
@@ -612,11 +629,13 @@ void allocBlocksKernel(const float4* verts, const float4* normals)	{	//Do we nee
 
 
 	//first insert idStart block into the hashtable
-	bool status = vertexInFrustum(tempPos);
+	//bool status = vertexInFrustum(tempPos);
 
+	//TODO : NOTE these blockInFrustum checks are useless since having depth data means vertex is visible
 	if(blockInFrustum(temp))	{
 		insertVoxelEntry(temp);
-	}
+	}	//, instead simply
+	//insertVoxelEntry(temp);
 
 	while((temp.x != idEnd.x) && (temp.y != idEnd.y) && (temp.z != idEnd.z))	{
 
@@ -640,7 +659,6 @@ void allocBlocksKernel(const float4* verts, const float4* normals)	{	//Do we nee
 		if(blockInFrustum(temp))	{
 			bool status = insertVoxelEntry(temp);
 		}
-		//cout<<"\nVisited "<<glm::to_string(temp);
 		//iter++;
 	}
 	//By now all necessary blocks should have been allocated
@@ -670,7 +688,7 @@ void flattenKernel()	{
 
 	//local address within block
 	int localAddr = -1;
-	VoxelEntry& entry = d_ptrHldr.d_hashTable[idx];
+	const VoxelEntry& entry = d_ptrHldr.d_hashTable[idx];
 	if(entry.ptr != FREE_BLOCK && blockInFrustum(entry.pos))	{
 		localAddr = atomicAdd(&localCounter, 1);
 	}
@@ -700,7 +718,7 @@ extern "C" int flattenIntoBuffer(const HashTableParams& params)	{
 	checkCudaErrors(cudaDeviceSynchronize());
 	checkCudaErrors(cudaMemset(h_ptrHldr.d_compactifiedHashCounter, 0, sizeof(int)));
 
-	int blocks = (d_hashtableParams.numBuckets * d_hashtableParams.bucketSize/256) + 1;
+	int blocks = (params.numBuckets * params.bucketSize/256) + 1;
 	int threads = 256;
 	flattenKernel<<<blocks, threads>>>();
 	checkCudaErrors(cudaDeviceSynchronize());
