@@ -128,6 +128,7 @@ extern "C" void mapGLobjectsToCUDApointers(cudaGraphicsResource* res_ptr) {
 	int occupiedBlocks = -1;
 	checkCudaErrors(cudaMemcpy(&occupiedBlocks, &h_ptrHldr.d_compactifiedHashCounter[0], sizeof(int), cudaMemcpyDeviceToHost));
 	std::cout << "(after GL mapping)numVisibleBlocks : " << occupiedBlocks << "\n";
+	updateDevicePointers();
 	//checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void**)&d_input, &returnedBufferSize, cuda_resource));
 	//checkCudaErrors(cudaMemset(d_input, 0, returnedBufferSize));
 }
@@ -729,6 +730,7 @@ extern "C" int flattenIntoBuffer(const HashTableParams& params)	{
 	const int totalThreads = params.numBuckets*params.bucketSize;
 	int blocks = (totalThreads / 1024) + 1;
 	int threads = 1024;
+	//TODO : Do we really need to reset compactifiedHashTable? wouldn't it get overwritten by flattenKernel anyways?
 	resetHashTableKernel <<<blocks, threads >>> (h_ptrHldr.d_compactifiedHashTable);
 	checkCudaErrors(cudaDeviceSynchronize());
 	checkCudaErrors(cudaMemset(h_ptrHldr.d_compactifiedHashCounter, 0, sizeof(int)));
