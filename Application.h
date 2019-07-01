@@ -7,6 +7,7 @@
 #include "camera.h"
 //#include "Frustum.h"
 #include "CameraTracking.h"
+#include "SDFRenderer.h"
 #include "SDF_Hashtable.h"
 #include "helper_cuda.h"
 
@@ -52,6 +53,9 @@ private:
 
   	//GPU-hashtable
 	unique_ptr<SDF_Hashtable> fusionModule;
+
+	//Main renderer
+	unique_ptr<SDFRenderer> renderer;
 
 	//Texture & images
 	GLuint depthTexture1, depthTexture2;
