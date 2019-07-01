@@ -38,6 +38,7 @@ public:
 	//HashEntry deleteHashEntry(HashEntry& hashEntry);
 	void integrate(const float4x4& deltaT, const float4*, const float4*);
 	void registerGLtoCUDA(SDFRenderer&);
+	void unmapCUDApointers();
 };
 
 #endif

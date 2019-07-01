@@ -117,6 +117,21 @@ void updateDevicePointers() {
 //	ptrHldr.d_SDFBlocks = thrust::raw_pointer_cast(&d_SDFBlocks_vec[0]);
 //}
 
+//TODO : Confusion here. FInish this later
+//no GL functions should be called after pointers are mapped to cuda
+//__host__
+extern "C" void mapGLobjectsToCUDApointers(cudaGraphicsResource* res_ptr) {
+
+	size_t returnedBufferSize;
+	checkCudaErrors(cudaGraphicsMapResources(1, &res_ptr, 0));
+	checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void**)&h_ptrHldr.d_compactifiedHashCounter, &returnedBufferSize, res_ptr));
+	int occupiedBlocks = -1;
+	checkCudaErrors(cudaMemcpy(&occupiedBlocks, &h_ptrHldr.d_compactifiedHashCounter[0], sizeof(int), cudaMemcpyDeviceToHost));
+	std::cout << "(after GL mapping)numVisibleBlocks : " << occupiedBlocks << "\n";
+	//checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void**)&d_input, &returnedBufferSize, cuda_resource));
+	//checkCudaErrors(cudaMemset(d_input, 0, returnedBufferSize));
+}
+
 __global__
 void resetHashTableKernel(VoxelEntry* table) {
 	const int idx = blockIdx.x*blockDim.x + threadIdx.x;
@@ -144,7 +159,7 @@ void deviceAllocate(const HashTableParams &params)	{
 	checkCudaErrors(cudaMalloc((void**)&h_ptrHldr.d_hashTableBucketMutex, sizeof(int) * params.numBuckets));
 	checkCudaErrors(cudaMalloc((void**)&h_ptrHldr.d_SDFBlocks, sizeof(Voxel) * params.numVoxelBlocks * params.voxelBlockSize * params.voxelBlockSize * params.voxelBlockSize));
 	checkCudaErrors(cudaMalloc((void**)&h_ptrHldr.d_heapCounter, sizeof(int)));
-	checkCudaErrors(cudaMalloc((void**)&h_ptrHldr.d_compactifiedHashCounter, sizeof(int)));
+	//checkCudaErrors(cudaMalloc((void**)&h_ptrHldr.d_compactifiedHashCounter, sizeof(int)));	//TODO : remove this
 
 	updateDevicePointers();
 
@@ -168,7 +183,7 @@ void deviceAllocate(const HashTableParams &params)	{
 	checkCudaErrors(cudaMemset(h_ptrHldr.d_SDFBlocks, 0, sizeof(Voxel) * params.numVoxelBlocks * 
 		params.voxelBlockSize * params.voxelBlockSize * params.voxelBlockSize));
 	checkCudaErrors(cudaMemset(h_ptrHldr.d_heapCounter, 0, sizeof(int)));
-	checkCudaErrors(cudaMemset(h_ptrHldr.d_compactifiedHashCounter, 0, sizeof(int)));
+	//checkCudaErrors(cudaMemset(h_ptrHldr.d_compactifiedHashCounter, 0, sizeof(int)));	//TODO : remove this
 
 	//set d_heapCounter = numVoxelBlocks -1;
 	int heapCounterInitVal = params.numVoxelBlocks - 1;
@@ -183,7 +198,7 @@ void deviceFree()	{
 	checkCudaErrors(cudaFree(d_ptrHldr.d_heap));
 	checkCudaErrors(cudaFree(d_ptrHldr.d_heapCounter));
 	checkCudaErrors(cudaFree(d_ptrHldr.d_compactifiedHashTable));
-	checkCudaErrors(cudaFree(d_ptrHldr.d_compactifiedHashCounter));
+	//checkCudaErrors(cudaFree(d_ptrHldr.d_compactifiedHashCounter));	//TODO : remove this
 	checkCudaErrors(cudaFree(d_ptrHldr.d_SDFBlocks));
 	checkCudaErrors(cudaFree(d_ptrHldr.d_hashTableBucketMutex));
 }

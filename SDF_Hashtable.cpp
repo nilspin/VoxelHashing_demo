@@ -8,6 +8,8 @@
 #include "VoxelUtils.h"
 
 void SDF_Hashtable::integrate(const float4x4& viewMat, const float4* verts, const float4* normals)	{
+
+	mapGLobjectsToCUDApointers(numVisibleBlocks_res);
 	//first update the device HashParams variable
 	float4x4 inv_global_transform = viewMat.getInverse();
 
@@ -31,6 +33,8 @@ void SDF_Hashtable::integrate(const float4x4& viewMat, const float4* verts, cons
 	//integrate vertices into SDF volume
 	integrateDepthMap(h_hashtableParams, verts);
 	std::cout << "depth map integrated into volume! \n";
+
+	unmapCUDApointers();
 }
 
 void SDF_Hashtable::registerGLtoCUDA(SDFRenderer& renderer) {
@@ -39,6 +43,12 @@ void SDF_Hashtable::registerGLtoCUDA(SDFRenderer& renderer) {
 	//int numVisibleBlocks_handle = renderer.numOccupiedBlocks_handle;
 	//mapGLobjectsToCUDApointers(*rendererRef);
 	std::cout << "GL resources registered to CUDA hashtable\n";
+}
+
+void SDF_Hashtable::unmapCUDApointers()
+{
+	checkCudaErrors(cudaGraphicsUnmapResources(1, &numVisibleBlocks_res, 0));
+	std::cout << "numVisibleBlocks_res unmapped!\n";
 }
 
 SDF_Hashtable::SDF_Hashtable()	{
