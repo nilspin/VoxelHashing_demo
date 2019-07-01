@@ -30,7 +30,8 @@ Application::Application() {
   if(image2 == nullptr) {cout<<"could not read second image file!"<<endl; exit(0);}
   tracker = unique_ptr<CameraTracking>(new CameraTracking(DepthWidth, DepthHeight));
   fusionModule = unique_ptr<SDF_Hashtable>(new SDF_Hashtable());
-  renderer = unique_ptr<SDFRenderer>(new SDFRenderer());
+  sdfRenderer = unique_ptr<SDFRenderer>(new SDFRenderer());
+  fusionModule->registerGLtoCUDA(*sdfRenderer);
 
   //put into cuda device buffer
   const int DEPTH_SIZE = sizeof(std::uint16_t)*DepthHeight*DepthWidth;

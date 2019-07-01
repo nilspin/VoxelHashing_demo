@@ -55,7 +55,7 @@ private:
 	unique_ptr<SDF_Hashtable> fusionModule;
 
 	//Main renderer
-	unique_ptr<SDFRenderer> renderer;
+	unique_ptr<SDFRenderer> sdfRenderer;
 
 	//Texture & images
 	GLuint depthTexture1, depthTexture2;

@@ -2,7 +2,9 @@
 #include <windows.h>
 #endif
 
+#include "prereq.h"
 #include "SDF_Hashtable.h"
+#include "SDFRenderer.h"
 #include "VoxelUtils.h"
 
 void SDF_Hashtable::integrate(const float4x4& viewMat, const float4* verts, const float4* normals)	{
@@ -29,6 +31,14 @@ void SDF_Hashtable::integrate(const float4x4& viewMat, const float4* verts, cons
 	//integrate vertices into SDF volume
 	integrateDepthMap(h_hashtableParams, verts);
 	std::cout << "depth map integrated into volume! \n";
+}
+
+void SDF_Hashtable::registerGLtoCUDA(SDFRenderer& renderer) {
+	//rendererRef = &renderer;
+	checkCudaErrors(cudaGraphicsGLRegisterBuffer(&numVisibleBlocks_res, renderer.numOccupiedBlocks_handle, cudaGraphicsRegisterFlagsNone));
+	//int numVisibleBlocks_handle = renderer.numOccupiedBlocks_handle;
+	//mapGLobjectsToCUDApointers(*rendererRef);
+	std::cout << "GL resources registered to CUDA hashtable\n";
 }
 
 SDF_Hashtable::SDF_Hashtable()	{
