@@ -33,4 +33,19 @@ const int pyramid_iters[pyramid_size+1] = {4,5,10};
 const int kinZNear = 1.0f;
 const float kinZFar = 1000.0f;
 
+/*-----Hashtable Params----*/
+const int numBuckets = 500000;
+const int bucketSize = 5;
+const int attachedLinkedListSize = 4;
+const int numVoxelBlocks = 100000;
+const int voxelBlockSize = 8;
+const float voxelSize = 0.05f;
+const int numOccupiedBlocks = 0;
+const float maxIntegrationDistance = 4.0f;
+const float truncScale = 0.01f;
+const float truncation = 0.02f;
+const int integrationWeightSample = 10;
+const int integrationWeightMax = 255;
+
+
 #endif

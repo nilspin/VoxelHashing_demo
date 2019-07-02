@@ -10,7 +10,7 @@ class SDFRenderer {
 	GLuint SDF_VAO;
 	GLuint numOccupiedBlocks_handle = -1;
 	GLuint SDF_VolumeBuffer_handle;
-	GLint compactHashTable_handle;
+	GLuint compactHashTable_handle;
 
 	GLuint FBO;
 	GLuint depthTexture_front;

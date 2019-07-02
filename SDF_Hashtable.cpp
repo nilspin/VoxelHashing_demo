@@ -9,7 +9,7 @@
 
 void SDF_Hashtable::integrate(const float4x4& viewMat, const float4* verts, const float4* normals)	{
 
-	mapGLobjectsToCUDApointers(numVisibleBlocks_res);
+	mapGLobjectsToCUDApointers(numVisibleBlocks_res, compactHashtable_res, sdfBlocks_res);
 	//first update the device HashParams variable
 	float4x4 inv_global_transform = viewMat.getInverse();
 
@@ -20,6 +20,7 @@ void SDF_Hashtable::integrate(const float4x4& viewMat, const float4* verts, cons
 	updateConstantHashTableParams(h_hashtableParams);
 
 	//TODO : reset hash-table mutexes
+	resetHashTableMutexes(h_hashtableParams);
 
 	//launch kernel to insert voxelentries into hashtable
 	allocBlocks(verts, normals);
@@ -40,6 +41,8 @@ void SDF_Hashtable::integrate(const float4x4& viewMat, const float4* verts, cons
 void SDF_Hashtable::registerGLtoCUDA(SDFRenderer& renderer) {
 	//rendererRef = &renderer;
 	checkCudaErrors(cudaGraphicsGLRegisterBuffer(&numVisibleBlocks_res, renderer.numOccupiedBlocks_handle, cudaGraphicsRegisterFlagsNone));
+	checkCudaErrors(cudaGraphicsGLRegisterBuffer(&compactHashtable_res, renderer.compactHashTable_handle, cudaGraphicsRegisterFlagsNone));
+	checkCudaErrors(cudaGraphicsGLRegisterBuffer(&sdfBlocks_res, renderer.SDF_VolumeBuffer_handle, cudaGraphicsRegisterFlagsNone));
 	//int numVisibleBlocks_handle = renderer.numOccupiedBlocks_handle;
 	//mapGLobjectsToCUDApointers(*rendererRef);
 	std::cout << "GL resources registered to CUDA hashtable\n";
@@ -48,7 +51,9 @@ void SDF_Hashtable::registerGLtoCUDA(SDFRenderer& renderer) {
 void SDF_Hashtable::unmapCUDApointers()
 {
 	checkCudaErrors(cudaGraphicsUnmapResources(1, &numVisibleBlocks_res, 0));
-	std::cout << "numVisibleBlocks_res unmapped!\n";
+	checkCudaErrors(cudaGraphicsUnmapResources(1, &compactHashtable_res, 0));
+	checkCudaErrors(cudaGraphicsUnmapResources(1, &sdfBlocks_res, 0));
+	std::cout << "CUDA device pointers unmapped!\n";
 }
 
 SDF_Hashtable::SDF_Hashtable()	{

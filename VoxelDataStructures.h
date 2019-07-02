@@ -19,6 +19,8 @@ struct VoxelEntry	{
 	int3 pos;
 	int ptr;
 	int offset;
+	//long padding1;
+	//int padding2;
 };
 
 __align__(16)
