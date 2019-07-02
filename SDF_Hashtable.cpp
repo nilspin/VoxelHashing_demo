@@ -6,6 +6,7 @@
 #include "SDF_Hashtable.h"
 #include "SDFRenderer.h"
 #include "VoxelUtils.h"
+#include "common.h"
 
 void SDF_Hashtable::integrate(const float4x4& viewMat, const float4* verts, const float4* normals)	{
 
@@ -57,18 +58,18 @@ void SDF_Hashtable::unmapCUDApointers()
 }
 
 SDF_Hashtable::SDF_Hashtable()	{
-	h_hashtableParams.numBuckets = 500000;
-	h_hashtableParams.bucketSize = 5;	//10
-	h_hashtableParams.attachedLinkedListSize = 4;	//7
-	h_hashtableParams.numVoxelBlocks = 100000;
-	h_hashtableParams.voxelBlockSize = 8;
-	h_hashtableParams.voxelSize = 0.05f;
-	h_hashtableParams.numOccupiedBlocks = 0;
-	h_hashtableParams.maxIntegrationDistance = 4.0f;
-	h_hashtableParams.truncScale = 0.01f;
-	h_hashtableParams.truncation = 0.02f;
-	h_hashtableParams.integrationWeightSample = 10;
-	h_hashtableParams.integrationWeightMax = 255;
+	h_hashtableParams.numBuckets = numBuckets;
+	h_hashtableParams.bucketSize = bucketSize;	//10
+	h_hashtableParams.attachedLinkedListSize = attachedLinkedListSize;	//7
+	h_hashtableParams.numVoxelBlocks = numVoxelBlocks;
+	h_hashtableParams.voxelBlockSize = voxelBlockSize;
+	h_hashtableParams.voxelSize = voxelSize;
+	h_hashtableParams.numOccupiedBlocks = numOccupiedBlocks;
+	h_hashtableParams.maxIntegrationDistance = maxIntegrationDistance;
+	h_hashtableParams.truncScale = truncScale;
+	h_hashtableParams.truncation = truncation;
+	h_hashtableParams.integrationWeightSample = integrationWeightSample;
+	h_hashtableParams.integrationWeightMax = integrationWeightMax;
 
 	updateConstantHashTableParams(h_hashtableParams);
 	deviceAllocate(h_hashtableParams);

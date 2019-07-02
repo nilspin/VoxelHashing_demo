@@ -81,6 +81,7 @@ Application::Application() {
   float4x4 identity;
   identity.setIdentity();
   fusionModule->integrate(identity, d_input, d_inputNormals);
+  sdfRenderer->printSDFdata();
   //fusionModule->integrate(global_transform, d_target, d_targetNormals);
   checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_input_resource, 0));
   checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_inputNormals_resource, 0));

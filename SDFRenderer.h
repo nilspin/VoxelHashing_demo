@@ -21,6 +21,7 @@ public:
 	friend class SDF_Hashtable;
 	SDFRenderer();
 	~SDFRenderer();
+	void printSDFdata();
 	void render(const glm::mat4&);
 	//friend void registerGLtoCUDA(SDFRenderer*);
 	//SDFRenderer(const SDFRenderer&) = delete;
