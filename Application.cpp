@@ -130,6 +130,7 @@ void Application::run() {
     //tracker.Align(d_input, d_inputNormals, d_target, d_targetNormals, d_depthInput, d_depthTarget);
     //checkCudaErrors(cudaDeviceSynchronize());
     draw(VP);
+	sdfRenderer->render(view);
 
     //mat4 scaleMat =  glm::scale(vec3(1000));
     //mat4 newMVP = proj*view;//*scaleMat

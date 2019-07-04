@@ -58,6 +58,7 @@ void SDF_Hashtable::unmapCUDApointers()
 }
 
 SDF_Hashtable::SDF_Hashtable()	{
+	
 	h_hashtableParams.numBuckets = numBuckets;
 	h_hashtableParams.bucketSize = bucketSize;	//10
 	h_hashtableParams.attachedLinkedListSize = attachedLinkedListSize;	//7
