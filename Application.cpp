@@ -129,8 +129,11 @@ void Application::run() {
 
     //tracker.Align(d_input, d_inputNormals, d_target, d_targetNormals, d_depthInput, d_depthTarget);
     //checkCudaErrors(cudaDeviceSynchronize());
-    draw(VP);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	sdfRenderer->render(view);
+	draw(VP);
+	//sdfRenderer->printSDFdata();
+	
 
     //mat4 scaleMat =  glm::scale(vec3(1000));
     //mat4 newMVP = proj*view;//*scaleMat
@@ -144,7 +147,7 @@ void Application::run() {
 
 void Application::draw(const glm::mat4& vp)
 {
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   drawVertexMap->use();
   glm::mat4 MVP = vp*glm::mat4(1);
   glm::mat4 newMVP = vp*deltaT;
@@ -201,13 +204,13 @@ void Application::SetupBuffers() {
   //As we go along register buffers with CUDA as well
   glGenBuffers(1, &inputVBO);
   glBindBuffer(GL_ARRAY_BUFFER, inputVBO);
-  glBufferData(GL_ARRAY_BUFFER, ARRAY_SIZE, nullptr, GL_DYNAMIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, ARRAY_SIZE, nullptr, GL_STATIC_DRAW);
   glVertexAttribPointer(drawVertexMap->attribute("positions"), 4, GL_FLOAT, GL_FALSE, 0, 0);
   glEnableVertexAttribArray(drawVertexMap->attribute("positions"));
 
   glGenBuffers(1, &inputNormalVBO);
   glBindBuffer(GL_ARRAY_BUFFER, inputNormalVBO);
-  glBufferData(GL_ARRAY_BUFFER, ARRAY_SIZE, nullptr, GL_DYNAMIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, ARRAY_SIZE, nullptr, GL_STATIC_DRAW);
   glVertexAttribPointer(drawVertexMap->attribute("normals"), 4, GL_FLOAT, GL_FALSE, 0, 0);
   glEnableVertexAttribArray(drawVertexMap->attribute("normals"));
 
@@ -221,13 +224,13 @@ void Application::SetupBuffers() {
 
   glGenBuffers(1, &targetVBO);
   glBindBuffer(GL_ARRAY_BUFFER, targetVBO);
-  glBufferData(GL_ARRAY_BUFFER, ARRAY_SIZE, nullptr, GL_DYNAMIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, ARRAY_SIZE, nullptr, GL_STATIC_DRAW);
   glVertexAttribPointer(drawVertexMap->attribute("positions"), 4, GL_FLOAT, GL_FALSE, 0, 0);
   glEnableVertexAttribArray(drawVertexMap->attribute("positions"));
 
   glGenBuffers(1, &targetNormalVBO);
   glBindBuffer(GL_ARRAY_BUFFER, targetNormalVBO);
-  glBufferData(GL_ARRAY_BUFFER, ARRAY_SIZE, nullptr, GL_DYNAMIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, ARRAY_SIZE, nullptr, GL_STATIC_DRAW);
   glVertexAttribPointer(drawVertexMap->attribute("normals"), 4, GL_FLOAT, GL_FALSE, 0, 0);
   glEnableVertexAttribArray(drawVertexMap->attribute("normals"));
 

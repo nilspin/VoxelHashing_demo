@@ -3,7 +3,7 @@
 layout (points) in;
 layout (triangle_strip, max_vertices=4) out;
 
-in ivec4 v_position[];
+in vec4 v_position[];
 
 uniform mat4 viewMat;
 uniform mat4 projMat;
