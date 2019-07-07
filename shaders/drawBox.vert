@@ -1,4 +1,4 @@
-#version 430
+#version 430 core
 
 //struct VoxelEntry	{
 //	ivec3 pos;
@@ -7,10 +7,11 @@
 //};
 
 in ivec3 voxentry;
-out vec4 v_position;
-
+//out vec4 v_position;
+uniform mat4 VP;
 void main()	{
-	v_position = vec4(voxentry.x, voxentry.y, voxentry.z, 1.0);
+	gl_Position = VP * vec4(voxentry.x, voxentry.y, voxentry.z, 1.0);
+	//v_position = vec4(voxentry.x, voxentry.y, voxentry.z, 1.0);
 }
 
 //gl_Position = vec4(pos.x, pos.y, pos.z, 1.0);

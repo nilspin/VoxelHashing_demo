@@ -74,7 +74,7 @@ SDF_Hashtable::SDF_Hashtable()	{
 
 	updateConstantHashTableParams(h_hashtableParams);
 	deviceAllocate(h_hashtableParams);
-	std::cout<<"GPU memory allocated\n";
+	std::cout<<"CUDA device memory allocated\n";
 
 	calculateKinectProjectionMatrix();
 	std::cout<<"Kinect projection matrix calculated\n";
@@ -82,6 +82,9 @@ SDF_Hashtable::SDF_Hashtable()	{
 
 SDF_Hashtable::~SDF_Hashtable()	{
 	deviceFree();
-	std::cout<<"GPU memory freed\n";
+	checkCudaErrors(cudaGraphicsUnregisterResource(numVisibleBlocks_res));
+	checkCudaErrors(cudaGraphicsUnregisterResource(sdfBlocks_res));
+	checkCudaErrors(cudaGraphicsUnregisterResource(compactHashtable_res));
+	std::cout<<"CUDA device memory freed\n";
 }
 

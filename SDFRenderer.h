@@ -18,7 +18,7 @@ class SDFRenderer {
 	GLuint depthTexture_back;
 
 	std::unique_ptr<ShaderProgram> raycast_shader;
-	glm::mat4 projMat = glm::perspective(45.0f, 1.3333f, 0.1f, 5000.0f);
+	glm::mat4 projMat = glm::perspective(45.0f, 1.3333f, 0.1f, 500.0f);
 
 public:
 	friend class SDF_Hashtable;

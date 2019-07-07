@@ -34,10 +34,10 @@ const int kinZNear = 1.0f;
 const float kinZFar = 1000.0f;
 
 /*-----Hashtable Params----*/
-const int numBuckets = 500000;
+const int numBuckets = 50000;
 const int bucketSize = 5;
 const int attachedLinkedListSize = 4;
-const int numVoxelBlocks = 100000;
+const int numVoxelBlocks = 10000;
 const int voxelBlockSize = 8;
 const float voxelSize = 0.05f;
 const int numOccupiedBlocks = 0;
