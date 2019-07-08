@@ -18,6 +18,10 @@ To build, you'll need the following (version in brackets are versions used durin
 * Eigen3 with default OpenBLAS (3.3.5)
 * Boost-filesystem (1.68.0)
 
+## To build on Windows
+* Easiest way to build is using cmake-gui. Point to the correct paths for SDL2, GLM, Eigen, Boost etc and you should be good to go.
+* Make sure Boost is compiled with MSVC v140 toolset or just download binaries from [here](https://sourceforge.net/projects/boost/files/boost-binaries/).
+
 ## To build on Linux:
 
     export CC=gcc-7
