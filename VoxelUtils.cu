@@ -224,7 +224,7 @@ void deviceFree()	{
 __host__
 void calculateKinectProjectionMatrix()	{
 
-	float3x3 m(intrinsics);
+	float3x3 m(intrinsicsTranspose);
 	//Now upload to device
 	std::cout<<"Uploading projection matrix to device..\n";
 	checkCudaErrors(cudaMemcpyToSymbol(kinectProjectionMatrix, &m, sizeof(m)));
@@ -265,33 +265,37 @@ float getTruncation(float z)	{
 
 __device__
 int3 voxel2Block(int3 voxel) 	{
-	const float size = d_hashtableParams.voxelBlockSize;
-	float3 vx = make_float3(voxel);
-	int x = __float2int_rz(vx.x / size);
-	int y = __float2int_rz(vx.y / size);
-	int z = __float2int_rz(vx.z / size);
-	return make_int3(x, y, z);
-	//if(voxel.x < 0) voxel.x -= size-1;	//i.e voxelBlockSize -1
-	//if(voxel.y < 0) voxel.y -= size-1;
-	//if(voxel.z < 0) voxel.z -= size-1;
-	//return make_int3(voxel.x/size, voxel.y/size, voxel.z/size);
+	const int size = d_hashtableParams.voxelBlockSize;
+	//float3 vx = make_float3(voxel);
+	//int x = __float2int_rz(vx.x / size);
+	//int y = __float2int_rz(vx.y / size);
+	//int z = __float2int_rz(vx.z / size);
+	//return make_int3(x, y, z);
+	if(voxel.x < 0) voxel.x -= size-1;	//i.e voxelBlockSize -1
+	if(voxel.y < 0) voxel.y -= size-1;
+	if(voxel.z < 0) voxel.z -= size-1;
+	return make_int3(voxel.x/size, voxel.y/size, voxel.z/size);
 }
 
 __device__
 int3 world2Voxel(const float3& point)	{
 	const float size = d_hashtableParams.voxelSize;
 	float3 p = point/size;
-	return make_int3(p + make_float3(signbit(p.x), signbit(p.y),signbit(p.z))*0.5);//return center
+	int3 centerOffset = make_int3(copysignf(1, p.x), copysignf(1, p.y), copysignf(1, p.z));
+	int3 voxelPos =  make_int3(p + make_float3(centerOffset.x*0.5, centerOffset.y*0.5, centerOffset.z*0.5));//return center
+	return voxelPos;
 }
 
 __device__
 int3 block2Voxel(const int3& block)	{
-	return block*d_hashtableParams.voxelBlockSize;
+	int3 voxelPos = make_int3(block.x, block.y, block.z) * d_hashtableParams.voxelBlockSize;
+	return voxelPos;
 }
 
 __device__
 float3 voxel2World(const int3& voxel)	{
-	return make_float3(voxel) * d_hashtableParams.voxelSize;
+	float3 worldPos = make_float3(voxel) * d_hashtableParams.voxelSize;
+	return worldPos;
 }
 
 __device__
@@ -341,7 +345,7 @@ __inline__ __device__
 bool blockInFrustum(int3 blockId) {
 	float3 worldPos = block2World(blockId);
 	float4 pos = make_float4(worldPos.x, worldPos.y, worldPos.z, 1);
-	//pos = d_hashtableParams.global_transform * pos;	//TODO : shouldn't this be inv_global_transform?
+	pos = d_hashtableParams.global_transform * pos;	//TODO : shouldn't this be inv_global_transform?
 	float3 projected = make_float3(pos.x, pos.y, pos.z);
 	projected = kinectProjectionMatrix * projected;
 	projected = projected / projected.z;
@@ -630,6 +634,7 @@ void allocBlocksKernel(const float4* verts, const float4* normals)	{	//Do we nee
 
 	//Now find their voxel blocks
 	int3 startBlock = world2Block(rayStart);
+	/*TODO : Maybe we don't need this???
 	int3 endBlock = world2Block(rayEnd);
 	float3 rayDir = normalize(rayEnd - rayStart);
 
@@ -663,13 +668,14 @@ void allocBlocksKernel(const float4* verts, const float4* normals)	{	//Do we nee
 
 	//first insert idStart block into the hashtable
 	//bool status = vertexInFrustum(tempPos);
-
+	*/
 	//TODO : NOTE these blockInFrustum checks are useless since having depth data means vertex is visible
-	if(blockInFrustum(temp))	{
-		insertVoxelEntry(temp);
+	if(blockInFrustum(startBlock))	{	//blockInFrustum(temp)
+		insertVoxelEntry(startBlock);
 	}	//, instead simply
 	//insertVoxelEntry(temp);
 
+	/*	TODO: Maybe we don't need this???
 	while((temp.x != idEnd.x) && (temp.y != idEnd.y) && (temp.z != idEnd.z))	{
 
 		if(tMax.x < tMax.y && tMax.x < tMax.z)	{
@@ -694,6 +700,7 @@ void allocBlocksKernel(const float4* verts, const float4* normals)	{	//Do we nee
 		}
 		//iter++;
 	}
+	*/
 	//By now all necessary blocks should have been allocated
 }
 
@@ -762,7 +769,7 @@ extern "C" int flattenIntoBuffer(const HashTableParams& params)	{
 
 __inline__ __device__
 int2 project(float4 point) {
-	float3 pos = make_float3(point.x, point.y, point.z);
+ 	float3 pos = make_float3(point.x, point.y, point.z);
 	pos = kinectProjectionMatrix * pos;
 	pos = pos / pos.z;
 	return make_int2(pos.x, pos.y);

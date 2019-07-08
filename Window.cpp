@@ -35,6 +35,8 @@ bool Window::Initialize()
 		throw std::runtime_error("GLAD initialization failed");
 	}
 
+	glEnable(GL_DEPTH_TEST);
+
 #ifdef NDEBUG
 	//Enable Debug output
 	glEnable(GL_DEBUG_OUTPUT);
