@@ -22,7 +22,7 @@ using glm::mat4;
 extern "C" void preProcess(float4 *positions, float4* normals, const std::uint16_t *depth);
 
 Application::Application() {
-  //frustum.setFromVectors(vec3(0,0,-1), vec3(0,0,0), vec3(1,0,0), vec3(0,1,0), 5.0, 700.0, 45, 1.3333);
+  frustum.setFromVectors(vec3(0,0,1), vec3(0,0,0), vec3(1,0,0), vec3(0,1,0), 0.1, 500.0, 45, 1.3333);
   //stbi_set_flip_vertically_on_load(true); //Keep commented for now
   image1 = stbi_load_16("assets/T0.png", &DepthWidth, &DepthHeight, &channels, 0);
   image2 = stbi_load_16("assets/T1.png", &DepthWidth, &DepthHeight, &channels, 0);
@@ -125,7 +125,8 @@ void Application::run() {
     cam.calcMatrices();
     GLfloat time = SDL_GetTicks();
     view = cam.getViewMatrix();
-	mat4 model = glm::scale(glm::mat4(1.0f), glm::vec3(0.05f));
+	//scaling : convert voxelblock dims to world-space dims
+	mat4 model = glm::scale(glm::mat4(1.0f), glm::vec3(voxelSize*voxelBlockSize));
 	mat4 VP = proj*view;	// *model;
 	mat4 MVP = proj*view*model;
     //tracker.Align(d_input, d_inputNormals, d_target, d_targetNormals, d_depthInput, d_depthTarget);

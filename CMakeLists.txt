@@ -56,6 +56,9 @@ target_link_libraries(Window ${SDL2_LIBRARIES})
 add_library(Camera STATIC camera.cpp)
 target_link_libraries(Camera ${SDL2_LIBRARIES})
 
+add_library(Frustum STATIC Frustum.cpp)
+#target_link_libraries(Frustum ShaderProgram)
+
 #Compile CameraTrackingUtils
 add_library(Solver STATIC SE3.h SE3.cpp Solver.cpp Solver.cu)
 set_target_properties(Solver PROPERTIES LINKER_LANGUAGE CUDA)
@@ -83,7 +86,7 @@ target_link_libraries(Application Camera)
 target_link_libraries(Application Window)
 target_link_libraries(Application SDFModule)
 target_link_libraries(Application SDFRenderer)
-#target_link_libraries(Application ShaderProgram)
+target_link_libraries(Application Frustum)
 target_link_libraries(Application CameraTrackingUtils)
 #target_link_libraries(Application IntegrationUtils)
 

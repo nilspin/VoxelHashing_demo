@@ -14,7 +14,7 @@ out vec4 v_position;
 void main()	{
 	//vec3 pos = vec3(voxentry) * 0.05;
 	//gl_Position = VP * vec4(pos.x, pos.y, pos.z, 1.0);
-	gl_Position = VP * vec4(voxentry.x, voxentry.y, voxentry.z, 1.0);
+	v_position = VP * vec4(voxentry.x, voxentry.y, voxentry.z, 1.0);
 }
 
 //gl_Position = vec4(pos.x, pos.y, pos.z, 1.0);

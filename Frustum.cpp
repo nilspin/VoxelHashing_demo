@@ -54,7 +54,7 @@ void Frustum::setFromVectors(const vec3& dir, const vec3& pos, const vec3& right
     bottom = Plane(nearBotRight, farBotLeft, nearBotLeft);
     */
 
-/*
+//*
     corners[0] = farTopLeft;
     corners[1] = farTopRight; 
     corners[2] = farBotLeft; 
@@ -63,7 +63,7 @@ void Frustum::setFromVectors(const vec3& dir, const vec3& pos, const vec3& right
     corners[5] = nearTopLeft; 
     corners[6] = nearTopRight; 
     corners[7] = nearBotLeft; 
-*/
+/*
     corners[0] = vec3(-1,1,0);
     corners[1] = vec3(1,1,0); 
     corners[2] = vec3(-1,-1,0); 
@@ -72,7 +72,7 @@ void Frustum::setFromVectors(const vec3& dir, const vec3& pos, const vec3& right
     corners[5] = vec3(-1,1,-1);
     corners[6] = vec3(1,1,-1); 
     corners[7] = vec3(-1,-1,-1); 
-
+*/
     // Far face lines.
     lines[0] = corners[0];
     lines[1] = corners[1];
@@ -117,7 +117,7 @@ void Frustum::uploadBuffer() {
 }
 
 void Frustum::draw(const glm::mat4& transform){
-    mat4 VP = glm::inverse(transform);//mat4(1);//transform;//
+    mat4 VP = glm::inverse(transform);//transform;//mat4(1);//
     //const mat4 &VP = transform;
     drawFrustum->use();
     glBindVertexArray(frustum);

@@ -8,7 +8,7 @@
 
 class SDFRenderer {
 	unsigned int numOccupiedBlocks = 0;
-	GLuint SDF_VAO, CubeVAO, CubeVBO;
+	GLuint SDF_VAO;
 	GLuint numOccupiedBlocks_handle = -1;
 	GLuint SDF_VolumeBuffer_handle;
 	GLuint compactHashTable_handle;
