@@ -131,7 +131,7 @@ void Application::run() {
     //tracker.Align(d_input, d_inputNormals, d_target, d_targetNormals, d_depthInput, d_depthTarget);
     //checkCudaErrors(cudaDeviceSynchronize());
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	sdfRenderer->render(VP);
+	sdfRenderer->render(MVP);
 	draw(VP);
 	//sdfRenderer->printSDFdata();
 	

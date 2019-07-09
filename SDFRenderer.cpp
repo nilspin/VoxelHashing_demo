@@ -6,7 +6,7 @@
 SDFRenderer::SDFRenderer() {
 
 	raycast_shader = std::unique_ptr<ShaderProgram>(new ShaderProgram());
-	raycast_shader->initFromFiles("shaders/drawBox.vert", "shaders/drawBox.geom", "shaders/drawBox.frag");
+	raycast_shader->initFromFiles("shaders/drawBox.vert", "shaders/drawBox.frag");
 	raycast_shader->addAttribute("voxentry");
 	raycast_shader->addUniform("VP");
 	//raycast_shader->addUniform("projMat");
@@ -38,6 +38,71 @@ SDFRenderer::SDFRenderer() {
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	//glBindBuffer(GL_ARRAY_BUFFER, 0);
 	//register with SDF_Hashtable class
+	/*--------------------TEMP---------------------------*/
+	float tri_data[] = {
+		/* face 1 */
+		1.0, -1.0, -1.0,
+		-1.0, 1.0, -1.0,
+		1.0, 1.0, -1.0,
+
+		-1.0, 1.0, -1.0,
+		1.0, -1.0, -1.0,
+		-1.0, -1.0, -1.0,
+
+		/* face 2 */
+		-1.0, 1.0, 1.0,
+		1.0, -1.0, 1.0,
+		1.0, 1.0, 1.0,
+
+		1.0, -1.0, 1.0,
+		-1.0, 1.0, 1.0,
+		-1.0, -1.0, 1.0,
+
+		/* face 3 */
+		-1.0, 1.0, -1.0,
+		-1.0, 1.0, 1.0,
+		1.0, 1.0, -1.0,
+
+		-1.0, 1.0, 1.0,
+		1.0, 1.0, 1.0,
+		1.0, 1.0, -1.0,
+
+		/* face 4 */
+		-1.0, -1.0, 1.0,
+		-1.0, -1.0, -1.0,
+		1.0, -1.0, -1.0,
+
+		1.0, -1.0, 1.0,
+		-1.0, -1.0, 1.0,
+		1.0, -1.0, -1.0,
+
+		/* face 5 */
+		1.0, 1.0, -1.0,
+		1.0, 1.0, 1.0,
+		1.0, -1.0, 1.0,
+
+		1.0, 1.0, -1.0,
+		1.0, -1.0, 1.0,
+		1.0, -1.0, -1.0,
+
+		/* face 6 */
+		-1.0, 1.0, 1.0,
+		-1.0, 1.0, -1.0,
+		-1.0, -1.0, 1.0,
+
+		-1.0, -1.0, 1.0,
+		-1.0, 1.0, -1.0,
+		-1.0, -1.0, -1.0,
+	};
+	glGenVertexArrays(1, &CubeVAO);
+	glBindVertexArray(CubeVAO);
+	glGenBuffers(1, &CubeVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, CubeVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(tri_data), tri_data, GL_STATIC_DRAW);
+	glEnableVertexAttribArray(raycast_shader->attribute("voxentry"));
+	glVertexAttribPointer(raycast_shader->attribute("voxentry"), 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 //just to check if memory is mapped correctly. TODO : remove later
@@ -76,14 +141,14 @@ void SDFRenderer::printSDFdata() {
 
 void SDFRenderer::render(const glm::mat4& viewMat) {
 	//glMemoryBarrier(GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
-	glBindVertexArray(SDF_VAO);
+	glBindVertexArray(CubeVAO);
 	//glBindBuffer(GL_ARRAY_BUFFER, compactHashTable_handle);
 	//glVertexAttribPointer(raycast_shader->attribute("voxentry"), 3, GL_INT, GL_FALSE, sizeof(VoxelEntry), 0);
 	raycast_shader->use();
 	glEnableVertexAttribArray(raycast_shader->attribute("voxentry"));
 	glUniformMatrix4fv(raycast_shader->uniform("VP"), 1, false, glm::value_ptr(viewMat));
 	//glUniformMatrix4fv(raycast_shader->uniform("projMat"), 1, false, glm::value_ptr(projMat));
-	glDrawArrays(GL_POINTS, 0, numOccupiedBlocks);
+	glDrawArrays(GL_TRIANGLES, 0, 36);// numOccupiedBlocks);
 	//glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 
