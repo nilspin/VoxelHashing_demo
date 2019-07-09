@@ -329,7 +329,7 @@ __inline__ __device__
 int allocSingleBlockInHeap()	{	//int ptr
 	//decrement total available blocks by 1
 	int addr = atomicSub(&d_ptrHldr.d_heapCounter[0], 1);	//TODO: make this uint 
-	if (addr < 0) return -1;	//negative index shouldn't, but still happens :(
+	//if (addr < 0) return -1;	//negative index shouldn't, but still happens :(
 	return d_ptrHldr.d_heap[addr];
 }
 
@@ -629,8 +629,8 @@ void allocBlocksKernel(const float4* verts, const float4* normals)	{	//Do we nee
 	//}
 	float3 p = make_float3(tempPos);
 	float3 pn = make_float3(normals[idx]);
-	float3 rayStart = p - (d_hashtableParams.truncation * pn);
-	float3 rayEnd = p + (d_hashtableParams.truncation * pn);
+	float3 rayStart = p;// -(d_hashtableParams.truncation * pn);
+	//float3 rayEnd = p + (d_hashtableParams.truncation * pn);
 
 	//Now find their voxel blocks
 	int3 startBlock = world2Block(rayStart);
@@ -768,11 +768,12 @@ extern "C" int flattenIntoBuffer(const HashTableParams& params)	{
 }
 
 __inline__ __device__
-int2 project(float4 point) {
- 	float3 pos = make_float3(point.x, point.y, point.z);
-	pos = kinectProjectionMatrix * pos;
-	pos = pos / pos.z;
-	return make_int2(pos.x, pos.y);
+int2 project(float3 voxelWorldPos) {
+ 	//int3 pos = make_int3(point.x, point.y, point.z);
+	//float3 worldPos = voxel2World(voxel);
+	voxelWorldPos = kinectProjectionMatrix * voxelWorldPos;
+	voxelWorldPos = voxelWorldPos / voxelWorldPos.z;
+	return make_int2(voxelWorldPos.x, voxelWorldPos.y);
 }
 
 __inline __device__
@@ -795,7 +796,9 @@ void integrateDepthMapKernel(const float4* verts) {
 	int3 curr_voxel = base_voxel + delinearizeVoxelPos(i);
 	float4 curr_voxel_float = make_float4(curr_voxel.x, curr_voxel.y, curr_voxel.z, 1.0);
 	curr_voxel_float = d_hashtableParams.inv_global_transform * curr_voxel_float;
-	int2 screenPos = project(curr_voxel_float);
+	curr_voxel = make_int3(curr_voxel_float.x, curr_voxel_float.y, curr_voxel_float.z);
+	float3 voxel_worldPos = voxel2World(curr_voxel);
+	int2 screenPos = project(voxel_worldPos);
 
 	if ((screenPos.x < 0) || (screenPos.x >= 640) || (screenPos.y < 0) || (screenPos.y >= 480)) return;
 	const int idx = (screenPos.y * 640) + screenPos.x;
@@ -807,8 +810,8 @@ void integrateDepthMapKernel(const float4* verts) {
 	float depthRangeMax = 5.0;
 	float depthZeroOne = (depth - depthRangeMin) / (depthRangeMax - depthRangeMin);	//normalize current depth
 
-	float sdf = depth - curr_voxel_float.z;
-	float truncation = d_hashtableParams.truncation + (d_hashtableParams.truncScale*depth);
+	float sdf = depth - voxel_worldPos.z;
+	float truncation = d_hashtableParams.truncation;	// +(d_hashtableParams.truncScale*depth);
 	//i.e calculate truncation of the SDF for given depth value
 
 	if (sdf > -truncation) {
@@ -819,8 +822,9 @@ void integrateDepthMapKernel(const float4* verts) {
 			sdf = fmaxf(-truncation, sdf);
 		}
 
-		//not really sure about following line. Copied from prof. Niessner's implementation
-		float weightUpdate = fmaxf(d_hashtableParams.integrationWeightSample * 1.5 * (1.0 - depthZeroOne), 1.0f);
+		//Sets updation weight based on sensor noise. Farther depths have less weight. Copied from prof. Niessner's implementation
+		//float weightUpdate = fmaxf(d_hashtableParams.integrationWeightSample * 1.5 * (1.0 - depthZeroOne), 1.0f);
+		float weightUpdate = 10;	//let's keep this constant for now
 
 		Voxel curr;
 		curr.sdf = sdf;

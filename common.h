@@ -34,16 +34,16 @@ const int kinZNear = 1.0f;
 const float kinZFar = 1000.0f;
 
 /*-----Hashtable Params----*/
-const int numBuckets = 50000;
+const int numBuckets = 5000;
 const int bucketSize = 5;
 const int attachedLinkedListSize = 4;
-const int numVoxelBlocks = 10000;
+const int numVoxelBlocks = 1000;
 const int voxelBlockSize = 8;
 const float voxelSize = 0.05f;
 const int numOccupiedBlocks = 0;
 const float maxIntegrationDistance = 4.0f;
 const float truncScale = 0.01f;
-const float truncation = 0.02f;
+const float truncation = 1.0f;
 const int integrationWeightSample = 10;
 const int integrationWeightMax = 255;
 

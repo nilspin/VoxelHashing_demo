@@ -125,9 +125,9 @@ void Application::run() {
     cam.calcMatrices();
     GLfloat time = SDL_GetTicks();
     view = cam.getViewMatrix();
-	//mat4 model = glm::scale(glm::mat4(1.0f), glm::vec3(0.05f));
+	mat4 model = glm::scale(glm::mat4(1.0f), glm::vec3(0.05f));
 	mat4 VP = proj*view;	// *model;
-
+	mat4 MVP = proj*view*model;
     //tracker.Align(d_input, d_inputNormals, d_target, d_targetNormals, d_depthInput, d_depthTarget);
     //checkCudaErrors(cudaDeviceSynchronize());
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
