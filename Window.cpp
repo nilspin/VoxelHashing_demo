@@ -1,4 +1,5 @@
 #include "Window.h"
+#include "common.h"
 
 void Window::swap()
 {
@@ -27,7 +28,7 @@ bool Window::Initialize()
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
 
-	window = SDL_CreateWindow("KinectVis", 0, 0, 1280, 960, SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL /*| SDL_WINDOW_RESIZABLE*/);
+	window = SDL_CreateWindow("KinectVis", 0, 0, windowWidth, windowHeight, SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL /*| SDL_WINDOW_RESIZABLE*/);
 	context = SDL_GL_CreateContext(window);
 
 	if (!gladLoadGL())
@@ -36,8 +37,8 @@ bool Window::Initialize()
 	}
 
 	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	//glEnable(GL_BLEND);
+	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 #ifdef NDEBUG
 	//Enable Debug output

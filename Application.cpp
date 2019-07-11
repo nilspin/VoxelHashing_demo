@@ -133,6 +133,8 @@ void Application::run() {
     //checkCudaErrors(cudaDeviceSynchronize());
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	sdfRenderer->render(MVP);
+	//glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glDepthFunc(GL_LESS);
 	draw(VP);
 	//sdfRenderer->printSDFdata();
 	

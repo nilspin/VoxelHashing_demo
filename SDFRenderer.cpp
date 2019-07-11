@@ -5,6 +5,8 @@
 
 SDFRenderer::SDFRenderer() {
 
+	fbo_front = std::unique_ptr<FBO>(new FBO(windowWidth, windowHeight));
+	fbo_back = std::unique_ptr<FBO>(new FBO(windowWidth, windowHeight));
 	raycast_shader = std::unique_ptr<ShaderProgram>(new ShaderProgram());
 	raycast_shader->initFromFiles("shaders/drawBox.vert", "shaders/drawBox.geom", "shaders/drawBox.frag");
 	raycast_shader->addAttribute("voxentry");
@@ -75,8 +77,7 @@ void SDFRenderer::printSDFdata() {
 
 }
 
-void SDFRenderer::render(const glm::mat4& viewMat) {
-	//glMemoryBarrier(GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
+void SDFRenderer::drawSDF(const glm::mat4& viewMat) {
 	glBindVertexArray(SDF_VAO);
 	//glBindBuffer(GL_ARRAY_BUFFER, compactHashTable_handle);
 	//glVertexAttribPointer(raycast_shader->attribute("voxentry"), 3, GL_INT, GL_FALSE, sizeof(VoxelEntry), 0);
@@ -87,7 +88,23 @@ void SDFRenderer::render(const glm::mat4& viewMat) {
 	glDrawArrays(GL_POINTS, 0, numOccupiedBlocks); //1);// 
 	//glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
+}
 
+void SDFRenderer::render(const glm::mat4& viewMat) {
+	//glMemoryBarrier(GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
+	//First pass - render depth for front face
+	fbo_front->renderToFBO();
+	glClear(GL_DEPTH_BUFFER_BIT);
+	glDepthFunc(GL_LESS);
+	drawSDF(viewMat);
+	fbo_front->renderToScreen();
+	
+	//Second pass - render depth for front face
+	fbo_back->renderToFBO();
+	glClear(GL_DEPTH_BUFFER_BIT);
+	glDepthFunc(GL_GREATER);
+	drawSDF(viewMat);
+	fbo_back->renderToScreen();
 	//raycast_shader->uniform("viewMat")
 
 }

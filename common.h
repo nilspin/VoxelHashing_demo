@@ -19,6 +19,8 @@ const int numRows =  480;
 const int imgWidth = numCols;
 const int imgHeight = numRows;
 
+const int windowWidth = 1024;
+const int windowHeight = 768;
 
 //const float MAXF = std::numeric_limits<float>::max();
 //const float MINF = std::numeric_limits<float>::quiet_NaN();

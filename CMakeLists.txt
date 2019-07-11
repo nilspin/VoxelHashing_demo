@@ -42,6 +42,10 @@ set(GLAD_SRC "${GLAD_INCLUDE_DIR}/../src/glad.c")
 add_library(GladLib ${GLAD_SRC})
 target_include_directories(GladLib PRIVATE "${GLAD_INCLUDE_DIR}")
 
+add_library(FBO STATIC FBO.hpp)
+set_target_properties(FBO PROPERTIES LINKER_LANGUAGE CXX)
+target_link_libraries(FBO GladLib)
+
 add_library(SDFRenderer STATIC SDFRenderer.h SDFRenderer.cpp)
 set_target_properties(SDFRenderer PROPERTIES LINKER_LANGUAGE CXX)
 target_link_libraries(SDFRenderer GladLib)
@@ -49,6 +53,7 @@ target_link_libraries(SDFRenderer GladLib)
 add_library(ShaderProgram STATIC ShaderProgram.hpp)
 set_target_properties(ShaderProgram PROPERTIES LINKER_LANGUAGE CXX)
 target_link_libraries(ShaderProgram GladLib)
+
 
 add_library(Window STATIC Window.cpp)
 target_link_libraries(Window ${SDL2_LIBRARIES})
