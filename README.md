@@ -1,11 +1,11 @@
 # ICP Demo
 
-A program for GPU based scalable 3D reconstruction based on Matthias Niessner's 2013 SIGGRAPH paper [VoxelHashing](http://niessnerlab.org/papers/2013/4hashing/niessner2013hashing.pdf).
+A program for GPU based scalable 3D reconstruction based on Prof. Matthias Niessner's 2013 SIGGRAPH paper [VoxelHashing](http://niessnerlab.org/papers/2013/4hashing/niessner2013hashing.pdf).
 
 It ~~has~~ will have 3 components :  
 1. Point-cloud registration using Point-to-plane Iterative Closest Points algorithm. Uses Gauss-Newton for solving non-linear least squares problem.  
-2. [WIP] Hash-table in GPU memory that stores underlying 3D model by-parts, and is backbone of the program. Supports fast addition and deletion of blocks on-the-fly.   
-3. [TODO] Renderer for visualising integrated model so far.  
+2. Hash-table in GPU memory that stores underlying 3D model by-parts, and is backbone of the program. Supports fast addition and deletion of blocks on-the-fly.   
+3. [WIP] Renderer for visualising integrated model so far.  
 
 To build, you'll need the following (version in brackets are versions used during development)  :
 
@@ -32,5 +32,6 @@ To build, you'll need the following (version in brackets are versions used durin
     make -j
 
 ## Todo:
-* Depth Integration
+* ~~Depth Integration~~
 * Write renderer that reads from hashtable
+* Refactor, Optimisation
