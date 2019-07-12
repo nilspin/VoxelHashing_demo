@@ -4,7 +4,7 @@
 //Implementation copied from this brilliant answer here : https://stackoverflow.com/a/55136613
 
 layout (points) in;
-layout (triangle_strip, max_vertices=12) out;
+layout (triangle_strip, max_vertices=16) out;
 
 in vec4 v_position[];
 
@@ -68,6 +68,20 @@ void main()	{
 
     gl_Position = p4;
     EmitVertex();
+
+	EndPrimitive();
+
+	gl_Position = p1;
+	EmitVertex();
+
+	gl_Position = p5;
+	EmitVertex();
+
+	gl_Position = p2;
+	EmitVertex();
+
+	gl_Position = p6;
+	EmitVertex();
 
 	EndPrimitive();
 }
