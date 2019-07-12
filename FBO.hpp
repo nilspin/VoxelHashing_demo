@@ -96,6 +96,8 @@ public:
 		glDeleteFramebuffers(1, &fbo);
 	}
 
+	GLuint getDepthTexID() { return depthTex; }
+
 	void renderToFBO() {
 		std::cout << "Render to FBO: " << fbo << "\n";
 		glBindFramebuffer(GL_FRAMEBUFFER, fbo);

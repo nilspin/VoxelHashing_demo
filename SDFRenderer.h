@@ -18,6 +18,7 @@ class SDFRenderer {
 	std::unique_ptr<FBO> fbo_back;
 
 	std::unique_ptr<ShaderProgram> raycast_shader;
+	std::unique_ptr<ShaderProgram> depthWriteShader;	//Shader to compare depths between fbo_front and fbo_back FBOs
 	glm::mat4 projMat = glm::perspective(45.0f, 1.3333f, 0.1f, 500.0f);
 
 public:
@@ -26,7 +27,7 @@ public:
 	~SDFRenderer();
 	void printSDFdata();
 	void render(const glm::mat4&);
-	void drawSDF(const glm::mat4&);
+	void drawSDF(ShaderProgram &, const glm::mat4&);
 	//friend void registerGLtoCUDA(SDFRenderer*);
 	//SDFRenderer(const SDFRenderer&) = delete;
 	//SDFRenderer& operator=(const SDFRenderer&) = delete;
