@@ -22,6 +22,7 @@ using glm::mat4;
 extern "C" void preProcess(float4 *positions, float4* normals, const std::uint16_t *depth);
 
 Application::Application() {
+	glPixelStorei(GL_PACK_ALIGNMENT, 1);
   frustum.setFromVectors(vec3(0,0,1), vec3(0,0,0), vec3(1,0,0), vec3(0,1,0), 0.1, 500.0, 45, 1.3333);
   //stbi_set_flip_vertically_on_load(true); //Keep commented for now
   image1 = stbi_load_16("assets/T0.png", &DepthWidth, &DepthHeight, &channels, 0);
@@ -135,6 +136,7 @@ void Application::run() {
 	sdfRenderer->render(MVP);
 	//glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glDepthFunc(GL_LESS);
+	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	draw(VP);
 	//sdfRenderer->printSDFdata();
 	

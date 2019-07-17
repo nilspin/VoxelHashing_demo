@@ -24,7 +24,9 @@ SDFRenderer::SDFRenderer() {
 	drawLinearDepth->initFromFiles("shaders/passthrough.vert", "shaders/linearDepth.frag");
 	drawLinearDepth->addAttribute("position");
 	drawLinearDepth->addUniform("depthTexture");
-	drawLinearDepth->addUniform("VP");
+	//drawLinearDepth->addUniform("zNear");
+	//drawLinearDepth->addUniform("zFar");
+	//drawLinearDepth->addUniform("VP");
 	generateCanvas();
 	//raycast_shader->addUniform("projMat");
 
@@ -124,6 +126,7 @@ void SDFRenderer::drawToFrontAndBack(const glm::mat4& viewMat) {
 	//glMemoryBarrier(GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
 	//First pass - render depth for front face
 	glEnable(GL_CULL_FACE);
+	glEnable(GL_DEPTH_TEST);
 	glFrontFace(GL_CW);	//IMPORTANT - Need to do this because we're looking along +Z axis
 	fbo_front->renderToFBO();
 	glClear(GL_DEPTH_BUFFER_BIT);
@@ -161,23 +164,33 @@ void SDFRenderer::drawToFrontAndBack(const glm::mat4& viewMat) {
 void SDFRenderer::render(const glm::mat4& viewMat) {
 	drawToFrontAndBack(viewMat);
 	//draw to screen
-	glBindVertexArray(CanvasVAO);
+	
+	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glDisable(GL_CULL_FACE);
+	//glDisable(GL_DEPTH_TEST);
+	//glDisable(GL_BLEND);
+	glDepthFunc(GL_LESS);
 	drawLinearDepth->use();
-	glUniformMatrix4fv(drawLinearDepth->uniform("VP"), 1, false, glm::value_ptr(viewMat));
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, fbo_front->getDepthTexID());
-	glUniform1i(drawLinearDepth->uniform("depthTexture"), 1);
+	//glUniform1f(-1/*drawLinearDepth->uniform("zNear")*/, zNear);
+	//glUniform1f(-1/*drawLinearDepth->uniform("zFar")*/, zFar);
+	//glUniformMatrix4fv(drawLinearDepth->uniform("VP"), 1, false, glm::value_ptr(viewMat));
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, fbo_back->getDepthTexID());
+	glUniform1i(drawLinearDepth->uniform("depthTexture"), 0);
+	glBindVertexArray(CanvasVAO);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
+	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 void SDFRenderer::generateCanvas() {
 	GLfloat canvas[] = {		//DATA
 		-1.0f,-1.0f,
+		1.0f, -1.0f,
 		-1.0f, 1.0f,
+
 		1.0f, -1.0f,
-		1.0f, -1.0f,
+		-1.0f, 1.0f,
 		1.0f, 1.0f,
-		-1.0f, 1.0f
 	};	//Don't need index data for this peasant mesh!
 
 	glGenVertexArrays(1, &CanvasVAO);
