@@ -142,7 +142,7 @@ extern "C" void mapGLobjectsToCUDApointers(cudaGraphicsResource* numBlocks_res, 
 
 }
 
-__host__
+//__host__
 extern "C" void resetHashTableMutexes(const HashTableParams& params) {
 	checkCudaErrors(cudaMemset(h_ptrHldr.d_hashTableBucketMutex, 0, sizeof(int)*params.numBuckets));
 	updateDevicePointers();
