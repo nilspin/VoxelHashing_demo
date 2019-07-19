@@ -16,26 +16,26 @@ class FBO {
 	void initDepthTexture() {
 		glGenTextures(1, &depthTex);
 		glBindTexture(GL_TEXTURE_2D, depthTex);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, width, height, 0,
+			GL_DEPTH_COMPONENT, GL_FLOAT, 0);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_DEPTH_TEXTURE_MODE, GL_INTENSITY);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE,
-			GL_COMPARE_R_TO_TEXTURE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE,
+		//	GL_COMPARE_R_TO_TEXTURE);
+		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
 		//NULL means reserve texture memory, but texels are undefined
 		//You can also try GL_DEPTH_COMPONENT16, GL_DEPTH_COMPONENT24 for the internal format.
 		//If GL_DEPTH24_STENCIL8_EXT, go ahead and use it (GL_EXT_packed_depth_stencil)
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32, width, height, 0,
-			GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, NULL);
 	}
 
 	void initFBO() {
 		glGenFramebuffers(1, &fbo);
 		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 		//Attach
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTex, 0);
+		glBindTexture(GL_TEXTURE_2D, depthTex);
+		glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthTex, 0);
 		//-------------------------
 		//Does the GPU support current FBO configuration?
 		//Before checking the configuration, you should call these 2 according to the spec.
@@ -99,7 +99,7 @@ public:
 	GLuint getDepthTexID() { return depthTex; }
 
 	void renderToFBO() {
-		std::cout << "Render to FBO: " << fbo << "\n";
+		//std::cout << "Render to FBO: " << fbo << "\n";
 		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 		// Bind our frame buffer for rendering
 		//-------------------------
@@ -110,7 +110,7 @@ public:
 	}
 
 	void FBO::renderToScreen() {
-		std::cout << "Render to screen \n";
+		//std::cout << "Render to screen \n";
 		// Finish all operations
 		//glFlush();
 		//-------------------------

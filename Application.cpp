@@ -134,12 +134,13 @@ void Application::run() {
     //checkCudaErrors(cudaDeviceSynchronize());
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	sdfRenderer->render(MVP);
+	//sdfRenderer->drawToFrontAndBack(MVP);
 	//glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glDepthFunc(GL_LESS);
 	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	draw(VP);
+	//draw(VP);
 	//sdfRenderer->printSDFdata();
-	
+
 
     //mat4 scaleMat =  glm::scale(vec3(1000));
     //mat4 newMVP = proj*view;//*scaleMat

@@ -19,7 +19,7 @@ SDFRenderer::SDFRenderer() {
 	depthWriteShader->addUniform("prevDepthTexture");
 	depthWriteShader->addUniform("windowWidth");
 	depthWriteShader->addUniform("windowHeight");
-	
+
 	drawLinearDepth = std::unique_ptr<ShaderProgram>(new ShaderProgram());
 	drawLinearDepth->initFromFiles("shaders/passthrough.vert", "shaders/linearDepth.frag");
 	drawLinearDepth->addAttribute("position");
@@ -31,7 +31,7 @@ SDFRenderer::SDFRenderer() {
 	//raycast_shader->addUniform("projMat");
 
 	/*----------VAO-------------------*/
-	//init GL resources 
+	//init GL resources
 	glGenVertexArrays(1, &SDF_VAO);
 	glBindVertexArray(SDF_VAO);
 
@@ -39,7 +39,7 @@ SDFRenderer::SDFRenderer() {
 	glBindBuffer(GL_ARRAY_BUFFER, compactHashTable_handle);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(VoxelEntry) * numBuckets * bucketSize, nullptr, GL_STATIC_DRAW);
 	glEnableVertexAttribArray(raycast_shader->attribute("voxentry"));
-	glVertexAttribPointer(raycast_shader->attribute("voxentry"), 3, GL_INT, GL_FALSE, sizeof(VoxelEntry), 0);	
+	glVertexAttribPointer(raycast_shader->attribute("voxentry"), 3, GL_INT, GL_FALSE, sizeof(VoxelEntry), 0);
 
 	//unbind
 	glBindVertexArray(0);
@@ -71,7 +71,7 @@ void SDFRenderer::printSDFdata() {
 	vox_entries.resize(numOccupiedBlocks);
 	glBindBuffer(GL_ARRAY_BUFFER, compactHashTable_handle);
 	glGetBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(VoxelEntry) * numOccupiedBlocks, vox_entries.data());
-	
+
 	std::vector<Voxel> sdf_chunks;
 	sdf_chunks.resize(numOccupiedBlocks * 512);
 	glGetBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(Voxel) * 512 * numOccupiedBlocks, sdf_chunks.data());
@@ -103,7 +103,7 @@ void SDFRenderer::drawSDF(ShaderProgram &shader, const glm::mat4& viewMat) {
 	glEnableVertexAttribArray(raycast_shader->attribute("voxentry"));
 	glUniformMatrix4fv(raycast_shader->uniform("VP"), 1, false, glm::value_ptr(viewMat));
 	//glUniformMatrix4fv(raycast_shader->uniform("projMat"), 1, false, glm::value_ptr(projMat));
-	glDrawArrays(GL_POINTS, 0, numOccupiedBlocks); //1);// 
+	glDrawArrays(GL_POINTS, 0, numOccupiedBlocks); //1);//
 	//glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 }
@@ -117,7 +117,7 @@ void SDFRenderer::drawSDF(ShaderProgram &shader, const glm::mat4& viewMat) {
 	glEnableVertexAttribArray(shader.attribute("voxentry"));
 	glUniformMatrix4fv(shader.uniform("VP"), 1, false, glm::value_ptr(viewMat));
 	//glUniformMatrix4fv(raycast_shader->uniform("projMat"), 1, false, glm::value_ptr(projMat));
-	glDrawArrays(GL_POINTS, 0, numOccupiedBlocks); //1);// 
+	glDrawArrays(GL_POINTS, 0, numOccupiedBlocks); //1);//
 												   //glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 }
@@ -125,25 +125,26 @@ void SDFRenderer::drawSDF(ShaderProgram &shader, const glm::mat4& viewMat) {
 void SDFRenderer::drawToFrontAndBack(const glm::mat4& viewMat) {
 	//glMemoryBarrier(GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
 	//First pass - render depth for front face
-	glEnable(GL_CULL_FACE);
+	//glEnable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST);
-	glFrontFace(GL_CW);	//IMPORTANT - Need to do this because we're looking along +Z axis
+	//glFrontFace(GL_CW);	//IMPORTANT - Need to do this because we're looking along +Z axis
 	fbo_front->renderToFBO();
 	glClear(GL_DEPTH_BUFFER_BIT);
-	glCullFace(GL_BACK);
-	glDepthFunc(GL_LESS);
+	//glCullFace(GL_BACK);
+	//glDepthFunc(GL_LESS);
 	raycast_shader->use();
 	drawSDF(*raycast_shader, viewMat);
 	fbo_front->renderToScreen();
-	
+
 	//Second pass - render depth for front face
+	/*
 	fbo_back->renderToFBO();
 	glClear(GL_DEPTH_BUFFER_BIT);
 	glCullFace(GL_FRONT);
 	glDepthFunc(GL_LESS);	//ideally should be GL_GREATER as per groundai article, but GL_LESS with custom depth-compare-shader works
 	//raycast_shader->use();
-	//drawSDF(*raycast_shader, viewMat);
-	depthWriteShader->use();
+	drawSDF(*raycast_shader, viewMat);
+	//depthWriteShader->use();
 	glUniform1f(depthWriteShader->uniform("windowWidth"), windowWidth);
 	glUniform1f(depthWriteShader->uniform("windowHeight"), windowHeight);
 	glActiveTexture(GL_TEXTURE0);
@@ -151,35 +152,34 @@ void SDFRenderer::drawToFrontAndBack(const glm::mat4& viewMat) {
 	glUniform1i(depthWriteShader->uniform("prevDepthTexture"), 0);
 	drawSDF(*depthWriteShader, viewMat);
 	fbo_back->renderToScreen();
+	*/
 	//raycast_shader->uniform("viewMat")
 
 	//TODO - remove this later
-	//Draw to default framebuffer just one more time - for verification
-	//glDisable(GL_CULL_FACE);
-	//glDepthFunc(GL_LESS);
-	//glCullFace(GL_BACK);
-	//drawSDF(*raycast_shader, viewMat);
+	raycast_shader->use();
+	drawSDF(*raycast_shader, viewMat);
 }
 
 void SDFRenderer::render(const glm::mat4& viewMat) {
 	drawToFrontAndBack(viewMat);
 	//draw to screen
-	
+
 	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glDisable(GL_CULL_FACE);
+	//glDisable(GL_CULL_FACE);
 	//glDisable(GL_DEPTH_TEST);
 	//glDisable(GL_BLEND);
-	glDepthFunc(GL_LESS);
+	//glDepthFunc(GL_LESS);
+	glBindVertexArray(CanvasVAO);
 	drawLinearDepth->use();
 	//glUniform1f(-1/*drawLinearDepth->uniform("zNear")*/, zNear);
 	//glUniform1f(-1/*drawLinearDepth->uniform("zFar")*/, zFar);
 	//glUniformMatrix4fv(drawLinearDepth->uniform("VP"), 1, false, glm::value_ptr(viewMat));
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, fbo_back->getDepthTexID());
+	glBindTexture(GL_TEXTURE_2D, fbo_front->getDepthTexID());
 	glUniform1i(drawLinearDepth->uniform("depthTexture"), 0);
-	glBindVertexArray(CanvasVAO);
-	glDrawArrays(GL_TRIANGLES, 0, 6);
+	glDrawArrays(GL_TRIANGLES, 0, 3);
 	glBindTexture(GL_TEXTURE_2D, 0);
+	glBindVertexArray(0);
 }
 
 void SDFRenderer::generateCanvas() {
