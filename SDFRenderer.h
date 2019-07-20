@@ -22,7 +22,7 @@ class SDFRenderer {
 	std::unique_ptr<ShaderProgram> depthWriteShader;	//Shader to compare depths between fbo_front and fbo_back FBOs
 	std::unique_ptr<ShaderProgram> drawLinearDepth;
 	const float zNear = 0.1f;
-	const float zFar = 100.0f;
+	const float zFar = 5.0f;
 	glm::mat4 projMat = glm::perspective(45.0f, 1.3333f, zNear, zFar);
 
 public:

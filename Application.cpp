@@ -136,7 +136,8 @@ void Application::run() {
 	sdfRenderer->render(MVP);
 	//sdfRenderer->drawToFrontAndBack(MVP);
 	//glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glDepthFunc(GL_LESS);
+	//glDepthFunc(GL_TRUE);
+	glDisable(GL_DEPTH_TEST);
 	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	//draw(VP);
 	//sdfRenderer->printSDFdata();
