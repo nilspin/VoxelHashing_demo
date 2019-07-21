@@ -1,11 +1,11 @@
 #version 430
 
-in vec2 uv;
+flat in vec3 voxCenter;
 
 uniform sampler2D startDepthTex;
 uniform sampler2D endDepthTex;
-//uniform float zNear;
-//uniform float zFar;
+uniform float windowWidth;
+uniform float windowHeight;
 uniform mat4 VP;
 
 float zNear = 0.1;
@@ -13,7 +13,7 @@ float zFar = 5.0;
 
 out vec4 outColor;
 
-vec3 getWorldSpacePosition(float depth)	{
+vec3 getWorldSpacePosition(float depth, vec2 uv)	{
 
 	vec2 NDCcoord = (vec2(uv)*2) - vec2(1);
 	float NDCdepth = depth*2 - 1.0;
@@ -25,10 +25,11 @@ vec3 getWorldSpacePosition(float depth)	{
 
 void main()	{
 	//----------------Find worldPos---------------------
+	vec2 uv = vec2(gl_FragCoord.x/windowWidth, gl_FragCoord.y/windowHeight);
 	float nearDepth = texture(startDepthTex, uv).x;
 	float farDepth = texture(endDepthTex, uv).x;
-	vec3 wrldPos_start = getWorldSpacePosition(nearDepth);
-	vec3 wrldPos_stop = getWorldSpacePosition(farDepth);
+	vec3 wrldPos_start = getWorldSpacePosition(nearDepth, uv);
+	vec3 wrldPos_stop = getWorldSpacePosition(farDepth, uv);
 	float dist = length(wrldPos_stop - wrldPos_start);
 	//float d = worldSpacePos.z;
 	//if(d < -1) discard;

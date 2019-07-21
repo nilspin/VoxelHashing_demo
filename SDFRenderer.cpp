@@ -21,14 +21,17 @@ SDFRenderer::SDFRenderer() {
 	depthWriteShader->addUniform("windowHeight");
 
 	drawLinearDepth = std::unique_ptr<ShaderProgram>(new ShaderProgram());
-	drawLinearDepth->initFromFiles("shaders/passthrough.vert", "shaders/linearDepth.frag");
-	drawLinearDepth->addAttribute("position");
+	//drawLinearDepth->initFromFiles("shaders/passthrough.vert", "shaders/linearDepth.frag");
+	drawLinearDepth->initFromFiles("shaders/drawBox.vert", "shaders/drawBox2flat.geom", "shaders/linearDepth.frag");
+	drawLinearDepth->addAttribute("voxentry");
 	drawLinearDepth->addUniform("startDepthTex");
 	drawLinearDepth->addUniform("endDepthTex");
+	drawLinearDepth->addUniform("windowWidth");
+	drawLinearDepth->addUniform("windowHeight");
 	//drawLinearDepth->addUniform("zNear");
 	//drawLinearDepth->addUniform("zFar");
 	drawLinearDepth->addUniform("VP");
-	generateCanvas();
+	//generateCanvas();
 	//raycast_shader->addUniform("projMat");
 
 	/*----------VAO-------------------*/
@@ -170,10 +173,8 @@ void SDFRenderer::render(const glm::mat4& viewMat) {
 	//glDisable(GL_DEPTH_TEST);
 	//glDisable(GL_BLEND);
 	//glDepthFunc(GL_LESS);
-	glBindVertexArray(CanvasVAO);
+	//glBindVertexArray(CanvasVAO);
 	drawLinearDepth->use();
-	//glUniform1f(-1/*drawLinearDepth->uniform("zNear")*/, zNear);
-	//glUniform1f(-1/*drawLinearDepth->uniform("zFar")*/, zFar);
 	glUniformMatrix4fv(drawLinearDepth->uniform("VP"), 1, false, glm::value_ptr(viewMat));
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, fbo_front->getDepthTexID());
@@ -181,7 +182,8 @@ void SDFRenderer::render(const glm::mat4& viewMat) {
 	glBindTexture(GL_TEXTURE_2D, fbo_back->getDepthTexID());
 	glUniform1i(drawLinearDepth->uniform("startDepthTex"), 1);
 	glUniform1i(drawLinearDepth->uniform("endDepthTex"), 2);
-	glDrawArrays(GL_TRIANGLES, 0, 6);
+	drawSDF(*drawLinearDepth, viewMat);
+	//glDrawArrays(GL_TRIANGLES, 0, 6);
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glBindVertexArray(0);
 }
