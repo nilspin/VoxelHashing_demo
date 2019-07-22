@@ -53,7 +53,7 @@ private:
 
 	// Shader program and individual shader Ids
 	GLuint programId;
-	
+
 	std::map<std::string, GLenum> shaderEnumMap
 	{
 		{".vert", GL_VERTEX_SHADER},
@@ -96,31 +96,31 @@ private:
 
 			// Compile the shaders and return their id values
 			GLuint shaderId = compileShader(shaderSource, shaderType);
-			
+
 			// Attach the compiled shader to the shader program
 			glAttachShader(programId, shaderId);
 
 			loadedShaders.push_back(shaderId);
-			
+
 		}
-		
+
 		// Link the shader program - details are placed in the program info log
 		glLinkProgram(programId);
-		
+
 		// Once the shader program has the shaders attached and linked, the shaders are no longer required.
 		// If the linking failed, then we're going to abort anyway so we still detach the shaders.
 		for(auto shader:loadedShaders)
 		{
 			glDetachShader(programId, shader);
 		}
-		
+
 		checkProgramLinkStatus();
-		
+
 		// Validate the shader program
 		glValidateProgram(programId);
 
 		checkProgramValidationStatus();
-		
+
 		// Finally, the shader program is initialised
 		initialised=true;
 	}
@@ -129,7 +129,7 @@ private:
 	GLuint compileShader(std::string shaderSource, GLenum shaderType)
 	{
 		std::string shaderTypeString = std::to_string(shaderType);
-		
+
 		// Generate a shader id
 		// Note: Shader id will be non-zero if successfully created.
 		GLuint shaderId = glCreateShader(shaderType);
@@ -155,7 +155,7 @@ private:
 		// If everything went well, return the shader id
 		return shaderId;
 	}
-	
+
 	// Check the compilation status and throw a runtime_error if shader compilation failed
 	void checkCompileStatus(GLint shaderId, std::string shaderTypeString)
 	{
@@ -169,7 +169,7 @@ private:
 			// The maxLength includes the NULL character
 			GLchar* errorLog = (GLchar*)malloc(maxLength);
 			glGetShaderInfoLog(shaderId, maxLength, &maxLength, errorLog);
-			
+
 			std::cout << "Shader compile error : " << errorLog << std::endl;
 			free(errorLog);
 			glDeleteShader(shaderId); // Don't leak the shader.
@@ -221,7 +221,7 @@ private:
 
 			//The maxLength includes the NULL character
 			GLchar *log = (GLchar *)malloc(maxLength);
-			glGetProgramInfoLog(programId, maxLength, 0, log); 
+			glGetProgramInfoLog(programId, maxLength, 0, log);
 			std::cout << "Linker error : " << log << std::endl;
 			free(log);
 			//The program is useless now. So delete it.
@@ -297,10 +297,12 @@ public:
 		return t;
 	}
 
+	GLuint getProgramHandle()	{	return programId;	}
+
 	/*
 	Converts arguments into vector of string.
 	Converted args are put into initializer list
-	(which compiler resolves by itself) and initialised 
+	(which compiler resolves by itself) and initialised
 	into a vector.
 	*/
 	template<typename ... Params>

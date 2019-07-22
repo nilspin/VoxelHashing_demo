@@ -31,6 +31,7 @@ SDFRenderer::SDFRenderer() {
 	//drawLinearDepth->addUniform("zNear");
 	//drawLinearDepth->addUniform("zFar");
 	drawLinearDepth->addUniform("VP");
+	drawLinearDepth->addUniform("invVP");
 	//generateCanvas();
 	//raycast_shader->addUniform("projMat");
 
@@ -176,16 +177,30 @@ void SDFRenderer::render(const glm::mat4& viewMat) {
 	//glBindVertexArray(CanvasVAO);
 	drawLinearDepth->use();
 	glUniformMatrix4fv(drawLinearDepth->uniform("VP"), 1, false, glm::value_ptr(viewMat));
+	glUniformMatrix4fv(drawLinearDepth->uniform("invVP"), 1, false, glm::value_ptr(glm::inverse(viewMat)));
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, fbo_front->getDepthTexID());
 	glActiveTexture(GL_TEXTURE2);
 	glBindTexture(GL_TEXTURE_2D, fbo_back->getDepthTexID());
 	glUniform1i(drawLinearDepth->uniform("startDepthTex"), 1);
 	glUniform1i(drawLinearDepth->uniform("endDepthTex"), 2);
+	glUniform1f(drawLinearDepth->uniform("windowWidth"), windowWidth);
+	glUniform1f(drawLinearDepth->uniform("windowHeight"), windowHeight);
+	//bind same compactifiedHashtable buffer as SSBO
+	GLuint voxelentry_ssbo_index = 0;
+	voxelentry_ssbo_index = glGetProgramResourceIndex(drawLinearDepth->getProgramHandle(), GL_SHADER_STORAGE_BLOCK, "VoxelEntry");
+	glShaderStorageBlockBinding(drawLinearDepth->getProgramHandle(), voxelentry_ssbo_index, 2);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, compactHashTable_handle);
+	//bind sdf_voxels buffer as SSBO
+	GLuint sdfvoxels_ssbo_index = 0;
+	sdfvoxels_ssbo_index = glGetProgramResourceIndex(drawLinearDepth->getProgramHandle(), GL_SHADER_STORAGE_BLOCK, "Voxels");
+	glShaderStorageBlockBinding(drawLinearDepth->getProgramHandle(), sdfvoxels_ssbo_index, 3);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, SDF_VolumeBuffer_handle);
 	drawSDF(*drawLinearDepth, viewMat);
 	//glDrawArrays(GL_TRIANGLES, 0, 6);
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glBindVertexArray(0);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 }
 
 void SDFRenderer::generateCanvas() {
