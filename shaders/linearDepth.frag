@@ -1,6 +1,6 @@
 #version 430
 
-flat in vec3 voxCenter;
+flat in ivec3 voxCenter;
 
 uniform sampler2D startDepthTex;
 uniform sampler2D endDepthTex;
@@ -61,24 +61,24 @@ uint linearizeVoxelPos(const ivec3 pos)	{
 vec3 getWorldSpacePosition(float depth, vec2 uv)	{
 
 	// Convert screen coordinates to normalized device coordinates (NDC)
-    //vec4 ndc = vec4(
-    //    (gl_FragCoord.x / windowWidth - 0.5) * 2.0,
-    //    (gl_FragCoord.y / windowHeight - 0.5) * 2.0,
-    //    //(gl_FragCoord.z - 0.5) * 2.0,
-    //    (depth - 0.5) * 2.0,
-    //    1.0);
+    vec4 ndc = vec4(
+        (gl_FragCoord.x / windowWidth - 0.5) * 2.0,
+        (gl_FragCoord.y / windowHeight - 0.5) * 2.0,
+        //(gl_FragCoord.z - 0.5) * 2.0,
+        (depth - 0.5) * 2.0,
+        1.0);
 
-    //// Convert NDC throuch inverse clip coordinates to view coordinates
-    //vec4 clip = invVP * ndc;
-    //vec3 vertex = (clip / clip.w).xyz;
-	//return vertex;
+    // Convert NDC throuch inverse clip coordinates to view coordinates
+    vec4 clip = invVP * ndc;
+    vec3 vertex = (clip / clip.w).xyz;
+	return vertex;
 
-	vec2 NDCcoord = (vec2(uv)*2) - vec2(1);
-	float NDCdepth = depth*2 - 1.0;
-	vec4 pos = vec4(NDCcoord.x, NDCcoord.y, NDCdepth, 1.0);
-	vec4 worldSpacePos = invVP*pos;
-	worldSpacePos /= worldSpacePos.w;
-	return worldSpacePos.xyz;
+	//vec2 NDCcoord = (vec2(uv)*2) - vec2(1);
+	//float NDCdepth = depth*2 - 1.0;
+	//vec4 pos = vec4(NDCcoord.x, NDCcoord.y, NDCdepth, 1.0);
+	//vec4 worldSpacePos = invVP*pos;
+	//worldSpacePos /= worldSpacePos.w;
+	//return worldSpacePos.xyz;
 }
 
 vec4 traverse(vec3 start, vec3 stop, ivec3 blockPos)	{
@@ -136,32 +136,33 @@ vec4 traverse(vec3 start, vec3 stop, ivec3 blockPos)	{
 void main()	{
 	//----------------Find worldPos---------------------
 	vec2 uv = vec2(gl_FragCoord.x/windowWidth, gl_FragCoord.y/windowHeight);
-	float nearDepth = texture(startDepthTex, uv).x;
-	float farDepth = texture(endDepthTex, uv).x;
-	vec3 wrldPos_start = getWorldSpacePosition(nearDepth, uv);
-	vec3 wrldPos_stop = getWorldSpacePosition(farDepth, uv);
-	float dist = length(wrldPos_stop - wrldPos_start);
+	//float nearDepth = texture(startDepthTex, uv).x;
+	//float farDepth = texture(endDepthTex, uv).x;
+	//vec3 wrldPos_start = getWorldSpacePosition(nearDepth, uv);
+	//vec3 wrldPos_stop = getWorldSpacePosition(farDepth, uv);
+	//float dist = length(wrldPos_stop - wrldPos_start);
 	//float d = worldSpacePos.z;
 	vec3 temp = getWorldSpacePosition(gl_FragCoord.z, uv);
 	//temp /= 0.16;
-	ivec3 voxel_start = world2Voxel(wrldPos_start);
-	ivec3 voxel_stop = world2Voxel(wrldPos_stop);
+	//ivec3 voxel_start = world2Voxel(wrldPos_start);
+	//ivec3 voxel_stop = world2Voxel(wrldPos_stop);
 	//temp---------------
-	ivec3 startBlockPos = world2Block(wrldPos_start);
-	ivec3 stopBlockPos = world2Block(wrldPos_stop);
+	//ivec3 startBlockPos = world2Block(wrldPos_start);
+	//ivec3 stopBlockPos = world2Block(wrldPos_stop);
 	// startBlockPos and stopBlockPos should be same for all fragments,
 	// not just corner ones
-	if(startBlockPos == stopBlockPos)	{ outColor = vec4(1); }
-	else {
-		discard;
-		//outColor = vec4(1,0,0,0.3);
-	}
-	//-------------------
-	//if(world2Block(temp) == vec3(voxCenter) )	{ outColor = vec4(1,1,1,1);	}
-	////if(gl_FragCoord.xyz == voxCenter )	{ outColor = vec4(1,0,0,1);	}
-	//else 	{
-	//	outColor = vec4(vec3(dist)*normalize(voxCenter), 1);
+	//if(startBlockPos == stopBlockPos)	{ outColor = vec4(1); }
+	//else {
+	//	//discard;
+	//	outColor = vec4(1,0,0,1);
 	//}
+	//-------------------
+	if(world2Block(temp) == voxCenter )	{ outColor = vec4(1,1,1,1);	}
+	//if(gl_FragCoord.xyz == voxCenter )	{ outColor = vec4(1,0,0,1);	}
+	else 	{
+		discard;
+		//outColor = vec4(vec3(dist)*normalize(voxCenter), 1);
+	}
 
 	//------------------Display linear depth---------------
 	//float depth = texture(depthTexture, uv).x;
