@@ -26,12 +26,12 @@ SDFRenderer::SDFRenderer() {
 	drawLinearDepth->addAttribute("voxentry");
 //	drawLinearDepth->addUniform("startDepthTex");
 //	drawLinearDepth->addUniform("endDepthTex");
-	//drawLinearDepth->addUniform("windowWidth");
-	//drawLinearDepth->addUniform("windowHeight");
+	drawLinearDepth->addUniform("windowWidth");
+	drawLinearDepth->addUniform("windowHeight");
 	//drawLinearDepth->addUniform("zNear");
 	//drawLinearDepth->addUniform("zFar");
 	drawLinearDepth->addUniform("VP");
-	//drawLinearDepth->addUniform("invVP");
+	drawLinearDepth->addUniform("invVP");
 	//generateCanvas();
 	//raycast_shader->addUniform("projMat");
 
@@ -177,15 +177,15 @@ void SDFRenderer::render(const glm::mat4& viewMat) {
 	//glBindVertexArray(CanvasVAO);
 	drawLinearDepth->use();
 	glUniformMatrix4fv(drawLinearDepth->uniform("VP"), 1, false, glm::value_ptr(viewMat));
-	//glUniformMatrix4fv(drawLinearDepth->uniform("invVP"), 1, false, glm::value_ptr(glm::inverse(viewMat)));
+	glUniformMatrix4fv(drawLinearDepth->uniform("invVP"), 1, false, glm::value_ptr(glm::inverse(viewMat)));
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, fbo_front->getDepthTexID());
 	glActiveTexture(GL_TEXTURE2);
 	glBindTexture(GL_TEXTURE_2D, fbo_back->getDepthTexID());
 //	glUniform1i(drawLinearDepth->uniform("startDepthTex"), 1);
 //	glUniform1i(drawLinearDepth->uniform("endDepthTex"), 2);
-	//glUniform1f(drawLinearDepth->uniform("windowWidth"), windowWidth);
-	//glUniform1f(drawLinearDepth->uniform("windowHeight"), windowHeight);
+	glUniform1f(drawLinearDepth->uniform("windowWidth"), windowWidth);
+	glUniform1f(drawLinearDepth->uniform("windowHeight"), windowHeight);
 	//bind same compactifiedHashtable buffer as SSBO
 	GLuint voxelentry_ssbo_index = 0;
 	voxelentry_ssbo_index = glGetProgramResourceIndex(drawLinearDepth->getProgramHandle(), GL_SHADER_STORAGE_BLOCK, "VoxelEntry");

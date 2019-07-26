@@ -50,6 +50,7 @@ ivec3 block2Voxel(const ivec3 block)	{
 	ivec3 voxelPos = ivec3(block.x, block.y, block.z) * blockSize;
 	return voxelPos;
 }
+
 uint linearizeVoxelPos(const ivec3 pos)	{
 	const int blockSize = 8;
 	return  pos.z * blockSize * blockSize +
@@ -61,24 +62,24 @@ uint linearizeVoxelPos(const ivec3 pos)	{
 vec3 getWorldSpacePosition(float depth, vec2 uv)	{
 
 	// Convert screen coordinates to normalized device coordinates (NDC)
-    vec4 ndc = vec4(
-        (gl_FragCoord.x / windowWidth - 0.5) * 2.0,
-        (gl_FragCoord.y / windowHeight - 0.5) * 2.0,
-        //(gl_FragCoord.z - 0.5) * 2.0,
-        (depth - 0.5) * 2.0,
-        1.0);
+    //vec4 ndc = vec4(
+    //    (gl_FragCoord.x / windowWidth - 0.5) * 2.0,
+    //    (gl_FragCoord.y / windowHeight - 0.5) * 2.0,
+    //    //(gl_FragCoord.z - 0.5) * 2.0,
+    //    (depth - 0.5) * 2.0,
+    //    1.0);
 
-    // Convert NDC throuch inverse clip coordinates to view coordinates
-    vec4 clip = invVP * ndc;
-    vec3 vertex = (clip / clip.w).xyz;
-	return vertex;
+    //// Convert NDC throuch inverse clip coordinates to view coordinates
+    //vec4 clip = invVP * ndc;
+    //vec3 vertex = (clip / clip.w).xyz;
+	//return vertex;
 
-	//vec2 NDCcoord = (vec2(uv)*2) - vec2(1);
-	//float NDCdepth = depth*2 - 1.0;
-	//vec4 pos = vec4(NDCcoord.x, NDCcoord.y, NDCdepth, 1.0);
-	//vec4 worldSpacePos = invVP*pos;
-	//worldSpacePos /= worldSpacePos.w;
-	//return worldSpacePos.xyz;
+	vec2 NDCcoord = (vec2(uv)*2) - vec2(1);
+	float NDCdepth = depth*2 - 1.0;
+	vec4 pos = vec4(NDCcoord.x, NDCcoord.y, NDCdepth, 1.0);
+	vec4 worldSpacePos = invVP*pos;
+	worldSpacePos /= worldSpacePos.w;
+	return worldSpacePos.xyz;
 }
 
 vec4 traverse(vec3 start, vec3 stop, ivec3 blockPos)	{
@@ -133,6 +134,16 @@ vec4 traverse(vec3 start, vec3 stop, ivec3 blockPos)	{
 	return col;
 }
 
+//temp
+vec3 screenspaceVoxCenter(ivec3 vc)	{
+	vec4 pos = vec4(vc.x, vc.y, vc.z, 1);
+	vec4 transformed_vc = inverse(invVP) * pos;	//multiply with MVP to get to clipspace
+	vec3 NDC_vc = (transformed_vc/transformed_vc.w).xyz;
+	vec3 screenspace_vc = vec3(NDC_vc.x*2 - 1, NDC_vc.y*2 -1, NDC_vc.z*2 - 1);
+	vec3 fragCoord_vc = vec3(screenspace_vc.x * windowWidth, screenspace_vc.y * windowHeight, screenspace_vc.z);
+	return fragCoord_vc;
+}
+
 void main()	{
 	//----------------Find worldPos---------------------
 	vec2 uv = vec2(gl_FragCoord.x/windowWidth, gl_FragCoord.y/windowHeight);
@@ -157,13 +168,15 @@ void main()	{
 	//	outColor = vec4(1,0,0,1);
 	//}
 	//-------------------
-	//if(world2Block(temp) == voxCenter_frag )	{ outColor = vec4(1,1,1,1);	}
+	//if(world2Block(temp) >= voxCenter_frag )	{ outColor = vec4(1,1,1,1);	}
 	////if(gl_FragCoord.xyz == voxCenter )	{ outColor = vec4(1,0,0,1);	}
 	//else 	{
 	//	discard;
 	//	//outColor = vec4(vec3(dist)*normalize(voxCenter), 1);
 	//}
-	outColor = vec4(vec3(normalize(voxCenter_frag)), 1);
+	//IMP DEBUG below
+	//outColor = vec4(vec3(0.016*length(vec3(voxCenter_frag) - vec3(world2Block(temp)))), 1);
+	outColor = vec4(vec3(length(temp - voxCenter_frag)), 1);
 
 	//------------------Display linear depth---------------
 	//float depth = texture(depthTexture, uv).x;
