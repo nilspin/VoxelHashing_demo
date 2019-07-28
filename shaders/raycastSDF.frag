@@ -1,6 +1,7 @@
 #version 430
 
 flat in ivec3 voxCenter_frag;
+flat in int SDFVolumeBasePtr_frag;
 
 uniform sampler2D startDepthTex;
 uniform sampler2D endDepthTex;
@@ -16,16 +17,20 @@ const float INFINITY = 1. / 0.;
 
 out vec4 outColor;
 
-layout(std430, binding=2) buffer VoxelEntry	{
-	ivec3 pos;
-	int ptr;
-	int offset;
-	ivec3 padding;
+//layout(std430, binding=2) buffer VoxelEntry	{
+//	ivec3 pos;
+//	int ptr;
+//	int offset;
+//	ivec3 padding;
+//};
+
+struct Voxel {
+	float SDF;
+	uint WEIGHT;
 };
 
-layout(std430, binding=3) buffer Voxels	{
-	float sdf;
-	uint weight;
+layout(std430, binding=3) readonly buffer SDFVolume	{
+	Voxel Voxels[];
 };
 
 ivec3 voxel2Block(ivec3 voxel) 	{
@@ -51,7 +56,7 @@ ivec3 block2Voxel(const ivec3 block)	{
 	return voxelPos;
 }
 
-uint linearizeVoxelPos(const ivec3 pos)	{
+int linearizeVoxelPos(const ivec3 pos)	{
 	const int blockSize = 8;
 	return  pos.z * blockSize * blockSize +
 			pos.y * blockSize +
@@ -82,20 +87,34 @@ vec3 getWorldSpacePosition(float depth, vec2 uv)	{
 	return worldSpacePos.xyz;
 }
 
+vec4 calculateColor(ivec3 temp)	{
+	ivec3 baseVoxel = block2Voxel(voxCenter_frag);
+	ivec3 diff = temp - baseVoxel;	//TODO : make sure this lies between 0-7
+
+	int idx = linearizeVoxelPos(diff);
+	int baseIdx = SDFVolumeBasePtr_frag;	//TODO: take this as flat vert attrib
+
+	float sdf = Voxels[baseIdx + idx].SDF;
+	uint weight = Voxels[baseIdx + idx].WEIGHT;
+
+	vec4 color = vec4(vec3(sdf)*weight, 1.0);
+	return color;
+}
+
 vec4 traverse(vec3 start, vec3 stop, ivec3 blockPos)	{
 	vec4 col = vec4(0);
 	vec3 rayDir = stop - start;
 	ivec3 stepSize = ivec3(sign(rayDir.x), sign(rayDir.y), sign(rayDir.z));
 	vec3 next_boundary = start + vec3(stepSize);
-	next_boundary *= voxelSize;
+	next_boundary *= 0.125; //voxelSize;
 
 	//calculate max distance to next barrier
 	vec3 tMax = vec3(next_boundary - start)/rayDir;
-	vec3 tDelta = vec3(voxelSize/rayDir);
+	vec3 tDelta = vec3(0.125/rayDir);	//voxelSize
 	tDelta *= stepSize;
 
-	ivec3 idStart = ivec3((start.x/voxelSize),(start.y/voxelSize),(start.z/voxelSize));
-	ivec3 idStop = ivec3((stop.x/voxelSize),(stop.y/voxelSize),(stop.z/voxelSize));
+	ivec3 idStart = ivec3((start.x/0.125),(start.y/0.125),(start.z/0.125));
+	ivec3 idStop = ivec3((stop.x/0.125),(stop.y/0.125),(stop.z/0.125));
 	ivec3 temp = idStart;
 
 	if (rayDir.x == 0.0f) { tMax.x = INFINITY; tDelta.x = INFINITY; }
@@ -107,9 +126,7 @@ vec4 traverse(vec3 start, vec3 stop, ivec3 blockPos)	{
 	if (rayDir.z == 0.0f) { tMax.z = INFINITY; tDelta.z = INFINITY; }
 	if (next_boundary.z - start.z == 0.0f) { tMax.z = INFINITY; tDelta.z = INFINITY; }
 
-	ivec3 baseVoxel = block2Voxel(blockPos);
-	ivec3 currVoxel = baseVoxel + temp;
-	uint currVoxIdx = linearizeVoxelPos(currVoxel);
+	col += calculateColor(temp);
 
 	int iter = 0, maxIter = 20;
 	while(temp != idStop)	{
@@ -129,6 +146,9 @@ vec4 traverse(vec3 start, vec3 stop, ivec3 blockPos)	{
 			//if(temp.y == idEnd.y) break;
 			tMax.y += tDelta.y;
 		}
+
+		col += calculateColor(temp);
+		iter++;
 	}
 	//int idx = blockPos.ptr;
 	return col;
@@ -147,10 +167,10 @@ vec3 screenspaceVoxCenter(ivec3 vc)	{
 void main()	{
 	//----------------Find worldPos---------------------
 	vec2 uv = vec2(gl_FragCoord.x/windowWidth, gl_FragCoord.y/windowHeight);
-	//float nearDepth = texture(startDepthTex, uv).x;
-	//float farDepth = texture(endDepthTex, uv).x;
-	//vec3 wrldPos_start = getWorldSpacePosition(nearDepth, uv);
-	//vec3 wrldPos_stop = getWorldSpacePosition(farDepth, uv);
+	float nearDepth = texture(startDepthTex, uv).x;
+	float farDepth = texture(endDepthTex, uv).x;
+	vec3 wrldPos_start = getWorldSpacePosition(nearDepth, uv);
+	vec3 wrldPos_stop = getWorldSpacePosition(farDepth, uv);
 	//float dist = length(wrldPos_stop - wrldPos_start);
 	//float d = worldSpacePos.z;
 	vec3 temp = getWorldSpacePosition(gl_FragCoord.z, uv);
@@ -176,7 +196,8 @@ void main()	{
 	//}
 	//IMP DEBUG below
 	//outColor = vec4(vec3(0.016*length(vec3(voxCenter_frag) - vec3(world2Block(temp)))), 1);
-	outColor = vec4(vec3(length(temp - voxCenter_frag)), 1);
+	//outColor = vec4(vec3(length(temp - voxCenter_frag)), 1);
+	outColor = traverse(wrldPos_start, wrldPos_stop, voxCenter_frag);
 
 	//------------------Display linear depth---------------
 	//float depth = texture(depthTexture, uv).x;

@@ -3,6 +3,8 @@
 #include "VoxelDataStructures.h"
 #include <vector>
 
+#define BUFFER_OFFSET(i) ((char*)NULL + (i))
+
 SDFRenderer::SDFRenderer() {
 
 	fbo_front = std::unique_ptr<FBO>(new FBO(windowWidth, windowHeight));
@@ -24,8 +26,9 @@ SDFRenderer::SDFRenderer() {
 	//drawLinearDepth->initFromFiles("shaders/passthrough.vert", "shaders/linearDepth.frag");
 	drawLinearDepth->initFromFiles("shaders/raycastSDF.vert", "shaders/raycastSDF.geom", "shaders/raycastSDF.frag");
 	drawLinearDepth->addAttribute("voxentry");
-//	drawLinearDepth->addUniform("startDepthTex");
-//	drawLinearDepth->addUniform("endDepthTex");
+	drawLinearDepth->addAttribute("SDFVolumeBasePtr_vert");
+	drawLinearDepth->addUniform("startDepthTex");
+	drawLinearDepth->addUniform("endDepthTex");
 	drawLinearDepth->addUniform("windowWidth");
 	drawLinearDepth->addUniform("windowHeight");
 	//drawLinearDepth->addUniform("zNear");
@@ -45,6 +48,11 @@ SDFRenderer::SDFRenderer() {
 	glBufferData(GL_ARRAY_BUFFER, sizeof(VoxelEntry) * numBuckets * bucketSize, nullptr, GL_STATIC_DRAW);
 	glEnableVertexAttribArray(raycast_shader->attribute("voxentry"));
 	glVertexAttribPointer(raycast_shader->attribute("voxentry"), 3, GL_INT, GL_FALSE, sizeof(VoxelEntry), 0);
+
+	glEnableVertexAttribArray(drawLinearDepth->attribute("voxentry"));
+	glVertexAttribPointer(drawLinearDepth->attribute("voxentry"), 3, GL_INT, GL_FALSE, sizeof(VoxelEntry), 0);
+	glEnableVertexAttribArray(drawLinearDepth->attribute("SDFVolumeBasePtr_vert"));
+	glVertexAttribPointer(drawLinearDepth->attribute("SDFVolumeBasePtr_vert"), 1, GL_INT, GL_FALSE, sizeof(VoxelEntry), BUFFER_OFFSET(sizeof(glm::ivec3)));
 
 	//unbind
 	glBindVertexArray(0);
@@ -182,19 +190,21 @@ void SDFRenderer::render(const glm::mat4& viewMat) {
 	glBindTexture(GL_TEXTURE_2D, fbo_front->getDepthTexID());
 	glActiveTexture(GL_TEXTURE2);
 	glBindTexture(GL_TEXTURE_2D, fbo_back->getDepthTexID());
-//	glUniform1i(drawLinearDepth->uniform("startDepthTex"), 1);
-//	glUniform1i(drawLinearDepth->uniform("endDepthTex"), 2);
+	glUniform1i(drawLinearDepth->uniform("startDepthTex"), 1);
+	glUniform1i(drawLinearDepth->uniform("endDepthTex"), 2);
 	glUniform1f(drawLinearDepth->uniform("windowWidth"), windowWidth);
 	glUniform1f(drawLinearDepth->uniform("windowHeight"), windowHeight);
 	//bind same compactifiedHashtable buffer as SSBO
-	GLuint voxelentry_ssbo_index = 0;
-	voxelentry_ssbo_index = glGetProgramResourceIndex(drawLinearDepth->getProgramHandle(), GL_SHADER_STORAGE_BLOCK, "VoxelEntry");
-	glShaderStorageBlockBinding(drawLinearDepth->getProgramHandle(), voxelentry_ssbo_index, 2);
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, compactHashTable_handle);
+	//GLuint voxelentry_ssbo_index = 0;
+	//voxelentry_ssbo_index = glGetProgramResourceIndex(drawLinearDepth->getProgramHandle(), GL_SHADER_STORAGE_BLOCK, "VoxelEntry");
+	//glShaderStorageBlockBinding(drawLinearDepth->getProgramHandle(), voxelentry_ssbo_index, 2);
+	//glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, compactHashTable_handle);
+
 	//bind sdf_voxels buffer as SSBO
 	GLuint sdfvoxels_ssbo_index = 0;
-	sdfvoxels_ssbo_index = glGetProgramResourceIndex(drawLinearDepth->getProgramHandle(), GL_SHADER_STORAGE_BLOCK, "Voxels");
-	glShaderStorageBlockBinding(drawLinearDepth->getProgramHandle(), sdfvoxels_ssbo_index, 3);
+	sdfvoxels_ssbo_index = glGetProgramResourceIndex(drawLinearDepth->getProgramHandle(), GL_SHADER_STORAGE_BLOCK, "SDFVolume");
+	//glShaderStorageBlockBinding(drawLinearDepth->getProgramHandle(), sdfvoxels_ssbo_index, 3);
+	glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, SDF_VolumeBuffer_handle);
 	drawSDF(*drawLinearDepth, viewMat);
 	//glDrawArrays(GL_TRIANGLES, 0, 6);

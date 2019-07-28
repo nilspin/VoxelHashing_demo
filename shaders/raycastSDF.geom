@@ -10,6 +10,9 @@ in vec4 v_position[];
 flat in ivec3 voxCenter_vert[];
 flat out ivec3 voxCenter_frag;
 
+flat in int SDFVolumeBasePtr_geom[];
+flat out int SDFVolumeBasePtr_frag;
+
 uniform mat4 VP;
 //uniform mat4 projMat;
 
@@ -17,6 +20,7 @@ void main()	{
 	float width = 0.2;
 	vec4 center = v_position[0];
 	voxCenter_frag = voxCenter_vert[0];
+	SDFVolumeBasePtr_frag = SDFVolumeBasePtr_geom[0];
 	vec4 dx = VP[0];
 	vec4 dy = VP[1];
 	vec4 dz = VP[2];
