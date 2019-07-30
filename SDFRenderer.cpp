@@ -26,7 +26,7 @@ SDFRenderer::SDFRenderer() {
 	//drawLinearDepth->initFromFiles("shaders/passthrough.vert", "shaders/linearDepth.frag");
 	drawLinearDepth->initFromFiles("shaders/raycastSDF.vert", "shaders/raycastSDF.geom", "shaders/raycastSDF.frag");
 	drawLinearDepth->addAttribute("voxentry");
-	drawLinearDepth->addAttribute("SDFVolumeBasePtr_vert");
+	//drawLinearDepth->addAttribute("SDFVolumeBasePtr_vert");
 	drawLinearDepth->addUniform("startDepthTex");
 	drawLinearDepth->addUniform("endDepthTex");
 	drawLinearDepth->addUniform("windowWidth");
@@ -51,8 +51,8 @@ SDFRenderer::SDFRenderer() {
 
 	glEnableVertexAttribArray(drawLinearDepth->attribute("voxentry"));
 	glVertexAttribPointer(drawLinearDepth->attribute("voxentry"), 3, GL_INT, GL_FALSE, sizeof(VoxelEntry), 0);
-	glEnableVertexAttribArray(drawLinearDepth->attribute("SDFVolumeBasePtr_vert"));
-	glVertexAttribPointer(drawLinearDepth->attribute("SDFVolumeBasePtr_vert"), 1, GL_INT, GL_FALSE, sizeof(VoxelEntry), BUFFER_OFFSET(sizeof(glm::ivec3)));
+	//glEnableVertexAttribArray(drawLinearDepth->attribute("SDFVolumeBasePtr_vert"));
+	//glVertexAttribPointer(drawLinearDepth->attribute("SDFVolumeBasePtr_vert"), 1, GL_INT, GL_FALSE, sizeof(VoxelEntry), BUFFER_OFFSET(sizeof(glm::ivec3)));
 
 	//unbind
 	glBindVertexArray(0);

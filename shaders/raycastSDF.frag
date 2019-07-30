@@ -29,7 +29,7 @@ struct Voxel {
 	uint WEIGHT;
 };
 
-layout(std430, binding=3) readonly buffer SDFVolume	{
+layout(packed, binding=3) readonly buffer SDFVolume	{
 	Voxel Voxels[];
 };
 
@@ -88,34 +88,39 @@ vec3 getWorldSpacePosition(float depth, vec2 uv)	{
 }
 
 vec4 calculateColor(ivec3 temp)	{
-	ivec3 baseVoxel = block2Voxel(voxCenter_frag);
-	ivec3 diff = temp - baseVoxel;	//TODO : make sure this lies between 0-7
+	//ivec3 baseVoxel = block2Voxel(voxCenter_frag);
+	//ivec3 diff = temp - baseVoxel;	//TODO : make sure this lies between 0-7
 
-	int idx = linearizeVoxelPos(diff);
-	int baseIdx = SDFVolumeBasePtr_frag;	//TODO: take this as flat vert attrib
+	//int idx = linearizeVoxelPos(diff);
+	//int baseIdx = SDFVolumeBasePtr_frag;	//TODO: take this as flat vert attrib
 
-	float sdf = Voxels[baseIdx + idx].SDF;
-	uint weight = Voxels[baseIdx + idx].WEIGHT;
+	//float sdf = Voxels[baseIdx + idx].SDF;
+	//uint weight = Voxels[baseIdx + idx].WEIGHT;
 
-	vec4 color = vec4(vec3(sdf)*weight, 1.0);
-	return color;
+	//vec4 color = vec4(vec3(sdf)*weight, 1.0);
+	//return color;
+	return vec4(vec3(1), 0.01);
 }
 
 vec4 traverse(vec3 start, vec3 stop, ivec3 blockPos)	{
 	vec4 col = vec4(0);
-	vec3 rayDir = stop - start;
+	ivec3 idStart = world2Voxel(start);
+	ivec3 idStop = world2Voxel(stop);
+	ivec3 temp = idStart;
+
+	vec3 rayDir = vec3(idStop - idStart);
 	ivec3 stepSize = ivec3(sign(rayDir.x), sign(rayDir.y), sign(rayDir.z));
-	vec3 next_boundary = start + vec3(stepSize);
+	vec3 next_boundary = vec3(idStart + stepSize);
 	next_boundary *= 0.125; //voxelSize;
 
 	//calculate max distance to next barrier
-	vec3 tMax = vec3(next_boundary - start)/rayDir;
-	vec3 tDelta = vec3(0.125/rayDir);	//voxelSize
+	vec3 tMax = vec3(next_boundary - vec3(idStart))/rayDir;
+	vec3 tDelta = vec3((1/rayDir.x),(1/rayDir.y),(1/rayDir.z));
 	tDelta *= stepSize;
 
-	ivec3 idStart = ivec3((start.x/0.125),(start.y/0.125),(start.z/0.125));
-	ivec3 idStop = ivec3((stop.x/0.125),(stop.y/0.125),(stop.z/0.125));
-	ivec3 temp = idStart;
+	//ivec3 idStart = ivec3((start.x/0.125),(start.y/0.125),(start.z/0.125));
+	//ivec3 idStop = ivec3((stop.x/0.125),(stop.y/0.125),(stop.z/0.125));
+	//ivec3 temp = idStart;
 
 	if (rayDir.x == 0.0f) { tMax.x = INFINITY; tDelta.x = INFINITY; }
 	if (next_boundary.x - start.x == 0.0f) { tMax.x = INFINITY; tDelta.x = INFINITY; }
@@ -130,20 +135,21 @@ vec4 traverse(vec3 start, vec3 stop, ivec3 blockPos)	{
 
 	int iter = 0, maxIter = 20;
 	while(temp != idStop)	{
+	//while(iter <= maxIter)	{
 
 		if(tMax.x < tMax.y && tMax.x < tMax.z)	{
 			temp.x += stepSize.x;
-			//if(temp.x == idEnd.x) break;
+			if(temp.x == idStop.x) break;
 			tMax.x += tDelta.x;
 		}
 		else if(tMax.z < tMax.y)	{
 			temp.z += stepSize.z;
-			//if(temp.z == idEnd.z) break;
+			if(temp.z == idStop.z) break;
 			tMax.z += tDelta.z;
 		}
 		else{
 			temp.y += stepSize.y;
-			//if(temp.y == idEnd.y) break;
+			if(temp.y == idStop.y) break;
 			tMax.y += tDelta.y;
 		}
 
