@@ -8,10 +8,11 @@
 #include "cuda_helper/helper_math.h"
 #include "cuda_helper/cuda_SimpleMatrixUtil.h"
 
-__align__(8)
+//__align__(8)
 struct Voxel	{
 	float sdf;
-	unsigned char weight;
+	//unsigned char weight;
+	unsigned int weight;
 };
 
 __align__(16)
@@ -53,7 +54,7 @@ struct PtrContainer	{
 	unsigned int* d_heap;	//linear buffer with indices to all unallocated blocks
 	VoxelEntry* d_hashTable;	//actual hashtable
 	VoxelEntry* d_compactifiedHashTable;
-	int* d_hashTableBucketMutex;	//mutex that'll decide wheter further allocations in bucket can be made or not 
+	int* d_hashTableBucketMutex;	//mutex that'll decide wheter further allocations in bucket can be made or not
 	Voxel* d_SDFBlocks;	//Actual underlying 3D geometry in TSDF form. Very important.
 
 	int* d_heapCounter;	//single int keeping track of numBlocks allocated

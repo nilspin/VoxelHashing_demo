@@ -120,7 +120,7 @@ void updateDevicePointers() {
 //TODO : Confusion here. FInish this later
 //no GL functions should be called after pointers are mapped to cuda
 //__host__
-extern "C" void mapGLobjectsToCUDApointers(cudaGraphicsResource* numBlocks_res, cudaGraphicsResource* compactHashtable_res, 
+extern "C" void mapGLobjectsToCUDApointers(cudaGraphicsResource* numBlocks_res, cudaGraphicsResource* compactHashtable_res,
 	cudaGraphicsResource* sdfVolume_res) {
 
 	size_t returnedBufferSize;
@@ -189,7 +189,7 @@ void deviceAllocate(const HashTableParams &params)	{
 	//TODO : reset compactifiedHashTable after registering GL buffers
 	//resetHashTableKernel<<<blocks, threads >>> (h_ptrHldr.d_compactifiedHashTable);
 	//checkCudaErrors(cudaDeviceSynchronize());
-	
+
 	int heapBlocks = (params.numVoxelBlocks / threads) + 1;
 	resetHeapKernel<<<heapBlocks, threads>>>(h_ptrHldr.d_heap);
 	checkCudaErrors(cudaDeviceSynchronize());
@@ -198,7 +198,7 @@ void deviceAllocate(const HashTableParams &params)	{
 	//checkCudaErrors(cudaMemset(h_ptrHldr.d_heap, 0, sizeof(int)*params.numVoxelBlocks));	//don't need this anymore
 	checkCudaErrors(cudaMemset(h_ptrHldr.d_hashTableBucketMutex, 0, sizeof(int)*params.numBuckets));
 	//TODO : reset SDFBlocks after registering GL buffers
-	//checkCudaErrors(cudaMemset(h_ptrHldr.d_SDFBlocks, 0, sizeof(Voxel) * params.numVoxelBlocks * 
+	//checkCudaErrors(cudaMemset(h_ptrHldr.d_SDFBlocks, 0, sizeof(Voxel) * params.numVoxelBlocks *
 		//params.voxelBlockSize * params.voxelBlockSize * params.voxelBlockSize));
 	checkCudaErrors(cudaMemset(h_ptrHldr.d_heapCounter, 0, sizeof(int)));
 	//checkCudaErrors(cudaMemset(h_ptrHldr.d_compactifiedHashCounter, 0, sizeof(int)));	//TODO : remove this
@@ -328,7 +328,7 @@ int3 delinearizeVoxelPos(const unsigned int index)	{
 __inline__ __device__
 int allocSingleBlockInHeap()	{	//int ptr
 	//decrement total available blocks by 1
-	int addr = atomicSub(&d_ptrHldr.d_heapCounter[0], 1);	//TODO: make this uint 
+	int addr = atomicSub(&d_ptrHldr.d_heapCounter[0], 1);	//TODO: make this uint
 	//if (addr < 0) return -1;	//negative index shouldn't, but still happens :(
 	return d_ptrHldr.d_heap[addr];
 }
@@ -782,7 +782,7 @@ Voxel combineVoxel(const Voxel& oldVox, const Voxel& currVox) {
 	Voxel newVox;
 	newVox.sdf = ((oldVox.sdf * (float)oldVox.weight) + (currVox.sdf * (float)currVox.weight)) / ((float)oldVox.weight + (float)currVox.weight);
 	newVox.weight = min(d_hashtableParams.integrationWeightMax, (unsigned int)oldVox.weight + (unsigned int)currVox.weight);
-	
+
 	return newVox;
 }
 
@@ -791,7 +791,7 @@ __global__
 void integrateDepthMapKernel(const float4* verts) {
 	const VoxelEntry& entry = d_ptrHldr.d_compactifiedHashTable[blockIdx.x];
 	int3 base_voxel = block2Voxel(entry.pos);
-	
+
 	uint i = threadIdx.x;
 	int3 curr_voxel = base_voxel + delinearizeVoxelPos(i);
 	float4 curr_voxel_float = make_float4(curr_voxel.x, curr_voxel.y, curr_voxel.z, 1.0);
@@ -824,7 +824,7 @@ void integrateDepthMapKernel(const float4* verts) {
 
 		//Sets updation weight based on sensor noise. Farther depths have less weight. Copied from prof. Niessner's implementation
 		//float weightUpdate = fmaxf(d_hashtableParams.integrationWeightSample * 1.5 * (1.0 - depthZeroOne), 1.0f);
-		float weightUpdate = 10;	//let's keep this constant for now
+		unsigned int weightUpdate = 10;	//let's keep this constant for now
 
 		Voxel curr;
 		curr.sdf = sdf;
