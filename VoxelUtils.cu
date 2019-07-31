@@ -781,7 +781,7 @@ Voxel combineVoxel(const Voxel& oldVox, const Voxel& currVox) {
 	//TODO: add color later
 	Voxel newVox;
 	newVox.sdf = ((oldVox.sdf * (float)oldVox.weight) + (currVox.sdf * (float)currVox.weight)) / ((float)oldVox.weight + (float)currVox.weight);
-	newVox.weight = min(d_hashtableParams.integrationWeightMax, (unsigned int)oldVox.weight + (unsigned int)currVox.weight);
+	newVox.weight = min(d_hashtableParams.integrationWeightMax, (float)oldVox.weight + (float)currVox.weight);
 
 	return newVox;
 }
@@ -824,7 +824,8 @@ void integrateDepthMapKernel(const float4* verts) {
 
 		//Sets updation weight based on sensor noise. Farther depths have less weight. Copied from prof. Niessner's implementation
 		//float weightUpdate = fmaxf(d_hashtableParams.integrationWeightSample * 1.5 * (1.0 - depthZeroOne), 1.0f);
-		unsigned int weightUpdate = 10;	//let's keep this constant for now
+		//unsigned int weightUpdate = 10;	//let's keep this constant for now
+		float  weightUpdate = 0.1f;
 
 		Voxel curr;
 		curr.sdf = sdf;

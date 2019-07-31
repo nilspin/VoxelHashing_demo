@@ -8,11 +8,12 @@
 #include "cuda_helper/helper_math.h"
 #include "cuda_helper/cuda_SimpleMatrixUtil.h"
 
-//__align__(8)
+__align__(8)
 struct Voxel	{
 	float sdf;
 	//unsigned char weight;
-	unsigned int weight;
+	//unsigned int weight;
+	float weight;
 };
 
 __align__(16)
@@ -46,7 +47,7 @@ struct HashTableParams	{
 	float truncation;	// = 0.02f;
 
 	unsigned int integrationWeightSample;	// = 10;
-	unsigned int integrationWeightMax;	// = 255;
+	float integrationWeightMax;	// = 255;
 
 };
 

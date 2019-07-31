@@ -47,7 +47,7 @@ const float maxIntegrationDistance = 4.0f;
 const float truncScale = 0.01f;
 const float truncation = 1.0f;
 const int integrationWeightSample = 10;
-const int integrationWeightMax = 255;
+const float integrationWeightMax = 255;
 
 
 #endif

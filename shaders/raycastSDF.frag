@@ -26,7 +26,7 @@ out vec4 outColor;
 
 struct Voxel {
 	float SDF;
-	uint WEIGHT;
+	float WEIGHT;
 };
 
 layout(packed, binding=3) readonly buffer SDFVolume	{
@@ -41,7 +41,7 @@ ivec3 voxel2Block(ivec3 voxel) 	{
 }
 
 ivec3 world2Voxel(vec3 point)	{
-	vec3 p = point/voxelSize;
+	vec3 p = point/0.125; //voxelSize;
 	ivec3 centerOffset = ivec3(sign(p.x), sign(p.y), sign(p.z));
 	ivec3 voxelPos =  ivec3(p + vec3(centerOffset.x*0.5, centerOffset.y*0.5, centerOffset.z*0.5));//return center
 	return voxelPos;
@@ -88,18 +88,32 @@ vec3 getWorldSpacePosition(float depth, vec2 uv)	{
 }
 
 vec4 calculateColor(ivec3 temp)	{
-	//ivec3 baseVoxel = block2Voxel(voxCenter_frag);
-	//ivec3 diff = temp - baseVoxel;	//TODO : make sure this lies between 0-7
 
-	//int idx = linearizeVoxelPos(diff);
-	//int baseIdx = SDFVolumeBasePtr_frag;	//TODO: take this as flat vert attrib
+	vec4 color = vec4(0);
 
-	//float sdf = Voxels[baseIdx + idx].SDF;
-	//uint weight = Voxels[baseIdx + idx].WEIGHT;
+	ivec3 baseVoxel = block2Voxel(voxCenter_frag);
+	ivec3 diff = temp - baseVoxel;	//TODO : make sure this lies between 0-7
+	if(any(greaterThan(diff, ivec3(7))))	{ color = vec4(1,0,0,0.1); return color;}
+	if(any(lessThan(diff, ivec3(0))))	{ color = vec4(0,1,0,0.1); return color;}
 
-	//vec4 color = vec4(vec3(sdf)*weight, 1.0);
-	//return color;
-	return vec4(vec3(1), 0.01);
+	int idx = linearizeVoxelPos(diff);
+	int baseIdx = SDFVolumeBasePtr_frag;	//TODO: take this as flat vert attrib
+
+	float sdf = Voxels[baseIdx + idx].SDF;
+	float weight = Voxels[baseIdx + idx].WEIGHT;
+
+	if(sdf == 0.0f)	{
+		//color = vec4(vec3(abs(sdf)), weight);
+		color = vec4(0.1);
+	}
+	else {
+		//color = vec4(1,0,0,0.005);
+		color = vec4(vec3(abs(sdf)), weight);
+		//discard;
+	}
+	//color = vec4(vec3(abs(100*sdf)), weight);
+	return color;
+	//return vec4(vec3(1), 0.01);
 }
 
 vec4 traverse(vec3 start, vec3 stop, ivec3 blockPos)	{
