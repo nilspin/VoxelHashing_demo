@@ -792,8 +792,8 @@ void integrateDepthMapKernel(const float4* verts) {
 	const VoxelEntry& entry = d_ptrHldr.d_compactifiedHashTable[blockIdx.x];
 	int3 base_voxel = block2Voxel(entry.pos);
 
-	uint i = threadIdx.x;
-	int3 curr_voxel = base_voxel + delinearizeVoxelPos(i);
+	int3 i = make_int3(threadIdx.x, threadIdx.y, threadIdx.z);
+	int3 curr_voxel = base_voxel + i;// delinearizeVoxelPos(i);
 	float4 curr_voxel_float = make_float4(curr_voxel.x, curr_voxel.y, curr_voxel.z, 1.0);
 	curr_voxel_float = d_hashtableParams.inv_global_transform * curr_voxel_float;
 	curr_voxel = make_int3(curr_voxel_float.x, curr_voxel_float.y, curr_voxel_float.z);
@@ -832,7 +832,7 @@ void integrateDepthMapKernel(const float4* verts) {
 		curr.weight = weightUpdate;
 		//curr.color = make_uchar3(0, 255, 0);	//TODO : later
 
-		const int oldVoxIdx = entry.ptr + i;
+		const int oldVoxIdx = entry.ptr + linearizeVoxelPos(i);
 
 		Voxel fusedVoxel = combineVoxel(d_ptrHldr.d_SDFBlocks[oldVoxIdx], curr);
 		d_ptrHldr.d_SDFBlocks[oldVoxIdx] = fusedVoxel;	//replace old voxel with new fused one
@@ -840,7 +840,7 @@ void integrateDepthMapKernel(const float4* verts) {
 }
 
 extern "C" void integrateDepthMap(const HashTableParams& params, const float4* verts) {
-	int threads = params.voxelBlockSize * params.voxelBlockSize * params.voxelBlockSize;
+	dim3 threads = dim3(params.voxelBlockSize, params.voxelBlockSize, params.voxelBlockSize);
 	int blocks = params.numOccupiedBlocks;
 
 	if (params.numOccupiedBlocks > 0) {
