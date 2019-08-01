@@ -1,6 +1,6 @@
 #====================
 cmake_minimum_required (VERSION 3.9)
-PROJECT(ICP_Demo LANGUAGES C CXX CUDA)
+PROJECT(VoxelHashing LANGUAGES C CXX CUDA)
 
 # Useful CMake options
 #set(CMAKE_CUDA_COMPILER "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v9.2/bin/nvcc")
