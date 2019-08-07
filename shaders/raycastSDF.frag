@@ -1,10 +1,11 @@
 #version 430
 
 flat in ivec3 voxCenter_frag;
-flat in int SDFVolumeBasePtr_frag;
+//flat in int SDFVolumeBasePtr_frag;	//get this from texture instead
 
 uniform sampler2D startDepthTex;
 uniform sampler2D endDepthTex;
+uniform usampler2D SDFVolumeBasePtr_texture;
 uniform float windowWidth;
 uniform float windowHeight;
 uniform mat4 invVP;
@@ -87,28 +88,29 @@ vec3 getWorldSpacePosition(float depth, vec2 uv)	{
 	return worldSpacePos.xyz;
 }
 
-vec4 calculateColor(ivec3 temp)	{
+vec4 calculateColor(ivec3 temp, vec2 uv)	{
 
 	vec4 color = vec4(0);
 
 	ivec3 baseVoxel = block2Voxel(voxCenter_frag);
 	ivec3 diff = temp - baseVoxel;	//TODO : make sure this lies between 0-7
+	//Red and Green - debug colors for out of range voxel samples
 	if(any(greaterThan(diff, ivec3(7))))	{ color = vec4(1,0,0,0.1); return color;}
 	if(any(lessThan(diff, ivec3(0))))	{ color = vec4(0,1,0,0.1); return color;}
 
 	int idx = linearizeVoxelPos(diff);
-	int baseIdx = SDFVolumeBasePtr_frag;	//TODO: take this as flat vert attrib
+	uint basePtr = texture(SDFVolumeBasePtr_texture, uv).x;	//TODO: take this as flat vert attrib
 
-	float sdf = Voxels[baseIdx + idx].SDF;
-	float weight = Voxels[baseIdx + idx].WEIGHT;
+	float sdf = Voxels[basePtr + idx].SDF;
+	float weight = Voxels[basePtr + idx].WEIGHT;
 
 	if(sdf == 0.0f)	{
 		//color = vec4(vec3(abs(sdf)), weight);
-		color = vec4(0.1);
+		color = vec4(0);
 	}
 	else {
-		//color = vec4(1,0,0,0.005);
-		color = vec4(vec3(abs(sdf)), weight);
+		color = vec4(0,0,1,1);
+		//color = vec4(vec3(abs(sdf)), weight);
 		//discard;
 	}
 	//color = vec4(vec3(abs(100*sdf)), weight);
@@ -116,7 +118,7 @@ vec4 calculateColor(ivec3 temp)	{
 	//return vec4(vec3(1), 0.01);
 }
 
-vec4 traverse(vec3 start, vec3 stop, ivec3 blockPos)	{
+vec4 traverse(vec3 start, vec3 stop, ivec3 blockPos, vec2 uv)	{
 	vec4 col = vec4(0);
 	ivec3 idStart = world2Voxel(start);
 	ivec3 idStop = world2Voxel(stop);
@@ -145,7 +147,7 @@ vec4 traverse(vec3 start, vec3 stop, ivec3 blockPos)	{
 	if (rayDir.z == 0.0f) { tMax.z = INFINITY; tDelta.z = INFINITY; }
 	if (next_boundary.z - start.z == 0.0f) { tMax.z = INFINITY; tDelta.z = INFINITY; }
 
-	col += calculateColor(temp);
+	col += calculateColor(temp, uv);
 
 	int iter = 0, maxIter = 20;
 	while(temp != idStop)	{
@@ -167,7 +169,7 @@ vec4 traverse(vec3 start, vec3 stop, ivec3 blockPos)	{
 			tMax.y += tDelta.y;
 		}
 
-		col += calculateColor(temp);
+		col += calculateColor(temp, uv);
 		iter++;
 	}
 	//int idx = blockPos.ptr;
@@ -217,7 +219,7 @@ void main()	{
 	//IMP DEBUG below
 	//outColor = vec4(vec3(0.016*length(vec3(voxCenter_frag) - vec3(world2Block(temp)))), 1);
 	//outColor = vec4(vec3(length(temp - voxCenter_frag)), 1);
-	outColor = traverse(wrldPos_start, wrldPos_stop, voxCenter_frag);
+	outColor = traverse(wrldPos_start, wrldPos_stop, voxCenter_frag, uv);
 
 	//------------------Display linear depth---------------
 	//float depth = texture(depthTexture, uv).x;

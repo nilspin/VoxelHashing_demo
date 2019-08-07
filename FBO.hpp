@@ -6,7 +6,7 @@
 class FBO {
 	int width, height;
 	GLuint fbo;
-	GLuint depthTex;
+	GLuint depthTex, integerTex;
 
 	void init() {
 		initDepthTexture();
@@ -16,6 +16,8 @@ class FBO {
 	void initDepthTexture() {
 		glGenTextures(1, &depthTex);
 		glBindTexture(GL_TEXTURE_2D, depthTex);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, width, height, 0,
 			GL_DEPTH_COMPONENT, GL_FLOAT, 0);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -40,8 +42,8 @@ class FBO {
 		//Does the GPU support current FBO configuration?
 		//Before checking the configuration, you should call these 2 according to the spec.
 		//At the very least, you need to call glDrawBuffer(GL_NONE)
-		glDrawBuffer(GL_NONE);
-		glReadBuffer(GL_NONE);
+		//glDrawBuffer(GL_NONE);
+		//glReadBuffer(GL_NONE);
 
 		checkFBO();
 
@@ -97,6 +99,7 @@ public:
 	}
 
 	GLuint getDepthTexID() { return depthTex; }
+	GLuint getSDFVolPtrTexID() { return integerTex; }
 
 	void renderToFBO() {
 		//std::cout << "Render to FBO: " << fbo << "\n";
@@ -105,11 +108,11 @@ public:
 		//-------------------------
 		//----and to render to it, don't forget to call
 		//At the very least, you need to call glDrawBuffer(GL_NONE)
-		glDrawBuffer(GL_NONE);
-		glReadBuffer(GL_NONE);
+		//glDrawBuffer(GL_NONE);
+		//glReadBuffer(GL_NONE);
 	}
 
-	void FBO::renderToScreen() {
+	void renderToScreen() {
 		//std::cout << "Render to screen \n";
 		// Finish all operations
 		//glFlush();
@@ -120,5 +123,29 @@ public:
 		glDrawBuffer(GL_BACK);
 		glReadBuffer(GL_BACK);
 	}
+
+	void initIntegerTexture()	{
+		renderToFBO();
+
+		glGenTextures(1, &integerTex);
+		glBindTexture(GL_TEXTURE_2D, integerTex);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_R32UI, width, height, 0,
+				GL_RED_INTEGER, GL_UNSIGNED_INT, 0);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, integerTex, 0);
+
+		GLenum drawBuffers[1] = {GL_COLOR_ATTACHMENT0};
+		glDrawBuffers(1, drawBuffers);
+
+		checkFBO();
+
+		renderToScreen();
+	}
+
 };
 #endif	//FBO_HPP

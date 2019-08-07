@@ -8,15 +8,18 @@
 SDFRenderer::SDFRenderer() {
 
 	fbo_front = std::unique_ptr<FBO>(new FBO(windowWidth, windowHeight));
+
 	fbo_back = std::unique_ptr<FBO>(new FBO(windowWidth, windowHeight));
+	fbo_back->initIntegerTexture();
 	raycast_shader = std::unique_ptr<ShaderProgram>(new ShaderProgram());
 	raycast_shader->initFromFiles("shaders/drawBox.vert", "shaders/drawBox.geom", "shaders/drawBox.frag");
 	raycast_shader->addAttribute("voxentry");
 	raycast_shader->addUniform("VP");
 
 	depthWriteShader = std::unique_ptr<ShaderProgram>(new ShaderProgram());
-	depthWriteShader->initFromFiles("shaders/drawBox.vert", "shaders/drawBox.geom", "shaders/depthWrite.frag");
+	depthWriteShader->initFromFiles("shaders/depthWrite.vert", "shaders/depthWrite.geom", "shaders/depthWrite.frag");
 	depthWriteShader->addAttribute("voxentry");
+	depthWriteShader->addAttribute("SDFVolumeBasePtr_vert");
 	depthWriteShader->addUniform("VP");
 	depthWriteShader->addUniform("prevDepthTexture");
 	depthWriteShader->addUniform("windowWidth");
@@ -26,7 +29,7 @@ SDFRenderer::SDFRenderer() {
 	//drawLinearDepth->initFromFiles("shaders/passthrough.vert", "shaders/linearDepth.frag");
 	drawLinearDepth->initFromFiles("shaders/raycastSDF.vert", "shaders/raycastSDF.geom", "shaders/raycastSDF.frag");
 	drawLinearDepth->addAttribute("voxentry");
-	drawLinearDepth->addAttribute("SDFVolumeBasePtr_vert");
+	//drawLinearDepth->addAttribute("SDFVolumeBasePtr_vert");
 	drawLinearDepth->addUniform("startDepthTex");
 	drawLinearDepth->addUniform("endDepthTex");
 	drawLinearDepth->addUniform("windowWidth");
@@ -51,8 +54,14 @@ SDFRenderer::SDFRenderer() {
 
 	glEnableVertexAttribArray(drawLinearDepth->attribute("voxentry"));
 	glVertexAttribPointer(drawLinearDepth->attribute("voxentry"), 3, GL_INT, GL_FALSE, sizeof(VoxelEntry), 0);
-	glEnableVertexAttribArray(drawLinearDepth->attribute("SDFVolumeBasePtr_vert"));
-	glVertexAttribPointer(drawLinearDepth->attribute("SDFVolumeBasePtr_vert"), 1, GL_INT, GL_FALSE, sizeof(VoxelEntry), BUFFER_OFFSET(sizeof(glm::ivec3)));
+	//glEnableVertexAttribArray(drawLinearDepth->attribute("SDFVolumeBasePtr_vert"));
+	//glVertexAttribPointer(drawLinearDepth->attribute("SDFVolumeBasePtr_vert"), 1, GL_INT, GL_FALSE, sizeof(VoxelEntry), BUFFER_OFFSET(sizeof(glm::ivec3)));
+
+
+	glEnableVertexAttribArray(depthWriteShader->attribute("voxentry"));
+	glVertexAttribPointer(depthWriteShader->attribute("voxentry"), 3, GL_INT, GL_FALSE, sizeof(VoxelEntry), 0);
+	glEnableVertexAttribArray(depthWriteShader->attribute("SDFVolumeBasePtr_vert"));
+	glVertexAttribPointer(depthWriteShader->attribute("SDFVolumeBasePtr_vert"), 1, GL_INT, GL_FALSE, sizeof(VoxelEntry), BUFFER_OFFSET(sizeof(glm::ivec3)));
 
 	//unbind
 	glBindVertexArray(0);
@@ -190,6 +199,8 @@ void SDFRenderer::render(const glm::mat4& viewMat) {
 	glBindTexture(GL_TEXTURE_2D, fbo_front->getDepthTexID());
 	glActiveTexture(GL_TEXTURE2);
 	glBindTexture(GL_TEXTURE_2D, fbo_back->getDepthTexID());
+	glActiveTexture(GL_TEXTURE3);
+	glBindTexture(GL_TEXTURE_2D, fbo_back->getSDFVolPtrTexID());
 	glUniform1i(drawLinearDepth->uniform("startDepthTex"), 1);
 	glUniform1i(drawLinearDepth->uniform("endDepthTex"), 2);
 	glUniform1f(drawLinearDepth->uniform("windowWidth"), windowWidth);

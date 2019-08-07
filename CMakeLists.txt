@@ -4,6 +4,10 @@ PROJECT(VoxelHashing LANGUAGES C CXX CUDA)
 
 # Useful CMake options
 #set(CMAKE_CUDA_COMPILER "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v9.2/bin/nvcc")
+
+#static analysis opens big can of worms. keep it closed for now.
+#set(CMAKE_CXX_CLANG_TIDY "clang-tidy;-checks=*;-header-filter=.;")
+
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_CXX_FLAGS "-std=c++11 -fpermissive -w")
