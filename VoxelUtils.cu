@@ -811,6 +811,7 @@ void integrateDepthMapKernel(const float4* verts) {
 	float depthZeroOne = (depth - depthRangeMin) / (depthRangeMax - depthRangeMin);	//normalize current depth
 
 	float sdf = depth - voxel_worldPos.z;
+	//printf("%f", sdf);	//Working fine till here
 	float truncation = d_hashtableParams.truncation;	// +(d_hashtableParams.truncScale*depth);
 	//i.e calculate truncation of the SDF for given depth value
 
@@ -835,6 +836,7 @@ void integrateDepthMapKernel(const float4* verts) {
 		const int oldVoxIdx = entry.ptr + linearizeVoxelPos(i);
 
 		Voxel fusedVoxel = combineVoxel(d_ptrHldr.d_SDFBlocks[oldVoxIdx], curr);
+		printf("(%f, %f)", fusedVoxel.sdf, fusedVoxel.weight);	//Working fine till here
 		d_ptrHldr.d_SDFBlocks[oldVoxIdx] = fusedVoxel;	//replace old voxel with new fused one
 	}
 }

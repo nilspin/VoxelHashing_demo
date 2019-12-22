@@ -12,8 +12,8 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_CXX_FLAGS "-std=c++11 -fpermissive -w")
 set(OpenGL_GL_PREFERENCE "GLVND")
-string(APPEND CMAKE_CUDA_FLAGS " -gencode arch=compute_61,code=sm_61 -w") #new laptop
-#string(APPEND CMAKE_CUDA_FLAGS " -gencode arch=compute_30,code=sm_30 -w")  #old, main laptop
+#string(APPEND CMAKE_CUDA_FLAGS " -gencode arch=compute_61,code=sm_61 -w") #new laptop
+string(APPEND CMAKE_CUDA_FLAGS " -gencode arch=compute_30,code=sm_30 -w")  #old, main laptop
 #if( CMAKE_BUILD_TYPE MATCHES "Debug" )
 string( APPEND CMAKE_CUDA_FLAGS " -g -G" )  #TODO : Remove these 3 lines later
 string( APPEND CMAKE_CUDA_FLAGS " -lineinfo" )
@@ -60,10 +60,10 @@ target_link_libraries(ShaderProgram GladLib)
 
 
 add_library(Window STATIC Window.cpp)
-target_link_libraries(Window ${SDL2_LIBRARIES})
+target_link_libraries(Window SDL2)
 
 add_library(Camera STATIC camera.cpp)
-target_link_libraries(Camera ${SDL2_LIBRARIES})
+target_link_libraries(Camera SDL2)
 
 add_library(Frustum STATIC Frustum.cpp)
 #target_link_libraries(Frustum ShaderProgram)
@@ -81,7 +81,7 @@ target_link_libraries(CameraTrackingUtils Solver)
 #set_target_properties(CameraTrackingUtils PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 
 #Compile IntegrationUtils
-add_library(IntegrationUtils STATIC VoxelDataStructures.h VoxelUtils.h VoxelUtils.cu)	#VoxelDataStructures.h VoxelUtils.h 
+add_library(IntegrationUtils STATIC VoxelDataStructures.h VoxelUtils.h VoxelUtils.cu)	#VoxelDataStructures.h VoxelUtils.h
 set_target_properties(IntegrationUtils PROPERTIES LINKER_LANGUAGE CUDA)
 set_target_properties(IntegrationUtils PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
@@ -100,8 +100,8 @@ target_link_libraries(Application CameraTrackingUtils)
 #target_link_libraries(Application IntegrationUtils)
 
 set(INCLUDE_DIRS  ${INCLUDE_DIRS} ${CUDA_INCLUDE_DIRS} ${CUHELPER_INCLUDE_DIR} ${EIGEN3_INCLUDE_DIR} ${GLM_INCLUDE_DIR}
-                ${OPENGL_INCLUDE_DIRS} ${SDL2_INCLUDE_DIRS} ${GLAD_INCLUDE_DIR} ${Boost_INCLUDE_DIRS})  
-set(LIBS ${LIBS} ${OPENGL_LIBRARY} ${CUDA_LIBRARIES}  ${SDL2_LIBRARIES} ${Boost_LIBRARIES} )  # ${GladLib} ${ShaderProgram} ${Window} ${Camera}
+                ${OPENGL_INCLUDE_DIRS} ${SDL2_INCLUDE_DIRS} ${GLAD_INCLUDE_DIR} ${Boost_INCLUDE_DIRS})
+			set(LIBS ${LIBS} ${OPENGL_LIBRARY} ${CUDA_LIBRARIES}  SDL2 ${Boost_LIBRARIES} )  # ${GladLib} ${ShaderProgram} ${Window} ${Camera}
 
 #specify include directory
 #include_directories(${CMAKE_SOURCE_DIR} )

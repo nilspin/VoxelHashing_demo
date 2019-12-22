@@ -195,7 +195,7 @@ void main()	{
 	vec3 wrldPos_stop = getWorldSpacePosition(farDepth, uv);
 	//float dist = length(wrldPos_stop - wrldPos_start);
 	//float d = worldSpacePos.z;
-	vec3 temp = getWorldSpacePosition(gl_FragCoord.z, uv);
+	//vec3 temp = getWorldSpacePosition(gl_FragCoord.z, uv);
 	//temp /= 0.16;
 	//ivec3 voxel_start = world2Voxel(wrldPos_start);
 	//ivec3 voxel_stop = world2Voxel(wrldPos_stop);

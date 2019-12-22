@@ -271,6 +271,10 @@ void Application::processEvents() {
 
           switch (event.key.keysym.sym)
           {
+			case SDLK_p:
+			  //sdfRenderer.printDebugImage();
+			  break;
+
             case SDLK_q:
               quit = true;
               break;

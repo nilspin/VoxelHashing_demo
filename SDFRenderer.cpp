@@ -1,7 +1,12 @@
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+
 #include "common.h"
 #include "SDFRenderer.h"
 #include "VoxelDataStructures.h"
+#include "stb_image_write.h"
 #include <vector>
+#include <fstream>
+#include <iomanip>
 
 #define BUFFER_OFFSET(i) ((char*)NULL + (i))
 
@@ -95,24 +100,32 @@ void SDFRenderer::printSDFdata() {
 	glGetBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(VoxelEntry) * numOccupiedBlocks, vox_entries.data());
 
 	std::vector<Voxel> sdf_chunks;
+	//std::array<Voxel, numOccupiedBlocks*512> sdf_chunks;
+	glBindBuffer(GL_ARRAY_BUFFER, SDF_VolumeBuffer_handle);
 	sdf_chunks.resize(numOccupiedBlocks * 512);
 	glGetBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(Voxel) * 512 * numOccupiedBlocks, sdf_chunks.data());
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-	std::cout << "numOccupiedBlocks from GL :" << numOccupiedBlocks << "\n";
-	for (auto &i : vox_entries) {
-		std::cout << "pos : (" << i.pos.x << ", " << i.pos.y << ", " << i.pos.z << ") ptr = " << i.ptr << " offset = " << i.offset << "\n";
-	}
-	/*
-	std::cout <<"\n\n\n SDFs \n";
+
+	std::ofstream fout("SDF_dump.txt");
+	fout << std::fixed << std::showpoint;
+	fout << std::setprecision(4);
+	fout << std::setw(7);
+	fout << "numOccupiedBlocks from GL :" << numOccupiedBlocks << "\n";
+	//for (auto &i : vox_entries) {
+	//	fout << "pos : (" << i.pos.x << ", " << i.pos.y << ", " << i.pos.z << ") ptr = " << i.ptr << " offset = " << i.offset << "\n";
+	//}
+
+	fout <<"\nSDFs \n\n";
 	for(int i = 0; i < numOccupiedBlocks; ++i) {
-		std::cout << i << ") : ";
+		fout << i << ") : ";
+		fout << "pos : (" << vox_entries[i].pos.x << ", " << vox_entries[i].pos.y << ", " << vox_entries[i].pos.z << ") ptr = " << vox_entries[i].ptr << " offset = " << vox_entries[i].offset << "\n";
 		for (int j = 0; j < 512; ++j) {
-			std::cout << sdf_chunks[i * 512 + j].sdf << "\t";
+			fout << sdf_chunks[i * 512 + j].sdf << "\t";
 		}
-		std::cout << "\n\n\n";
+		fout << "\n\n\n";
 	}
-	*/
+	fout.close();
 
 }
 
@@ -131,6 +144,28 @@ void SDFRenderer::drawSDF(ShaderProgram &shader, const glm::mat4& viewMat) {
 }
 */
 
+void SDFRenderer::CreateImageBuffer()	{
+	std::vector<uint8_t> emptyImage(windowWidth * windowHeight * 4);
+	std::fill(emptyImage.begin(), emptyImage.end(), 0);
+	glGenTextures(GL_TEXTURE_2D, dbg_R16I_imgTex);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+	glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA8UI, windowWidth, windowHeight);
+	glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+void SDFRenderer::printDebugImage()	{
+	std::vector<uint8_t> imageVector(windowWidth * windowHeight * 4);
+	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+	glBindTexture(GL_TEXTURE_2D, dbg_R16I_imgTex);
+	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA_INTEGER, GL_UNSIGNED_BYTE, &imageVector[0]);
+	glBindTexture(GL_TEXTURE_2D, 0);
+	stbi_flip_vertically_on_write(1);
+	stbi_write_png("textureDump.png", windowWidth, windowHeight, 4, imageVector.data(), windowWidth * 4/*stride*/);
+	cout<<"Screenshot dumped to file. \n";
+}
 void SDFRenderer::drawSDF(ShaderProgram &shader, const glm::mat4& viewMat) {
 	glBindVertexArray(SDF_VAO);
 	//glBindBuffer(GL_ARRAY_BUFFER, compactHashTable_handle);
@@ -244,6 +279,7 @@ void SDFRenderer::generateCanvas() {
 	glEnableVertexAttribArray(drawLinearDepth->attribute("position"));
 	glBindVertexArray(0);	//unbind VAO
 }
+
 SDFRenderer::~SDFRenderer() {
 
 }
