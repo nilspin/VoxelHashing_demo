@@ -47,7 +47,7 @@ class FBO {
 
 		checkFBO();
 
-		renderToScreen();
+		disable();
 	}
 
 	void checkFBO() throw() {
@@ -101,7 +101,7 @@ public:
 	GLuint getDepthTexID() { return depthTex; }
 	GLuint getSDFVolPtrTexID() { return integerTex; }
 
-	void renderToFBO() {
+	void enable() {
 		//std::cout << "Render to FBO: " << fbo << "\n";
 		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 		// Bind our frame buffer for rendering
@@ -112,7 +112,7 @@ public:
 		//glReadBuffer(GL_NONE);
 	}
 
-	void renderToScreen() {
+	void disable() {
 		//std::cout << "Render to screen \n";
 		// Finish all operations
 		//glFlush();
@@ -125,26 +125,30 @@ public:
 	}
 
 	void initIntegerTexture()	{
-		renderToFBO();
+		//renderToFBO();	We don't need to use regular textures anymore!
+		//use image instead
 
 		glGenTextures(1, &integerTex);
 		glBindTexture(GL_TEXTURE_2D, integerTex);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_R32UI, width, height, 0,
-				GL_RED_INTEGER, GL_UNSIGNED_INT, 0);
+		//TODO - verify and clean this
+		//glTexImage2D(GL_TEXTURE_2D, 0, GL_R32UI, width, height, 0,
+		//		GL_RED_INTEGER, GL_UNSIGNED_INT, 0);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, integerTex, 0);
+		glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA8UI, width, height);
+		glBindTexture(GL_TEXTURE_2D, 0);
 
-		GLenum drawBuffers[1] = {GL_COLOR_ATTACHMENT0};
-		glDrawBuffers(1, drawBuffers);
+		//glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, integerTex, 0);
+		//GLenum drawBuffers[1] = {GL_COLOR_ATTACHMENT0};
+		//glDrawBuffers(1, drawBuffers);
 
-		checkFBO();
+		//checkFBO();
 
-		renderToScreen();
+		//renderToScreen();
 	}
 
 };

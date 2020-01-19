@@ -32,7 +32,7 @@ public:
 	friend class SDF_Hashtable;
 	SDFRenderer();
 	~SDFRenderer();
-	void CreateImageBuffer()	{
+	void CreateImageBuffer();
 	void printSDFdata();
 	void generateCanvas();
 	void render(const glm::mat4&);

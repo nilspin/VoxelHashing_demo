@@ -10,6 +10,9 @@ PROJECT(VoxelHashing LANGUAGES C CXX CUDA)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
+#set(CMAKE_CXX_STANDARD 11)
+#set(CMAKE_CXX_STANDARD_REQUIRED ON)
+#set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_FLAGS "-std=c++11 -fpermissive -w")
 set(OpenGL_GL_PREFERENCE "GLVND")
 #string(APPEND CMAKE_CUDA_FLAGS " -gencode arch=compute_61,code=sm_61 -w") #new laptop
@@ -30,6 +33,7 @@ IF( EXISTS "${CMAKE_CURRENT_BINARY_DIR}/compile_commands.json" )
 ENDIF()
 
 find_package(CUDA REQUIRED)
+#set_property(TARGET tgt PROPERTY CUDA_STANDARD 14)
 find_package(Eigen3 REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(SDL2 REQUIRED)
@@ -50,7 +54,7 @@ add_library(FBO STATIC FBO.hpp)
 set_target_properties(FBO PROPERTIES LINKER_LANGUAGE CXX)
 target_link_libraries(FBO GladLib)
 
-add_library(SDFRenderer STATIC SDFRenderer.h SDFRenderer.cpp)
+add_library(SDFRenderer STATIC SDFRenderer.h SDFRendererUtils.h SDFRenderer.cpp SDFRendererUtils.cpp)
 set_target_properties(SDFRenderer PROPERTIES LINKER_LANGUAGE CXX)
 target_link_libraries(SDFRenderer GladLib)
 
