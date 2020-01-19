@@ -40,7 +40,7 @@ bool Window::Initialize()
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-#ifdef NDEBUG
+#ifdef GLDBG
 	//Enable Debug output
 	glEnable(GL_DEBUG_OUTPUT);
 	glDebugMessageCallback(MessageCallback, nullptr);
@@ -48,5 +48,5 @@ bool Window::Initialize()
 	glDebugMessageInsert(GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_MARKER, 0,
 		GL_DEBUG_SEVERITY_NOTIFICATION, -1, "Start debugging");
 	return true;
-#endif // DEBUG
+#endif // GLDBG
 }

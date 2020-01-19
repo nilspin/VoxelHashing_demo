@@ -23,10 +23,10 @@
   #include <SDL2/SDL_opengl.h>
 #endif
 
-//#define NDEBUG
-#ifdef NDEBUG
+#define GLDBG
+#ifdef GLDBG
 	#include "oglDebug.hpp"
-#endif // DEBUG
+#endif // GLDBG
 
 //Make Eigen use Intel's MKL
 //#define EIGEN_USE_MKL_ALL

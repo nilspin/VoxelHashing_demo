@@ -2,6 +2,8 @@
 #define FBO_HPP
 
 #include"prereq.h"
+#include <vector>
+#include <algorithm>
 
 class FBO {
 	int width, height;
@@ -128,6 +130,8 @@ public:
 		//renderToFBO();	We don't need to use regular textures anymore!
 		//use image instead
 
+		std::vector<unsigned char> emptyBuffer(width * height * 4);
+		std::fill(emptyBuffer.begin(), emptyBuffer.end(), 0);
 		glGenTextures(1, &integerTex);
 		glBindTexture(GL_TEXTURE_2D, integerTex);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
@@ -140,6 +144,7 @@ public:
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA8UI, width, height);
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, &emptyBuffer[0]);
 		glBindTexture(GL_TEXTURE_2D, 0);
 
 		//glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, integerTex, 0);

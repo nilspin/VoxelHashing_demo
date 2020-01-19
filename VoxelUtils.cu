@@ -836,7 +836,7 @@ void integrateDepthMapKernel(const float4* verts) {
 		const int oldVoxIdx = entry.ptr + linearizeVoxelPos(i);
 
 		Voxel fusedVoxel = combineVoxel(d_ptrHldr.d_SDFBlocks[oldVoxIdx], curr);
-		printf("(%f, %f)", fusedVoxel.sdf, fusedVoxel.weight);	//Working fine till here
+		//printf("(%f, %f)", fusedVoxel.sdf, fusedVoxel.weight);	//Working fine till here
 		d_ptrHldr.d_SDFBlocks[oldVoxIdx] = fusedVoxel;	//replace old voxel with new fused one
 	}
 }

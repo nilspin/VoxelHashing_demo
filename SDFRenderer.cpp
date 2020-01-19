@@ -142,7 +142,8 @@ void SDFRenderer::printDebugImage()	{
 	glBindTexture(GL_TEXTURE_2D, fbo_front->getSDFVolPtrTexID());
 	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA_INTEGER, GL_UNSIGNED_BYTE, &imageVector[0]);
 	glBindTexture(GL_TEXTURE_2D, 0);
-	//stbi_flip_vertically_on_write(1);
+	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+	stbi_flip_vertically_on_write(1);
 	stbi_write_png("textureDump.png", windowWidth, windowHeight, 4, imageVector.data(), windowWidth * 4/*stride*/);
 	std::cout<<"Screenshot dumped to file. \n";
 }
@@ -165,9 +166,9 @@ void SDFRenderer::drawToFrontAndBack(const glm::mat4& viewMat) {
 	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 	//glMemoryBarrier(GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
 	//First pass - render depth for front face
-	glEnable(GL_CULL_FACE);
-	glEnable(GL_DEPTH_TEST);
-	glFrontFace(GL_CW);	//IMPORTANT - Need to do this because we're looking along +Z axis
+	//glEnable(GL_CULL_FACE);
+	//glEnable(GL_DEPTH_TEST);
+	//glFrontFace(GL_CW);	//IMPORTANT - Need to do this because we're looking along +Z axis
 	fbo_front->enable();
 	glClear(GL_DEPTH_BUFFER_BIT);
 	glCullFace(GL_BACK);
@@ -176,28 +177,28 @@ void SDFRenderer::drawToFrontAndBack(const glm::mat4& viewMat) {
 	glUniform1f(depthWriteShader->uniform("windowWidth"), windowWidth);
 	glUniform1f(depthWriteShader->uniform("windowHeight"), windowHeight);
 	glBindImageTexture(1, fbo_front->getSDFVolPtrTexID(), 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA8UI);
-	drawSDF(*raycast_shader, viewMat);
+	drawSDF(*depthWriteShader, viewMat);
 	fbo_front->disable();
 	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
 	//Second pass - render depth for front face
 
-	fbo_back->enable();
-	glClear(GL_DEPTH_BUFFER_BIT);
-	glCullFace(GL_FRONT);
-	glDepthFunc(GL_LESS);	//ideally should be GL_GREATER as per groundai article, but GL_LESS with custom depth-compare-shader works
-	//raycast_shader->use();
-	//drawSDF(*raycast_shader, viewMat);
-	depthWriteShader->use();
-	glUniform1f(depthWriteShader->uniform("windowWidth"), windowWidth);
-	glUniform1f(depthWriteShader->uniform("windowHeight"), windowHeight);
-	glBindImageTexture(1, fbo_back->getSDFVolPtrTexID(), 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA8UI);
-	//glActiveTexture(GL_TEXTURE0);
-	//glBindTexture(GL_TEXTURE_2D, fbo_front->getDepthTexID());
-	//glUniform1i(depthWriteShader->uniform("prevDepthTexture"), 0);
-	drawSDF(*depthWriteShader, viewMat);
-	fbo_back->disable();
-	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+	//fbo_back->enable();
+	//glClear(GL_DEPTH_BUFFER_BIT);
+	//glCullFace(GL_FRONT);
+	//glDepthFunc(GL_LESS);	//ideally should be GL_GREATER as per groundai article, but GL_LESS with custom depth-compare-shader works
+	////raycast_shader->use();
+	////drawSDF(*raycast_shader, viewMat);
+	//depthWriteShader->use();
+	//glUniform1f(depthWriteShader->uniform("windowWidth"), windowWidth);
+	//glUniform1f(depthWriteShader->uniform("windowHeight"), windowHeight);
+	//glBindImageTexture(1, fbo_back->getSDFVolPtrTexID(), 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA8UI);
+	////glActiveTexture(GL_TEXTURE0);
+	////glBindTexture(GL_TEXTURE_2D, fbo_front->getDepthTexID());
+	////glUniform1i(depthWriteShader->uniform("prevDepthTexture"), 0);
+	//drawSDF(*depthWriteShader, viewMat);
+	//fbo_back->disable();
+	//glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
 	//raycast_shader->uniform("viewMat")
 
@@ -208,6 +209,7 @@ void SDFRenderer::drawToFrontAndBack(const glm::mat4& viewMat) {
 
 void SDFRenderer::render(const glm::mat4& viewMat) {
 	drawToFrontAndBack(viewMat);
+
 	//draw to screen
 
 	/*
