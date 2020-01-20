@@ -18,13 +18,13 @@ It ~~has~~ will have 3 components :
 To build, you'll need the following (version in brackets are versions used during development)  :
 
 * CMake (>3.9)
-* gcc (7.4) - because anything newer doesn't play well with CUDA
+* gcc (8.3) - because anything newer doesn't play well with CUDA
 * (Windows) Visual Studio Community 2015 (v14.0)
-* CUDA (10.1)
-* GLM (0.9.9.2)
-* SDL2 (2.0.8)
-* Eigen3 with default OpenBLAS (3.3.5)
-* Boost-filesystem (1.68.0)
+* CUDA (10.2)
+* GLM (0.9.9.7)
+* SDL2 (2.0.10)
+* Eigen3 with default OpenBLAS (3.3.7)
+* Boost-filesystem (1.71.0)
 
 Also, change the SM version in CMakeLists according to your GPU.
 
@@ -36,13 +36,13 @@ Also, change the SM version in CMakeLists according to your GPU.
 ## To build on Linux:
 Change "`${SDL2_LIBRARIES}`" to "`SDL2`" inside CMakeLists.txt. SDL2 doesn't link otherwise.
 
-    export CC=gcc-7
-    export CXX=g++-7
+    export CC=gcc-8
+    export CXX=g++-8
     mkdir build
     cd build
     cmake ..
     make -j
-    optirun ./ICP_Demo
+    optirun ./VoxelHashing
 
 
 
