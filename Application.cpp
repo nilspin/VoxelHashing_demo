@@ -23,14 +23,18 @@ extern "C" void preProcess(float4 *positions, float4* normals, const std::uint16
 
 Application::Application() {
 	glPixelStorei(GL_PACK_ALIGNMENT, 1);
+	//Set up frustum
   frustum.setFromVectors(vec3(0,0,1), vec3(0,0,0), vec3(1,0,0), vec3(0,1,0), 0.1, 500.0, 45, 1.3333);
   //stbi_set_flip_vertically_on_load(true); //Keep commented for now
   image1 = stbi_load_16("assets/T0.png", &DepthWidth, &DepthHeight, &channels, 0);
   image2 = stbi_load_16("assets/T1.png", &DepthWidth, &DepthHeight, &channels, 0);
   if(image1 == nullptr) {cout<<"could not read first image file!"<<endl; exit(0);}
   if(image2 == nullptr) {cout<<"could not read second image file!"<<endl; exit(0);}
+  //Start tracker
   tracker = unique_ptr<CameraTracking>(new CameraTracking(DepthWidth, DepthHeight));
+  //Depth Fusion
   fusionModule = unique_ptr<SDF_Hashtable>(new SDF_Hashtable());
+  //Render to screen
   sdfRenderer = unique_ptr<SDFRenderer>(new SDFRenderer());
   fusionModule->registerGLtoCUDA(*sdfRenderer);
 

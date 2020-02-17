@@ -84,7 +84,7 @@ vec3 getWorldSpacePosition(float depth, vec2 uv)	{
 	float NDCdepth = depth*2 - 1.0;
 	vec4 pos = vec4(NDCcoord.x, NDCcoord.y, NDCdepth, 1.0);
 	vec4 worldSpacePos = invVP*pos;
-	worldSpacePos /= worldSpacePos.w;
+	worldSpacePos /= worldSpacePos.w;	//TODO : shouldn't this be *= worldSpacePos.w ?
 	return worldSpacePos.xyz;
 }
 

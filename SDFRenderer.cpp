@@ -210,8 +210,8 @@ void SDFRenderer::render(const glm::mat4& viewMat) {
 	drawToFrontAndBack(viewMat);
 	//draw to screen
 
-	/*
-TODO : THIS HAS GOTTEN TOO MESSY!!! CLEAN THIS UP SOON
+	///*
+//TODO : THIS HAS GOTTEN TOO MESSY!!! CLEAN THIS UP SOON
 
 	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glDisable(GL_CULL_FACE);
@@ -249,7 +249,7 @@ TODO : THIS HAS GOTTEN TOO MESSY!!! CLEAN THIS UP SOON
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glBindVertexArray(0);
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-*/
+//*/
 }
 
 void SDFRenderer::generateCanvas() {
