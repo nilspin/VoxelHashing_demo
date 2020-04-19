@@ -21,13 +21,14 @@ using glm::mat4;
 //Takes device pointers, calculates correct position and normals
 extern "C" void preProcess(float4 *positions, float4* normals, const std::uint16_t *depth);
 
+//void SetupInputData(
 Application::Application() {
 	glPixelStorei(GL_PACK_ALIGNMENT, 1);
 	//Set up frustum
   frustum.setFromVectors(vec3(0,0,1), vec3(0,0,0), vec3(1,0,0), vec3(0,1,0), 0.1, 500.0, 45, 1.3333);
   //stbi_set_flip_vertically_on_load(true); //Keep commented for now
-  image1 = stbi_load_16("assets/T0.png", &DepthWidth, &DepthHeight, &channels, 0);
-  image2 = stbi_load_16("assets/T1.png", &DepthWidth, &DepthHeight, &channels, 0);
+  image1 = stbi_load_16("assets/d3.png", &DepthWidth, &DepthHeight, &channels, 0);
+  image2 = stbi_load_16("assets/d4.png", &DepthWidth, &DepthHeight, &channels, 0);
   if(image1 == nullptr) {cout<<"could not read first image file!"<<endl; exit(0);}
   if(image2 == nullptr) {cout<<"could not read second image file!"<<endl; exit(0);}
   //Start tracker
@@ -57,26 +58,31 @@ Application::Application() {
 
   //TODO: Move into gameloop
   size_t returnedBufferSize;
+  //input-verts
   checkCudaErrors(cudaGraphicsMapResources(1, &cuda_input_resource, 0));
   checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void**)&d_input, &returnedBufferSize, cuda_input_resource));
   checkCudaErrors(cudaMemset(d_input, 0, returnedBufferSize));
 
+  //input-normals
   checkCudaErrors(cudaGraphicsMapResources(1, &cuda_inputNormals_resource, 0));
   checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void**)&d_inputNormals, &returnedBufferSize, cuda_inputNormals_resource));
   checkCudaErrors(cudaMemset(d_inputNormals, 0, returnedBufferSize));
 
+  //target-verts
   checkCudaErrors(cudaGraphicsMapResources(1, &cuda_target_resource, 0));
   checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void**)&d_target, &returnedBufferSize, cuda_target_resource));
   checkCudaErrors(cudaMemset(d_input, 0, returnedBufferSize));
 
+  //target-normals
   checkCudaErrors(cudaGraphicsMapResources(1, &cuda_targetNormals_resource, 0));
   checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void**)&d_targetNormals, &returnedBufferSize, cuda_targetNormals_resource));
   checkCudaErrors(cudaMemset(d_input, 0, returnedBufferSize));
 
+  //VBOs allocated
   std::cout<<"\nAllocated input VBO size: "<<returnedBufferSize<<"\n";
   preProcess(d_input, d_inputNormals, d_depthInput);
   preProcess(d_target, d_targetNormals, d_depthTarget);
-  //tracker->Align(d_input, d_inputNormals, d_target, d_targetNormals, d_depthInput, d_depthTarget);
+  tracker->Align(d_input, d_inputNormals, d_target, d_targetNormals, d_depthInput, d_depthTarget);
   deltaT = glm::make_mat4(tracker->getTransform().data());
   //deltaT = glm::transpose(deltaT);
   std::cout << termcolor::on_blue<< "Final rigid transform : \n" << termcolor::reset<< glm::to_string(deltaT) << "\n";
@@ -86,7 +92,7 @@ Application::Application() {
   float4x4 identity;
   identity.setIdentity();
   fusionModule->integrate(identity, d_input, d_inputNormals);
-  sdfRenderer->printSDFdata();
+  //sdfRenderer->printSDFdata();
   //fusionModule->integrate(global_transform, d_target, d_targetNormals);
   checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_input_resource, 0));
   checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_inputNormals_resource, 0));
@@ -276,7 +282,7 @@ void Application::processEvents() {
           switch (event.key.keysym.sym)
           {
 			case SDLK_p:
-			  sdfRenderer->printDebugImage();
+			  //sdfRenderer->printDebugImage();
 			  break;
 
             case SDLK_q:

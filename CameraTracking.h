@@ -37,7 +37,7 @@ private:
   int width, height;
   //LinearSystem linearSystem;
   Solver solver;
-  int maxIters = 20;
+  int maxIters = 30;
   float4* d_correspondenceNormals;
   float4* d_correspondences;
   float* d_residuals;

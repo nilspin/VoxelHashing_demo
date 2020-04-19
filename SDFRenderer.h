@@ -18,14 +18,24 @@ class SDFRenderer {
 	std::unique_ptr<FBO> fbo_front;
 	std::unique_ptr<FBO> fbo_back;
 
-	std::unique_ptr<ShaderProgram> raycast_shader;
+	//std::unique_ptr<ShaderProgram> raycast_shader;
 	std::unique_ptr<ShaderProgram> depthWriteShader;	//Shader to compare depths between fbo_front and fbo_back FBOs
-	std::unique_ptr<ShaderProgram> drawLinearDepth;
+	//std::unique_ptr<ShaderProgram> drawLinearDepth;	//I forgot what this was!
 	const float zNear = 0.1f;
 	const float zFar = 5.0f;
 	glm::mat4 projMat = glm::perspective(45.0f, 1.3333f, zNear, zFar);
 	//---------------DEBUG--------------------------------
 	GLuint dbg_R16I_imgTex;	//for front face
+	GLuint debug_ssbo;	//debug ssbo to keep track of per-pixel metrics
+	/*such as
+	  * ID of ray hitting the front buffer
+	  * start position of ray hitting the block (world space)
+	  *
+	  * ID of ray hitting the back buffer
+	  * stop position of ray hitting the block (world space)
+	  */
+	//std::unique_ptr<ShaderProgram> debugSDFInfo;	//debug shader that writes what's
+	//supposed to be drawn into an SSBO
 	//----------------------------------------------------
 
 public:
@@ -34,11 +44,9 @@ public:
 	~SDFRenderer();
 	void CreateImageBuffer();
 	void printSDFdata();
-	void generateCanvas();
 	void render(const glm::mat4&);
 	void drawToFrontAndBack(const glm::mat4&);
 	void drawSDF(ShaderProgram &, const glm::mat4&);
-	void printDebugImage();
 	//friend void registerGLtoCUDA(SDFRenderer*);
 	//SDFRenderer(const SDFRenderer&) = delete;
 	//SDFRenderer& operator=(const SDFRenderer&) = delete;

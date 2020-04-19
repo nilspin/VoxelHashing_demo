@@ -9,7 +9,7 @@ const float fy =  516.5f;
 const float cx =  318.6f;
 const float cy =  255.3f;
 
-const float distThres = 0.08f;
+const float distThres = 0.15f;
 const float normalThres = 1.0f;
 const float idealError = 0.0f;
 const float intrinsics[] = {fx, 0, cx, 0, fy, cy, 0, 0, 1};

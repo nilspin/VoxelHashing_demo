@@ -51,6 +51,7 @@ void CameraTracking::Align(float4* d_input, float4* d_inputNormals, float4* d_ta
 
 	  //We now have all data we need. find correspondence.
 	  globalCorrespondenceError = computeCorrespondences(d_input, d_target, d_targetNormals, d_correspondences, d_correspondenceNormals, d_residuals, deltaT, width, height);
+	  std::cout<<"\n"<<termcolor::on_blue<<termcolor::white<<"globalCorrespondenceError = "<<globalCorrespondenceError<<termcolor::reset<<"\n";
 
     if(globalCorrespondenceError == 0.0f) {
       std::cout<<"\n\n"<<termcolor::bold<<termcolor::grey<<termcolor::on_white<<"Correspondence error is zero. Stopping."<<termcolor::reset<<"\n\n";

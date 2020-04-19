@@ -62,4 +62,11 @@ struct PtrContainer	{
 	int* d_compactifiedHashCounter;
 };
 
+struct debug_ssbo_struct {
+	unsigned int startPtr;
+	float3 rayStartPos; //where ray hits the block in world-space
+	unsigned int stopPtr;
+	float3 rayStopPos; //where ray exits the block in world-space
+};
+
 #endif
