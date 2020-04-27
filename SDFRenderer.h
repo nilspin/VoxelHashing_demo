@@ -10,11 +10,14 @@
 
 class SDFRenderer {
 	unsigned int numOccupiedBlocks = 0;
-	GLuint SDF_VAO;
+	GLuint Scene;
 	GLuint CanvasVAO, CanvasVBO;
-	GLuint numOccupiedBlocks_handle = -1;
-	GLuint SDF_VolumeBuffer_handle;
-	GLuint compactHashTable_handle;
+	GLuint numOccupiedBlocks_handle = -1;//buffer contains single number.
+	//NOTE : we don't really use numOccupiedBlocks for rendering, so it might seem
+	//appropriate to keep this in SDF_Hashtable, but we keep it here for cleanliness.
+
+	GLuint SDF_VolumeBuffer_handle;	//actual sdf voxelblocks
+	GLuint compactHashTable_handle;	//voxelBlock metadata
 	std::unique_ptr<FBO> fbo_front;
 	std::unique_ptr<FBO> fbo_back;
 
@@ -45,7 +48,17 @@ public:
 	void CreateImageBuffer();
 	void printSDFdata();
 	void render(const glm::mat4&);
+
+	/**
+	 * Draws the Container Blocks twice to determine start/stop ranges
+	 * for eventual raycast operation
+	 */
 	void drawToFrontAndBack(const glm::mat4&);
+
+	/**
+	 * Draws Voxel container boxes
+	 * TODO : Needs to eventually raycast the SDF
+	 */
 	void drawSDF(ShaderProgram &, const glm::mat4&);
 	//friend void registerGLtoCUDA(SDFRenderer*);
 	//SDFRenderer(const SDFRenderer&) = delete;

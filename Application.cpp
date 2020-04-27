@@ -37,6 +37,7 @@ Application::Application() {
   fusionModule = unique_ptr<SDF_Hashtable>(new SDF_Hashtable());
   //Render to screen
   sdfRenderer = unique_ptr<SDFRenderer>(new SDFRenderer());
+  //register renderer to depthfusion class so CUDA can directly write to GL's buffers
   fusionModule->registerGLtoCUDA(*sdfRenderer);
 
   //put into cuda device buffer

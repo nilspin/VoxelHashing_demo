@@ -23,14 +23,14 @@ unique_ptr<FBO> setupFBO_w_intTex()	{
 unique_ptr<ShaderProgram> setupDepthWriteShader()	{
 	unique_ptr<ShaderProgram> depthWriteShader = unique_ptr<ShaderProgram>(new ShaderProgram());
 	depthWriteShader->initFromFiles("shaders/depthWrite.vert", "shaders/depthWrite.geom", "shaders/depthWrite.frag");
-	depthWriteShader->addAttribute("voxentry");
+	//depthWriteShader->addAttribute("voxentry");
 	//TODO : enable following attrib again
 	//depthWriteShader->addAttribute("SDFVolumeBasePtr_vert");
 	depthWriteShader->addUniform("VP");
 	//depthWriteShader->addUniform("imgTex");
 	//depthWriteShader->addUniform("prevDepthTexture");
-	depthWriteShader->addUniform("windowWidth");
-	depthWriteShader->addUniform("windowHeight");
+	//depthWriteShader->addUniform("windowWidth");
+	//depthWriteShader->addUniform("windowHeight");
 	return depthWriteShader;
 }
 
@@ -70,7 +70,8 @@ GLuint setup_Debug_SSBO()	{
 	GLuint dbg_ssbo = 0;
 	glGenBuffers(1, &dbg_ssbo);
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, dbg_ssbo);
-	glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(tempArray), &tempArray, GL_DYNAMIC_COPY);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(debug_ssbo_struct) * tempArray.size() , &tempArray, GL_DYNAMIC_COPY);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, dbg_ssbo);//binding index = 1
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 	return dbg_ssbo;
 }
