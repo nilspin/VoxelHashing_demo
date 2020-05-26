@@ -12,6 +12,7 @@ class SDFRenderer {
 	unsigned int numOccupiedBlocks = 0;
 	GLuint Scene;
 	GLuint CanvasVAO, CanvasVBO;
+	GLuint InstanceCubeVBO;
 	GLuint numOccupiedBlocks_handle = -1;//buffer contains single number.
 	//NOTE : we don't really use numOccupiedBlocks for rendering, so it might seem
 	//appropriate to keep this in SDF_Hashtable, but we keep it here for cleanliness.
@@ -23,12 +24,12 @@ class SDFRenderer {
 
 	//std::unique_ptr<ShaderProgram> raycast_shader;
 	std::unique_ptr<ShaderProgram> depthWriteShader;	//Shader to compare depths between fbo_front and fbo_back FBOs
+	std::unique_ptr<ShaderProgram> instancedCubeDrawShader;
 	//std::unique_ptr<ShaderProgram> drawLinearDepth;	//I forgot what this was!
 	const float zNear = 0.1f;
 	const float zFar = 5.0f;
 	glm::mat4 projMat = glm::perspective(45.0f, 1.3333f, zNear, zFar);
 	//---------------DEBUG--------------------------------
-	GLuint dbg_R16I_imgTex;	//for front face
 	GLuint debug_ssbo;	//debug ssbo to keep track of per-pixel metrics
 	/*such as
 	  * ID of ray hitting the front buffer

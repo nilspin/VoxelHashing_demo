@@ -15,7 +15,7 @@
 #include "cuda_helper/helper_cuda.h"
 
 using namespace glm;
-using namespace thrust;
+//using namespace thrust;
 
 extern HashTableParams d_hashtableParams;
 

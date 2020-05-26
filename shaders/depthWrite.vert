@@ -8,7 +8,7 @@
 //in VoxelEntry voxentry;
 
 layout(location=0) in ivec3 position;
-layout(location=1) in int PtrId_vert;
+//layout(location=1) in int PtrId_vert;
 //layout(location=2) in int blockOffset;
 uniform mat4 VP;
 

@@ -41,8 +41,8 @@ void SDF_Hashtable::integrate(const float4x4& viewMat, const float4* verts, cons
 
 void SDF_Hashtable::registerGLtoCUDA(SDFRenderer& renderer) {
 	//rendererRef = &renderer;
-	checkCudaErrors(cudaGraphicsGLRegisterBuffer(&numVisibleBlocks_res, renderer.numOccupiedBlocks_handle, cudaGraphicsRegisterFlagsNone));
 	checkCudaErrors(cudaGraphicsGLRegisterBuffer(&compactHashtable_res, renderer.compactHashTable_handle, cudaGraphicsRegisterFlagsNone));
+	checkCudaErrors(cudaGraphicsGLRegisterBuffer(&numVisibleBlocks_res, renderer.numOccupiedBlocks_handle, cudaGraphicsRegisterFlagsNone));
 	checkCudaErrors(cudaGraphicsGLRegisterBuffer(&sdfBlocks_res, renderer.SDF_VolumeBuffer_handle, cudaGraphicsRegisterFlagsNone));
 	//int numVisibleBlocks_handle = renderer.numOccupiedBlocks_handle;
 	//mapGLobjectsToCUDApointers(*rendererRef);
@@ -58,7 +58,7 @@ void SDF_Hashtable::unmapCUDApointers()
 }
 
 SDF_Hashtable::SDF_Hashtable()	{
-	
+
 	h_hashtableParams.numBuckets = numBuckets;
 	h_hashtableParams.bucketSize = bucketSize;	//10
 	h_hashtableParams.attachedLinkedListSize = attachedLinkedListSize;	//7

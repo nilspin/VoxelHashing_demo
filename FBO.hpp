@@ -42,7 +42,7 @@ class FBO {
 		//Does the GPU support current FBO configuration?
 		//Before checking the configuration, you should call these 2 according to the spec.
 		//At the very least, you need to call glDrawBuffer(GL_NONE)
-		//glDrawBuffer(GL_NONE);
+		glDrawBuffer(GL_NONE);
 		//glReadBuffer(GL_NONE);
 
 		checkFBO();

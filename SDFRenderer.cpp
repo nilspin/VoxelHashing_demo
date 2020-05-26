@@ -1,6 +1,6 @@
-#define STB_IMAGE_WRITE_IMPLEMENTATION
+//#define STB_IMAGE_WRITE_IMPLEMENTATION
 
-#include "stb_image_write.h"
+//#include "stb_image_write.h"
 #include "common.h"
 #include "SDFRenderer.h"
 #include "SDFRendererUtils.h"
@@ -21,7 +21,8 @@ SDFRenderer::SDFRenderer() {
 
 	//raycast_shader = setupRaycastShader();
 
-	depthWriteShader = setupDepthWriteShader();
+	//depthWriteShader = setupDepthWriteShader();
+	instancedCubeDrawShader = setupInstancedCubeDrawShader();
 
 	//---------------Debug---------------
 	debug_ssbo = setup_Debug_SSBO();
@@ -34,17 +35,18 @@ SDFRenderer::SDFRenderer() {
 
 	glGenBuffers(1, &compactHashTable_handle);
 
-	glEnableVertexAttribArray(0);
-	glEnableVertexAttribArray(1);
+	//attrib0 - boxVerts
+	generateUnitCube(InstanceCubeVBO);
+
+	//attrib1 - boxCenters
 	glBindBuffer(GL_ARRAY_BUFFER, compactHashTable_handle);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(VoxelEntry) * numBuckets * bucketSize, nullptr, GL_STATIC_DRAW);
-	glVertexAttribIPointer(0, 3, GL_INT, sizeof(VoxelEntry), nullptr);
-	glVertexAttribIPointer(1, 1, GL_INT, sizeof(VoxelEntry), reinterpret_cast<void *>(offsetof(VoxelEntry, ptr)));
+	glVertexAttribIPointer(1, 3, GL_INT, sizeof(VoxelEntry), nullptr); //boxCenters
+	//attrib2 - PtrId
+	glVertexAttribIPointer(2, 1, GL_INT, sizeof(VoxelEntry), reinterpret_cast<void *>(offsetof(VoxelEntry, ptr))); //PtrID
 
 	//unbind
 	glBindVertexArray(0);
-	glDisableVertexAttribArray(0);
-	glDisableVertexAttribArray(1);
 
 	/*--------------------------------*/
 
@@ -106,66 +108,74 @@ void SDFRenderer::printSDFdata() {
 
 }
 
-void SDFRenderer::drawSDF(ShaderProgram &shader, const glm::mat4& viewMat) {
-	glBindVertexArray(Scene);
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, debug_ssbo);
-	shader.use();
-	glEnableVertexAttribArray(0);
-	glEnableVertexAttribArray(1);
-	glUniformMatrix4fv(shader.uniform("VP"), 1, false, glm::value_ptr(viewMat));
-	//glUniformMatrix4fv(raycast_shader->uniform("projMat"), 1, false, glm::value_ptr(projMat));
-	glDrawArrays(GL_POINTS, 0, numOccupiedBlocks); //1);//
-	glBindVertexArray(0);
-}
+//void SDFRenderer::drawSDF(ShaderProgram &shader, const glm::mat4& viewMat) {
+//	glBindVertexArray(Scene);
+//	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, debug_ssbo);
+//	shader.use();
+//	glEnableVertexAttribArray(0);
+//	glEnableVertexAttribArray(1);
+//	glUniformMatrix4fv(shader.uniform("VP"), 1, false, glm::value_ptr(viewMat));
+//	//glUniformMatrix4fv(raycast_shader->uniform("projMat"), 1, false, glm::value_ptr(projMat));
+//	glDrawArrays(GL_POINTS, 0, numOccupiedBlocks); //1);//
+//	glBindVertexArray(0);
+//}
 
-void SDFRenderer::drawToFrontAndBack(const glm::mat4& viewMat) {
-	glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-	//First pass - render depth for front face
-	glEnable(GL_CULL_FACE);
-	glEnable(GL_DEPTH_TEST);
-	glFrontFace(GL_CW);	//IMPORTANT - Need to do this because we're looking along +Z axis
-	/*
-	* fbo_front->enable();
-	*/
-	glClear(GL_DEPTH_BUFFER_BIT);
-	glCullFace(GL_BACK);
-	glDepthFunc(GL_LESS);
-	depthWriteShader->use();
-	//glUniform1f(depthWriteShader->uniform("windowWidth"), windowWidth);
-	//glUniform1f(depthWriteShader->uniform("windowHeight"), windowHeight);
-	//TODO : another glUniform1ui(depthWriteShader->uniform("isFrontFaces"), 1);
-	//TODO : attach debug_ssbo here
-	drawSDF(*depthWriteShader, viewMat);
-	/*
-	* fbo_front->disable();
-	*/
-	glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-
-	//---------------Second pass - render depth for front face--------------
-
-	// /*
-	// * fbo_back->enable();
-	// */
-	// glClear(GL_DEPTH_BUFFER_BIT);
-	// glCullFace(GL_FRONT);
-	// glDepthFunc(GL_LESS);	//ideally should be GL_GREATER as per groundai article, but GL_LESS with custom depth-compare-shader works
-	// depthWriteShader->use();
-	// //glUniform1f(depthWriteShader->uniform("windowWidth"), windowWidth);
-	// //glUniform1f(depthWriteShader->uniform("windowHeight"), windowHeight);
-	// //TODO : another glUniform1ui(depthWriteShader->uniform("isFrontFaces"), 0);
-	// //TODO : attach debug_ssbo here
-	// //glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, dbg_ssbo);
-	// drawSDF(*depthWriteShader, viewMat);
-	// /*
-	// * fbo_back->disable();
-	// */
-	// glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-
-}
+//void SDFRenderer::drawToFrontAndBack(const glm::mat4& viewMat) {
+//	glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+//	//First pass - render depth for front face
+//	glEnable(GL_CULL_FACE);
+//	glEnable(GL_DEPTH_TEST);
+//	glFrontFace(GL_CW);	//IMPORTANT - Need to do this because we're looking along +Z axis
+//	/*
+//	* fbo_front->enable();
+//	*/
+//	glClear(GL_DEPTH_BUFFER_BIT);
+//	glCullFace(GL_BACK);
+//	glDepthFunc(GL_LESS);
+//	depthWriteShader->use();
+//	//glUniform1f(depthWriteShader->uniform("windowWidth"), windowWidth);
+//	//glUniform1f(depthWriteShader->uniform("windowHeight"), windowHeight);
+//	//TODO : another glUniform1ui(depthWriteShader->uniform("isFrontFaces"), 1);
+//	//TODO : attach debug_ssbo here
+//	drawSDF(*depthWriteShader, viewMat);
+//	/*
+//	* fbo_front->disable();
+//	*/
+//	glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+//
+//	//---------------Second pass - render depth for front face--------------
+//
+//	// /*
+//	// * fbo_back->enable();
+//	// */
+//	// glClear(GL_DEPTH_BUFFER_BIT);
+//	// glCullFace(GL_FRONT);
+//	// glDepthFunc(GL_LESS);	//ideally should be GL_GREATER as per groundai article, but GL_LESS with custom depth-compare-shader works
+//	// depthWriteShader->use();
+//	// //glUniform1f(depthWriteShader->uniform("windowWidth"), windowWidth);
+//	// //glUniform1f(depthWriteShader->uniform("windowHeight"), windowHeight);
+//	// //TODO : another glUniform1ui(depthWriteShader->uniform("isFrontFaces"), 0);
+//	// //TODO : attach debug_ssbo here
+//	// //glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, dbg_ssbo);
+//	// drawSDF(*depthWriteShader, viewMat);
+//	// /*
+//	// * fbo_back->disable();
+//	// */
+//	// glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+//
+//}
 
 void SDFRenderer::render(const glm::mat4& viewMat) {
-	drawToFrontAndBack(viewMat);
+	//drawToFrontAndBack(viewMat);
 	//draw to screen
+	glBindVertexArray(Scene);
+	instancedCubeDrawShader->use();
+	glEnableVertexAttribArray(0);	//boxVerts
+	glEnableVertexAttribArray(1);	//boxCenters
+	glVertexAttribDivisor(0, 0);
+	glVertexAttribDivisor(1, 1);
+	glUniformMatrix4fv(instancedCubeDrawShader->uniform("VP"), 1, false, glm::value_ptr(viewMat));
+	glDrawArraysInstanced(GL_TRIANGLES, 0, 36, numOccupiedBlocks);
 }
 
 SDFRenderer::~SDFRenderer() {
