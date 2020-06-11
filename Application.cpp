@@ -27,8 +27,8 @@ Application::Application() {
 	//Set up frustum
   frustum.setFromVectors(vec3(0,0,1), vec3(0,0,0), vec3(1,0,0), vec3(0,1,0), 0.1, 500.0, 45, 1.3333);
   //stbi_set_flip_vertically_on_load(true); //Keep commented for now
-  image1 = stbi_load_16("assets/d3.png", &DepthWidth, &DepthHeight, &channels, 0);
-  image2 = stbi_load_16("assets/d4.png", &DepthWidth, &DepthHeight, &channels, 0);
+  image1 = stbi_load_16("assets/T0.png", &DepthWidth, &DepthHeight, &channels, 0);
+  image2 = stbi_load_16("assets/T1.png", &DepthWidth, &DepthHeight, &channels, 0);
   if(image1 == nullptr) {cout<<"could not read first image file!"<<endl; exit(0);}
   if(image2 == nullptr) {cout<<"could not read second image file!"<<endl; exit(0);}
   //Start tracker
@@ -138,18 +138,19 @@ void Application::run() {
     GLfloat time = SDL_GetTicks();
     view = cam.getViewMatrix();
 	//scaling : convert voxelblock dims to world-space dims
-	mat4 model = glm::scale(glm::mat4(1.0f), glm::vec3(voxelSize*voxelBlockSize));
+	mat4 model = glm::scale(glm::mat4(1.0f), glm::vec3(voxelSize*voxelBlockSize)); //glm::mat4(1.0f);// 
 	mat4 VP = proj*view;	// *model;
 	mat4 MVP = proj*view*model;
 	//std::cout<<"\n"<<glm::to_string(MVP)<<"\n\n";
     //tracker.Align(d_input, d_inputNormals, d_target, d_targetNormals, d_depthInput, d_depthTarget);
     //checkCudaErrors(cudaDeviceSynchronize());
+	glEnable(GL_DEPTH_TEST);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	sdfRenderer->render(MVP);
 	//sdfRenderer->drawToFrontAndBack(MVP);
 	//glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	//glDepthFunc(GL_TRUE);
-	glDisable(GL_DEPTH_TEST);
+	//glDisable(GL_DEPTH_TEST);
 	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	//draw(VP);
 	//sdfRenderer->printSDFdata();

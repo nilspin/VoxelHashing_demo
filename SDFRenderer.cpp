@@ -29,21 +29,29 @@ SDFRenderer::SDFRenderer() {
 	//-----------------------------------
 
 	/*----------Scene VAO-------------------*/
-	//init GL resources
-	glGenVertexArrays(1, &Scene);
-	glBindVertexArray(Scene);
-
-	glGenBuffers(1, &compactHashTable_handle);
-
-	//attrib0 - boxVerts
+	//first generate Box
 	generateUnitCube(InstanceCubeVBO);
 
-	//attrib1 - boxCenters
-	glBindBuffer(GL_ARRAY_BUFFER, compactHashTable_handle);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(VoxelEntry) * numBuckets * bucketSize, nullptr, GL_STATIC_DRAW);
-	glVertexAttribIPointer(1, 3, GL_INT, sizeof(VoxelEntry), nullptr); //boxCenters
-	//attrib2 - PtrId
-	glVertexAttribIPointer(2, 1, GL_INT, sizeof(VoxelEntry), reinterpret_cast<void *>(offsetof(VoxelEntry, ptr))); //PtrID
+	//init rest of the GL resources required to render scene
+	glGenVertexArrays(1, &Scene);
+		glBindVertexArray(Scene);
+
+		//attrib0 - boxVerts
+		glBindBuffer(GL_ARRAY_BUFFER, InstanceCubeVBO); //no need for bufferdata, we've already set it up
+			glEnableVertexAttribArray(0);
+			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+			glVertexAttribDivisor(0, 0);
+
+		//attrib1 - boxCenters
+		glGenBuffers(1, &compactHashTable_handle);
+		glBindBuffer(GL_ARRAY_BUFFER, compactHashTable_handle);
+			glEnableVertexAttribArray(1);
+			glBufferData(GL_ARRAY_BUFFER, sizeof(VoxelEntry) * numBuckets * bucketSize, nullptr, GL_STATIC_DRAW);
+			glVertexAttribIPointer(1, 3, GL_INT, sizeof(VoxelEntry), nullptr); //boxCenters
+			glVertexAttribDivisor(1, 1);
+			//attrib2 - PtrId
+			glVertexAttribIPointer(2, 1, GL_INT, sizeof(VoxelEntry), reinterpret_cast<void *>(offsetof(VoxelEntry, ptr))); //PtrID
+			std::cout << "Sizeof(VoxelEntry) = " << sizeof(VoxelEntry) << "\n";
 
 	//unbind
 	glBindVertexArray(0);
@@ -166,16 +174,21 @@ void SDFRenderer::printSDFdata() {
 //}
 
 void SDFRenderer::render(const glm::mat4& viewMat) {
+	glBindBuffer(GL_ARRAY_BUFFER, numOccupiedBlocks_handle);
+	glGetBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(unsigned int), &numOccupiedBlocks);
 	//drawToFrontAndBack(viewMat);
 	//draw to screen
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glBindVertexArray(Scene);
-	instancedCubeDrawShader->use();
 	glEnableVertexAttribArray(0);	//boxVerts
 	glEnableVertexAttribArray(1);	//boxCenters
-	glVertexAttribDivisor(0, 0);
-	glVertexAttribDivisor(1, 1);
+	instancedCubeDrawShader->use();
+	//glVertexAttribDivisor(0, 0);
+	//glVertexAttribDivisor(1, 1);
 	glUniformMatrix4fv(instancedCubeDrawShader->uniform("VP"), 1, false, glm::value_ptr(viewMat));
 	glDrawArraysInstanced(GL_TRIANGLES, 0, 36, numOccupiedBlocks);
+	//glDrawArraysInstanced(GL_TRIANGLES, 0, 12, numOccupiedBlocks);
+	glBindVertexArray(0);
 }
 
 SDFRenderer::~SDFRenderer() {

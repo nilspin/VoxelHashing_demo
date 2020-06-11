@@ -6,6 +6,8 @@
 using std::cout;
 void printCudaDetails();
 
+//int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nShowCmd)
+//int main()
 int main(int argc, char *argv[])
 {
 

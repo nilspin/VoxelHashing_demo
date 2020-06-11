@@ -37,7 +37,7 @@ find_package(CUDA REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(SDL2 REQUIRED)
-find_package(glm REQUIRED)
+find_package(GLM REQUIRED)
 message(STATUS "GLM included at ${GLM_INCLUDE_DIR}")
 find_package(Boost COMPONENTS filesystem REQUIRED)  #only need this till nvcc starts supporting c++17 compiler
 
@@ -115,7 +115,7 @@ include_directories(${INCLUDE_DIRS})
 set(SOURCES DepthMain.cpp )  #Frustum.cpp Frustum.h Application.cpp camera.cpp Window.cpp
 
 
-add_executable(${PROJECT_NAME} ${SOURCES} ) #${HEADERS}
+add_executable(${PROJECT_NAME} WIN32 ${SOURCES} ) #${HEADERS}
 
 #Link all obj files
 target_link_libraries(${PROJECT_NAME} ${LIBS} Application)  #SDL2::SDL2  CameraTrackingUtils
