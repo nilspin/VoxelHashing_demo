@@ -128,56 +128,63 @@ void SDFRenderer::printSDFdata() {
 //	glBindVertexArray(0);
 //}
 
-//void SDFRenderer::drawToFrontAndBack(const glm::mat4& viewMat) {
-//	glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-//	//First pass - render depth for front face
-//	glEnable(GL_CULL_FACE);
-//	glEnable(GL_DEPTH_TEST);
-//	glFrontFace(GL_CW);	//IMPORTANT - Need to do this because we're looking along +Z axis
-//	/*
-//	* fbo_front->enable();
-//	*/
-//	glClear(GL_DEPTH_BUFFER_BIT);
-//	glCullFace(GL_BACK);
-//	glDepthFunc(GL_LESS);
-//	depthWriteShader->use();
-//	//glUniform1f(depthWriteShader->uniform("windowWidth"), windowWidth);
-//	//glUniform1f(depthWriteShader->uniform("windowHeight"), windowHeight);
-//	//TODO : another glUniform1ui(depthWriteShader->uniform("isFrontFaces"), 1);
-//	//TODO : attach debug_ssbo here
-//	drawSDF(*depthWriteShader, viewMat);
-//	/*
-//	* fbo_front->disable();
-//	*/
-//	glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-//
-//	//---------------Second pass - render depth for front face--------------
-//
-//	// /*
-//	// * fbo_back->enable();
-//	// */
-//	// glClear(GL_DEPTH_BUFFER_BIT);
-//	// glCullFace(GL_FRONT);
-//	// glDepthFunc(GL_LESS);	//ideally should be GL_GREATER as per groundai article, but GL_LESS with custom depth-compare-shader works
-//	// depthWriteShader->use();
-//	// //glUniform1f(depthWriteShader->uniform("windowWidth"), windowWidth);
-//	// //glUniform1f(depthWriteShader->uniform("windowHeight"), windowHeight);
-//	// //TODO : another glUniform1ui(depthWriteShader->uniform("isFrontFaces"), 0);
-//	// //TODO : attach debug_ssbo here
-//	// //glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, dbg_ssbo);
-//	// drawSDF(*depthWriteShader, viewMat);
-//	// /*
-//	// * fbo_back->disable();
-//	// */
-//	// glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-//
-//}
+void SDFRenderer::drawToFrontAndBack(const glm::mat4& viewMat) {
+	glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+	//First pass - render depth for front face
+	glEnable(GL_CULL_FACE);
+	glEnable(GL_DEPTH_TEST);
+	glFrontFace(GL_CCW);	//IMPORTANT - Need to do this because we're looking along +Z axis
+
+	fbo_back->enable();
+
+	glClear(GL_DEPTH_BUFFER_BIT);
+	glCullFace(GL_BACK);
+	//glDepthFunc(GL_LESS);
+	glBindVertexArray(Scene);
+	glEnableVertexAttribArray(0);	//boxVerts
+	glEnableVertexAttribArray(1);	//boxCenters
+	instancedCubeDrawShader->use();
+	//TODO : attach debug_ssbo here
+	glUniformMatrix4fv(instancedCubeDrawShader->uniform("VP"), 1, false, glm::value_ptr(viewMat));
+	glDrawArraysInstanced(GL_TRIANGLES, 0, 36, numOccupiedBlocks);
+	glBindVertexArray(0);
+
+	fbo_back->disable();
+
+	glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+
+	//---------------Second pass - render depth for front face--------------
+
+	 
+	fbo_front->enable();
+
+	//glEnable(GL_DEPTH_TEST);
+	//glDepthFunc(GL_GREATER);
+	glClear(GL_DEPTH_BUFFER_BIT);
+	glCullFace(GL_FRONT);
+	//glDepthFunc(GL_LESS);	//ideally should be GL_GREATER as per groundai article, but GL_LESS with custom depth-compare-shader works
+
+	glBindVertexArray(Scene);
+	glEnableVertexAttribArray(0);	//boxVerts
+	glEnableVertexAttribArray(1);	//boxCenters
+	instancedCubeDrawShader->use();
+	//TODO : attach debug_ssbo here
+	glUniformMatrix4fv(instancedCubeDrawShader->uniform("VP"), 1, false, glm::value_ptr(viewMat));
+	glDrawArraysInstanced(GL_TRIANGLES, 0, 36, numOccupiedBlocks);
+	glBindVertexArray(0);
+
+	fbo_front->disable();
+
+	glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+
+}
 
 void SDFRenderer::render(const glm::mat4& viewMat) {
 	glBindBuffer(GL_ARRAY_BUFFER, numOccupiedBlocks_handle);
 	glGetBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(unsigned int), &numOccupiedBlocks);
-	//drawToFrontAndBack(viewMat);
+	drawToFrontAndBack(viewMat);
 	//draw to screen
+	glCullFace(GL_BACK);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glBindVertexArray(Scene);
 	glEnableVertexAttribArray(0);	//boxVerts
