@@ -13,7 +13,7 @@ std::unique_ptr<ShaderProgram> setupDepthWriteShader();
 std::unique_ptr<ShaderProgram> setupInstancedCubeDrawShader();
 //std::unique_ptr<ShaderProgram> setupDrawLinearDepthShader();
 //void setupSDF_GL_buffer(GLuint SDF_VAO,...);//
-void generateCanvas(GLuint, GLuint);
+void generateCanvas(GLuint&, GLuint&, GLuint&);
 void generateUnitCube(GLuint&);
 GLuint setup_Debug_SSBO();
 

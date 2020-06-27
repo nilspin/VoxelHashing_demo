@@ -125,7 +125,7 @@ public:
 	}
 
 	void initIntegerTexture()	{
-		//renderToFBO();	We don't need to use regular textures anymore!
+		enable();	//We don't need to use regular textures anymore!
 		//use image instead
 
 		glGenTextures(1, &integerTex);
@@ -139,16 +139,16 @@ public:
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA8UI, width, height);
+		glTexStorage2D(GL_TEXTURE_2D, 1, GL_R32UI, width, height);
 		glBindTexture(GL_TEXTURE_2D, 0);
 
-		//glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, integerTex, 0);
-		//GLenum drawBuffers[1] = {GL_COLOR_ATTACHMENT0};
-		//glDrawBuffers(1, drawBuffers);
+		glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, integerTex, 0);
+		GLenum drawBuffers[1] = {GL_COLOR_ATTACHMENT0};
+		glDrawBuffers(1, drawBuffers);
 
-		//checkFBO();
+		checkFBO();
 
-		//renderToScreen();
+		disable();
 	}
 
 };

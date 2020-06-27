@@ -21,11 +21,12 @@ SDFRenderer::SDFRenderer() {
 
 	//raycast_shader = setupRaycastShader();
 
-	//depthWriteShader = setupDepthWriteShader();
-	instancedCubeDrawShader = setupInstancedCubeDrawShader();
+	tempPassthroughShader = setupDepthWriteShader(); //TODO : cleanup
 
+	instancedCubeDrawShader = setupInstancedCubeDrawShader();
+	generateCanvas(CanvasVAO, CanvasVertVBO, CanvasTexCoordsVBO);
 	//---------------Debug---------------
-	debug_ssbo = setup_Debug_SSBO();
+	//debug_ssbo = setup_Debug_SSBO();
 	//-----------------------------------
 
 	/*----------Scene VAO-------------------*/
@@ -50,7 +51,9 @@ SDFRenderer::SDFRenderer() {
 			glVertexAttribIPointer(1, 3, GL_INT, sizeof(VoxelEntry), nullptr); //boxCenters
 			glVertexAttribDivisor(1, 1);
 			//attrib2 - PtrId
+			glEnableVertexAttribArray(2);
 			glVertexAttribIPointer(2, 1, GL_INT, sizeof(VoxelEntry), reinterpret_cast<void *>(offsetof(VoxelEntry, ptr))); //PtrID
+			glVertexAttribDivisor(2, 1);
 			std::cout << "Sizeof(VoxelEntry) = " << sizeof(VoxelEntry) << "\n";
 
 	//unbind
@@ -137,12 +140,14 @@ void SDFRenderer::drawToFrontAndBack(const glm::mat4& viewMat) {
 
 	fbo_back->enable();
 
+	//glDrawBuffer(GL_COLOR_ATTACHMENT0);
 	glClear(GL_DEPTH_BUFFER_BIT);
 	glCullFace(GL_BACK);
 	//glDepthFunc(GL_LESS);
 	glBindVertexArray(Scene);
 	glEnableVertexAttribArray(0);	//boxVerts
 	glEnableVertexAttribArray(1);	//boxCenters
+	glEnableVertexAttribArray(2);	//VoxelBlockIDs
 	instancedCubeDrawShader->use();
 	//TODO : attach debug_ssbo here
 	glUniformMatrix4fv(instancedCubeDrawShader->uniform("VP"), 1, false, glm::value_ptr(viewMat));
@@ -167,6 +172,7 @@ void SDFRenderer::drawToFrontAndBack(const glm::mat4& viewMat) {
 	glBindVertexArray(Scene);
 	glEnableVertexAttribArray(0);	//boxVerts
 	glEnableVertexAttribArray(1);	//boxCenters
+	glEnableVertexAttribArray(2);	//VoxelBlockIDs
 	instancedCubeDrawShader->use();
 	//TODO : attach debug_ssbo here
 	glUniformMatrix4fv(instancedCubeDrawShader->uniform("VP"), 1, false, glm::value_ptr(viewMat));
@@ -184,18 +190,21 @@ void SDFRenderer::render(const glm::mat4& viewMat) {
 	glGetBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(unsigned int), &numOccupiedBlocks);
 	drawToFrontAndBack(viewMat);
 	//draw to screen
-	glCullFace(GL_BACK);
+
+	//glFrontFace(GL_CW);	//IMPORTANT - Need to do this because we're looking along +Z axis
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glBindVertexArray(Scene);
-	glEnableVertexAttribArray(0);	//boxVerts
-	glEnableVertexAttribArray(1);	//boxCenters
-	instancedCubeDrawShader->use();
-	//glVertexAttribDivisor(0, 0);
-	//glVertexAttribDivisor(1, 1);
-	glUniformMatrix4fv(instancedCubeDrawShader->uniform("VP"), 1, false, glm::value_ptr(viewMat));
-	glDrawArraysInstanced(GL_TRIANGLES, 0, 36, numOccupiedBlocks);
-	//glDrawArraysInstanced(GL_TRIANGLES, 0, 12, numOccupiedBlocks);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	tempPassthroughShader->use();
+	glBindVertexArray(CanvasVAO);
+	glEnableVertexAttribArray(0);
+	glEnableVertexAttribArray(1);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, fbo_front->getSDFVolPtrTexID());
+	glUniform1i(tempPassthroughShader->uniform("VoxelID_tex"), 0);
+
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 	glBindVertexArray(0);
+	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 SDFRenderer::~SDFRenderer() {

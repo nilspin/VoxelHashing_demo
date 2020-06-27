@@ -11,7 +11,7 @@
 class SDFRenderer {
 	unsigned int numOccupiedBlocks = 0;
 	GLuint Scene;
-	GLuint CanvasVAO, CanvasVBO;
+	GLuint CanvasVAO, CanvasVertVBO, CanvasTexCoordsVBO;
 	GLuint InstanceCubeVBO;
 	GLuint numOccupiedBlocks_handle = -1;//buffer contains single number.
 	//NOTE : we don't really use numOccupiedBlocks for rendering, so it might seem
@@ -23,7 +23,7 @@ class SDFRenderer {
 	std::unique_ptr<FBO> fbo_back;
 
 	//std::unique_ptr<ShaderProgram> raycast_shader;
-	std::unique_ptr<ShaderProgram> depthWriteShader;	//Shader to compare depths between fbo_front and fbo_back FBOs
+	std::unique_ptr<ShaderProgram> tempPassthroughShader;	//Temporary shader for debugging integer texture/ cube-ray intersection etc	
 	std::unique_ptr<ShaderProgram> instancedCubeDrawShader;
 	//std::unique_ptr<ShaderProgram> drawLinearDepth;	//I forgot what this was!
 	const float zNear = 0.1f;
