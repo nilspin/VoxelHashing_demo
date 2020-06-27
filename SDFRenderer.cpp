@@ -140,7 +140,9 @@ void SDFRenderer::drawToFrontAndBack(const glm::mat4& viewMat) {
 
 	fbo_back->enable();
 
-	//glDrawBuffer(GL_COLOR_ATTACHMENT0);
+	//clear before writing anything
+	glClearTexImage(fbo_back->getSDFVolPtrTexID(), 0, GL_RED_INTEGER, GL_UNSIGNED_INT, nullptr);
+
 	glClear(GL_DEPTH_BUFFER_BIT);
 	glCullFace(GL_BACK);
 	//glDepthFunc(GL_LESS);
@@ -162,6 +164,9 @@ void SDFRenderer::drawToFrontAndBack(const glm::mat4& viewMat) {
 
 	 
 	fbo_front->enable();
+
+	//clear before writing anything
+	glClearTexImage(fbo_front->getSDFVolPtrTexID(), 0, GL_RED_INTEGER, GL_UNSIGNED_INT, nullptr);
 
 	//glEnable(GL_DEPTH_TEST);
 	//glDepthFunc(GL_GREATER);

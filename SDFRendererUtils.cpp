@@ -47,10 +47,10 @@ void generateCanvas(GLuint& CanvasVAO, GLuint& CanvasVBO, GLuint& CanvasTexCoord
 
 
 	GLfloat canvasTexCoords[] = {		//DATA
-		0.0f, 1.0f,
 		0.0f, 0.0f,
-		1.0f, 1.0f,
-		1.0f, 0.0f
+		0.0f, 1.0f,
+		1.0f, 0.0f,
+		1.0f, 1.0f
 
 	};	//Don't need index data for this peasant mesh!
 
