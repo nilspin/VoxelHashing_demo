@@ -46,9 +46,9 @@ public:
 	friend class SDF_Hashtable;
 	SDFRenderer();
 	~SDFRenderer();
-	void CreateImageBuffer();
+	//void CreateImageBuffer(); //TODO : not needed. get rid of this
 	void printSDFdata();
-	void render(const glm::mat4&);
+	void render(const glm::mat4&, const glm::mat4&);
 
 	/**
 	 * Draws the Container Blocks twice to determine start/stop ranges

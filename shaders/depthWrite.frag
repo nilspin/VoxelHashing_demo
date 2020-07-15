@@ -12,21 +12,63 @@
 
 
 in vec2 v_texcoords;
-uniform usampler2D VoxelID_tex;
+in vec3 near_o;
+in vec3 far_o;
+
+uniform isampler2D VoxelID_tex;
+//uniform mat4 invProjMat;
+//uniform mat4 invModelViewMat;
 
 layout(location=0) out vec4 outColor;
 
 void main()	{
-	//dbg_ssbo.startPtr = PtrID_frag;
-	//dbg_ssbo.rayStartPos = vec3(gl_FragCoord.x, gl_FragCoord.y, gl_FragCoord.z);
-	//if(gl_FragCoord.z < texture(prevDepthTexture,pos).x) discard; //Manually performing the GL_GREATER depth test for each pixel
 
-	//uint ID = texelFetch(VoxelID_tex, ivec2(gl_FragCoord.xy), 0).x;
-	uint ID = texture(VoxelID_tex, v_texcoords).x;
-	if(ID > 0) {
-		outColor = vec4(1.0, 0.0, 0.0, 1.0);
+	//uint ID = texelFetch(VoxelID_tex, ivec2(gl_FragCoord.xy), 0).w;
+	uint ID = texture(VoxelID_tex, v_texcoords).w;
+	
+	ivec3 boxPosition = ivec3(texture(VoxelID_tex, v_texcoords).xyz);
+	vec3 size = vec3(1,1,1);
+	vec3 boxMax = boxPosition + size;
+	vec3 boxMin = boxPosition - size;
+	
+	//boxMin *= 0.02;
+	//boxMax *= 0.02;
+	
+	//paramaterise the rayS
+	vec3 rayStart = near_o;
+	vec3 rayEnd = far_o;
+	vec3 rayDir = normalize(rayEnd - rayStart);
+
+	//From :
+	//https://developer.arm.com/documentation/100140/0302/advanced-graphics-techniques/implementing-reflections-with-a-local-cubemap/ray-box-intersection-algorithm
+	vec3 t_boxmin = (boxMin - rayStart)/rayDir;
+	vec3 t_boxmax = (boxMax - rayStart)/rayDir;
+	
+	vec3 t_absoluteMax = (rayEnd - rayStart)/rayDir;
+	float t_absoluteMax_component = -1;
+	t_absoluteMax_component = max(t_absoluteMax.x, t_absoluteMax.y);
+	t_absoluteMax_component = max(t_absoluteMax_component, t_absoluteMax.z);
+	
+	//we require the greater value of the t parameter for the intersection at the min plane
+	float t_min = (t_boxmin.x > t_boxmin.y) ? t_boxmin.x : t_boxmin.y;
+	t_min = (t_min > t_boxmin.z) ? t_min : t_boxmin.z;
+	
+	float t_max = (t_boxmax.x < t_boxmax.y) ? t_boxmax.x : t_boxmax.y;
+	t_max = (t_max < t_boxmax.z) ? t_max : t_boxmax.z;
+	
+	//----------------------
+	if(ID > 0)	{
+		//if(abs(t_min) < abs(t_max))	{
+		//if(t_min > 0) {
+		if((abs(t_min) < abs(t_max)) && (abs(t_max) < abs(t_absoluteMax_component)))	{
+			outColor = vec4((t_absoluteMax_component),0,0,1);
+		} else {
+			outColor = vec4(0,1,0,1);
+		}
+
 	}
-	else {
-		outColor = vec4(0.0, 1.0, 0.0, 1.0);
-	}
+		//outColor = vec4(t_min, 0, 0, 1);
+	
+	
+	
 }

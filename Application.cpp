@@ -140,13 +140,15 @@ void Application::run() {
 	//scaling : convert voxelblock dims to world-space dims
 	mat4 model = glm::scale(glm::mat4(1.0f), glm::vec3(voxelSize*voxelBlockSize)); //glm::mat4(1.0f);// 
 	mat4 VP = proj*view;	// *model;
+	mat4 MV = view * model;
 	mat4 MVP = proj*view*model;
 	//std::cout<<"\n"<<glm::to_string(MVP)<<"\n\n";
     //tracker.Align(d_input, d_inputNormals, d_target, d_targetNormals, d_depthInput, d_depthTarget);
     //checkCudaErrors(cudaDeviceSynchronize());
 	glEnable(GL_DEPTH_TEST);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	sdfRenderer->render(MVP);
+	//sdfRenderer->render(MVP); //MV, P
+	sdfRenderer->render(MV, proj); //MV, P
 	//sdfRenderer->drawToFrontAndBack(MVP);
 	//glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	//glDepthFunc(GL_TRUE);

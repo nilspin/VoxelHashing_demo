@@ -152,7 +152,7 @@ void SDFRenderer::drawToFrontAndBack(const glm::mat4& viewMat) {
 	glEnableVertexAttribArray(2);	//VoxelBlockIDs
 	instancedCubeDrawShader->use();
 	//TODO : attach debug_ssbo here
-	glUniformMatrix4fv(instancedCubeDrawShader->uniform("VP"), 1, false, glm::value_ptr(viewMat));
+	glUniformMatrix4fv(instancedCubeDrawShader->uniform("MVP"), 1, false, glm::value_ptr(viewMat));
 	glDrawArraysInstanced(GL_TRIANGLES, 0, 36, numOccupiedBlocks);
 	glBindVertexArray(0);
 
@@ -166,6 +166,7 @@ void SDFRenderer::drawToFrontAndBack(const glm::mat4& viewMat) {
 	fbo_front->enable();
 
 	//clear before writing anything
+	//TODO : clear all 4 channels
 	glClearTexImage(fbo_front->getSDFVolPtrTexID(), 0, GL_RED_INTEGER, GL_UNSIGNED_INT, nullptr);
 
 	//glEnable(GL_DEPTH_TEST);
@@ -180,7 +181,7 @@ void SDFRenderer::drawToFrontAndBack(const glm::mat4& viewMat) {
 	glEnableVertexAttribArray(2);	//VoxelBlockIDs
 	instancedCubeDrawShader->use();
 	//TODO : attach debug_ssbo here
-	glUniformMatrix4fv(instancedCubeDrawShader->uniform("VP"), 1, false, glm::value_ptr(viewMat));
+	glUniformMatrix4fv(instancedCubeDrawShader->uniform("MVP"), 1, false, glm::value_ptr(viewMat));
 	glDrawArraysInstanced(GL_TRIANGLES, 0, 36, numOccupiedBlocks);
 	glBindVertexArray(0);
 
@@ -190,10 +191,11 @@ void SDFRenderer::drawToFrontAndBack(const glm::mat4& viewMat) {
 
 }
 
-void SDFRenderer::render(const glm::mat4& viewMat) {
+void SDFRenderer::render(const glm::mat4& MV, const glm::mat4& P) {
 	glBindBuffer(GL_ARRAY_BUFFER, numOccupiedBlocks_handle);
 	glGetBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(unsigned int), &numOccupiedBlocks);
-	drawToFrontAndBack(viewMat);
+	glm::mat4 MVP = P * MV;
+	drawToFrontAndBack(MVP);
 	//draw to screen
 
 	//glFrontFace(GL_CW);	//IMPORTANT - Need to do this because we're looking along +Z axis
@@ -206,6 +208,9 @@ void SDFRenderer::render(const glm::mat4& viewMat) {
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, fbo_front->getSDFVolPtrTexID());
 	glUniform1i(tempPassthroughShader->uniform("VoxelID_tex"), 0);
+	glUniformMatrix4fv(tempPassthroughShader->uniform("invMVP"), 1, false, glm::value_ptr(glm::inverse(MVP)));
+	//glUniformMatrix4fv(tempPassthroughShader->uniform("invModelViewMat"), 1, false, glm::value_ptr(glm::inverse(MV)));
+	//glUniformMatrix4fv(tempPassthroughShader->uniform("invProjMat"), 1, false, glm::value_ptr(glm::inverse(P)));
 
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 	glBindVertexArray(0);

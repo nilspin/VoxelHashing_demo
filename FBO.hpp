@@ -139,8 +139,8 @@ public:
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTexStorage2D(GL_TEXTURE_2D, 1, GL_R32UI, width, height);
-		glBindTexture(GL_TEXTURE_2D, 0);
+		glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA32I, width, height);
+		glBindTexture(GL_TEXTURE_2D, 0);//we'll be storing ivec3(blockPos) + BlockID in texture
 
 		glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, integerTex, 0);
 		GLenum drawBuffers[1] = {GL_COLOR_ATTACHMENT0};

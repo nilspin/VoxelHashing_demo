@@ -24,7 +24,7 @@ unique_ptr<FBO> setupFBO_w_intTex()	{
 unique_ptr<ShaderProgram> setupInstancedCubeDrawShader()	{
 	unique_ptr<ShaderProgram> instancedCubeDrawShader = unique_ptr<ShaderProgram>(new ShaderProgram());
 	instancedCubeDrawShader->initFromFiles("shaders/instancedCube.vert", "shaders/instancedCube.frag");
-	instancedCubeDrawShader->addUniform("VP");
+	instancedCubeDrawShader->addUniform("MVP");
 	return instancedCubeDrawShader;
 }
 
@@ -33,6 +33,9 @@ unique_ptr<ShaderProgram> setupDepthWriteShader()	{
 	depthWriteShader->initFromFiles("shaders/depthWrite.vert", "shaders/depthWrite.frag");
 	//depthWriteShader->addUniform("VP");
 	depthWriteShader->addUniform("VoxelID_tex");
+	depthWriteShader->addUniform("invMVP");
+	//depthWriteShader->addUniform("invModelViewMat");
+	//depthWriteShader->addUniform("invProjMat");
 	return depthWriteShader;
 }
 
