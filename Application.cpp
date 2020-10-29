@@ -135,6 +135,7 @@ void Application::run() {
 
     //First things first
     cam.calcMatrices();
+	vec3 camPos = cam.getCamPos();
     GLfloat time = SDL_GetTicks();
     view = cam.getViewMatrix();
 	//scaling : convert voxelblock dims to world-space dims
@@ -148,7 +149,7 @@ void Application::run() {
 	glEnable(GL_DEPTH_TEST);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	//sdfRenderer->render(MVP); //MV, P
-	sdfRenderer->render(MV, proj); //MV, P
+	sdfRenderer->render(MV, proj, camPos); //MV, P
 	//sdfRenderer->drawToFrontAndBack(MVP);
 	//glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	//glDepthFunc(GL_TRUE);

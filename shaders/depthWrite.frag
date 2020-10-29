@@ -12,17 +12,39 @@
 
 
 in vec2 v_texcoords;
-in vec3 near_o;
-in vec3 far_o;
+in vec2 positions;
 
 uniform isampler2D VoxelID_tex;
+uniform mat4 invMVP;
+uniform vec3 camPos;
 //uniform mat4 invProjMat;
 //uniform mat4 invModelViewMat;
 
 layout(location=0) out vec4 outColor;
 
+vec3 near_o;
+vec3 far_o;
+
 void main()	{
 
+	//----------------------------copied from vert shader------------
+	vec4 near_p = vec4(positions.x, positions.y, -1.0, 1.0);
+	vec4 far_p = vec4(positions.x, positions.y, 1.0, 1.0);
+	
+	vec4 near_o_homo = invMVP * near_p;//object space
+	vec4 far_o_homo = invMVP * far_p;
+	
+	//divide by w before interpolation means linear depth
+	// according to https://community.khronos.org/t/ray-origin-through-view-and-projection-matrices/72579/4
+	//but I didn't understand
+	near_o_homo /= near_o_homo.w;
+	far_o_homo /= far_o_homo.w;
+	
+	//these values will be interpolated 
+	near_o = near_o_homo.xyz;
+	far_o = far_o_homo.xyz;
+	
+	//---------------------------------------------------------------
 	//uint ID = texelFetch(VoxelID_tex, ivec2(gl_FragCoord.xy), 0).w;
 	uint ID = texture(VoxelID_tex, v_texcoords).w;
 	
@@ -35,8 +57,8 @@ void main()	{
 	//boxMax *= 0.02;
 	
 	//paramaterise the rayS
-	vec3 rayStart = near_o;
-	vec3 rayEnd = far_o;
+	vec3 rayStart = near_o - camPos;
+	vec3 rayEnd = far_o - camPos;
 	vec3 rayDir = normalize(rayEnd - rayStart);
 
 	//From :

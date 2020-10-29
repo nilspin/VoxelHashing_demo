@@ -153,7 +153,7 @@ void SDFRenderer::drawToFrontAndBack(const glm::mat4& viewMat) {
 	instancedCubeDrawShader->use();
 	//TODO : attach debug_ssbo here
 	glUniformMatrix4fv(instancedCubeDrawShader->uniform("MVP"), 1, false, glm::value_ptr(viewMat));
-	glDrawArraysInstanced(GL_TRIANGLES, 0, 36, numOccupiedBlocks);
+	glDrawArraysInstanced(GL_TRIANGLES, 0, 36, 1);// numOccupiedBlocks);
 	glBindVertexArray(0);
 
 	fbo_back->disable();
@@ -182,7 +182,7 @@ void SDFRenderer::drawToFrontAndBack(const glm::mat4& viewMat) {
 	instancedCubeDrawShader->use();
 	//TODO : attach debug_ssbo here
 	glUniformMatrix4fv(instancedCubeDrawShader->uniform("MVP"), 1, false, glm::value_ptr(viewMat));
-	glDrawArraysInstanced(GL_TRIANGLES, 0, 36, numOccupiedBlocks);
+	glDrawArraysInstanced(GL_TRIANGLES, 0, 36, 1);// numOccupiedBlocks);
 	glBindVertexArray(0);
 
 	fbo_front->disable();
@@ -191,7 +191,7 @@ void SDFRenderer::drawToFrontAndBack(const glm::mat4& viewMat) {
 
 }
 
-void SDFRenderer::render(const glm::mat4& MV, const glm::mat4& P) {
+void SDFRenderer::render(const glm::mat4& MV, const glm::mat4& P, const glm::vec3& camPos) {
 	glBindBuffer(GL_ARRAY_BUFFER, numOccupiedBlocks_handle);
 	glGetBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(unsigned int), &numOccupiedBlocks);
 	glm::mat4 MVP = P * MV;
@@ -209,6 +209,7 @@ void SDFRenderer::render(const glm::mat4& MV, const glm::mat4& P) {
 	glBindTexture(GL_TEXTURE_2D, fbo_front->getSDFVolPtrTexID());
 	glUniform1i(tempPassthroughShader->uniform("VoxelID_tex"), 0);
 	glUniformMatrix4fv(tempPassthroughShader->uniform("invMVP"), 1, false, glm::value_ptr(glm::inverse(MVP)));
+	glUniform3fv(tempPassthroughShader->uniform("camPos"), 1, glm::value_ptr(camPos));
 	//glUniformMatrix4fv(tempPassthroughShader->uniform("invModelViewMat"), 1, false, glm::value_ptr(glm::inverse(MV)));
 	//glUniformMatrix4fv(tempPassthroughShader->uniform("invProjMat"), 1, false, glm::value_ptr(glm::inverse(P)));
 

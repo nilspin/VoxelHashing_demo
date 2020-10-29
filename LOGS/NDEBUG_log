@@ -1,0 +1,252 @@
+Detected 1 CUDA Capable device(s)
+
+Device: 0 GeForce GT 755M
+  CUDA Driver Version / Runtime Version 10.1 / 10, 1
+  CUDA Capability Major/Minor version number: 3.0
+
+App.Marker[Notify](0): Start debugging
+OpenGL.Error[High](1282): GL_INVALID_OPERATION error generated. <program> has not been linked, or is not a program object.
+OpenGL.Error[High](1282): GL_INVALID_OPERATION error generated. <program> object is not successfully linked, or is not a program object.
+35633 shader compilation successful.
+35632 shader compilation successful.
+Shader program link successful.
+Shader program validation successful.
+Uniform VP bound to location: 0
+Uniform frustumColor bound to location: 1
+Attribute position bound to location: 0
+Intrinsic camera matrix :
+517.3     0     0
+    0 516.5     0
+318.6 255.3     1
+
+h_ptrHldr supposedly copied to device
+h_ptrHldr supposedly copied to device
+CUDA device memory allocated
+Uploading projection matrix to device..
+Kinect projection matrix calculated
+OpenGL.Other[Notify](131185): Buffer detailed info: Buffer object 1 (bound to GL_ARRAY_BUFFER_ARB, usage hint is GL_STATIC_DRAW) will use VIDEO memory as the source for buffer object operations.
+Good Framebuffer
+Good Framebuffer
+OpenGL.Error[High](1282): GL_INVALID_OPERATION error generated. <program> has not been linked, or is not a program object.
+OpenGL.Error[High](1282): GL_INVALID_OPERATION error generated. <program> object is not successfully linked, or is not a program object.
+35633 shader compilation successful.
+35632 shader compilation successful.
+Shader program link successful.
+Shader program validation successful.
+Uniform VP bound to location: 0
+OpenGL.Other[Notify](131185): Buffer detailed info: Buffer object 3 (bound to GL_ARRAY_BUFFER_ARB, usage hint is GL_STATIC_DRAW) will use VIDEO memory as the source for buffer object operations.
+OpenGL.Other[Notify](131185): Buffer detailed info: Buffer object 5 (bound to GL_ARRAY_BUFFER_ARB, usage hint is GL_STATIC_DRAW) will use VIDEO memory as the source for buffer object operations.
+OpenGL.Other[Notify](131185): Buffer detailed info: Buffer object 4 (bound to NONE, usage hint is GL_STATIC_DRAW) will use VIDEO memory as the source for buffer object operations.
+OpenGL.Other[Notify](131185): Buffer detailed info: Buffer object 5 (bound to NONE, usage hint is GL_STATIC_COPY) stored in VIDEO memory has been updated.
+OpenGL.Other[Notify](131185): Buffer detailed info: Buffer object 5 (bound to NONE, usage hint is GL_STATIC_COPY) will use VIDEO memory as the source for buffer object operations.
+OpenGL.Other[Notify](131185): Buffer detailed info: Buffer object 6 (bound to NONE, usage hint is GL_STATIC_COPY) will use VIDEO memory as the source for buffer object operations.
+GL resources registered to CUDA hashtable
+OpenGL.Error[High](1282): GL_INVALID_OPERATION error generated. <program> has not been linked, or is not a program object.
+OpenGL.Error[High](1282): GL_INVALID_OPERATION error generated. <program> object is not successfully linked, or is not a program object.
+35633 shader compilation successful.
+35632 shader compilation successful.
+Shader program link successful.
+Shader program validation successful.
+Attribute positions bound to location: 0
+Attribute normals bound to location: 1
+Uniform MVP bound to location: 2
+Uniform ShadeColor bound to location: 3
+Uniform LightPos bound to location: 1
+Uniform CamPos bound to location: 0
+OpenGL.Other[Notify](131185): Buffer detailed info: Buffer object 7 (bound to NONE, usage hint is GL_STATIC_DRAW) will use VIDEO memory as the source for buffer object operations.
+OpenGL.Other[Notify](131185): Buffer detailed info: Buffer object 8 (bound to NONE, usage hint is GL_STATIC_DRAW) will use VIDEO memory as the source for buffer object operations.
+OpenGL.Other[Notify](131185): Buffer detailed info: Buffer object 9 (bound to NONE, usage hint is GL_STATIC_DRAW) will use VIDEO memory as the source for buffer object operations.
+OpenGL.Other[Notify](131185): Buffer detailed info: Buffer object 10 (bound to NONE, usage hint is GL_STATIC_DRAW) will use VIDEO memory as the source for buffer object operations.
+
+Allocated input VBO size: 4915200
+
+Iteration : 0
+
+deltaTransform =
+1 0 0 0
+0 1 0 0
+0 0 1 0
+0 0 0 1
+
+globalCorrespondenceError = -9425.17
+
+Iteration : 1
+
+deltaTransform =
+   0.999977 -0.00108675  0.00671094  0.00667875
+ 0.00117728    0.999908  -0.0134999    0.039715
+-0.00669565   0.0135075    0.999886  -0.0766746
+          0           0           0           1
+
+globalCorrespondenceError = 416.521
+
+Iteration : 2
+
+
+globalCorrespondenceError = 35.7256
+Final rigid transform :
+mat4x4((0.997923, -0.051396, -0.038826, 0.000000), (0.052621, 0.998126, 0.031225, 0.000000), (0.037149, -0.033203, 0.998758, 0.000000), (0.063750, 0.054838, -0.018692, 1.000000))
+OpenGL.Other[Notify](131185): Buffer detailed info: Buffer object 5 (bound to NONE, usage hint is GL_STATIC_COPY) will use VIDEO memory as the source for buffer object operations.
+OpenGL.Other[Notify](131185): Buffer detailed info: Buffer object 5 (bound to NONE, usage hint is GL_STATIC_COPY) will use VIDEO memory as the source for buffer object operations.
+(after GL mapping)numVisibleBlocks : 0
+(after GL mapping) size of compactifiedHashtable(in bytes) : 800000
+(after GL mapping) size of SDFVoxelBlocks(in bytes) : 4096000
+h_ptrHldr supposedly copied to device
+h_ptrHldr supposedly copied to device
+Running AllocBlocksKernel
+Insertion : before bucket iteration
+Inserted block : (-2, -6, 13) at idx 998
+Inserted block : (-1, -8, 17) at idx 997
+Inserted block : (1, -7, 15) at idx 994
+Inserted block : (1, -6, 14) at idx 999
+Inserted block : (1, -7, 14) at idx 991
+Inserted block : (0, -7, 16) at idx 993
+Inserted block : (0, -7, 15) at idx 992
+Inserted block : (-1, -7, 16) at idx 989
+Inserted block : (-2, -8, 17) at idx 990
+Inserted block : (-1, -6, 13) at idx 996
+Inserted block : (-1, -7, 17) at idx 995
+Inserted block : (1, -6, 15) at idx 988
+Inserted block : (-5, -4, 7) at idx 987
+Inserted block : (-7, -5, 10) at idx 986
+Inserted block : (0, -6, 15) at idx 983
+Inserted block : (-3, -2, 5) at idx 985
+Inserted block : (-2, -5, 13) at idx 984
+Inserted block : (0, -6, 16) at idx 980
+Inserted block : (-1, -6, 15) at idx 982
+Inserted block : (-1, -7, 15) at idx 981
+Inserted block : (-4, -2, 5) at idx 979
+Inserted block : (-3, -5, 13) at idx 978
+Inserted block : (-1, -5, 14) at idx 974
+Inserted block : (-2, -6, 15) at idx 971
+Inserted block : (-2, -6, 14) at idx 976
+Inserted block : (-1, -6, 14) at idx 975
+Inserted block : (-2, -5, 14) at idx 977
+Inserted block : (-1, -3, 6) at idx 972
+Inserted block : (-1, -5, 13) at idx 973
+Inserted block : (-1, -6, 17) at idx 970
+Inserted block : (-1, -6, 16) at idx 969
+Inserted block : (1, -5, 14) at idx 968
+Inserted block : (-2, -4, 11) at idx 967
+Inserted block : (-1, -5, 15) at idx 966
+Inserted block : (0, -5, 13) at idx 965
+Inserted block : (1, -5, 15) at idx 964
+Inserted block : (0, -5, 15) at idx 963
+Inserted block : (0, -5, 16) at idx 962
+Inserted block : (-2, -4, 10) at idx 961
+Inserted block : (-2, -3, 10) at idx 959
+Inserted block : (-1, -2, 6) at idx 960
+Inserted block : (0, -2, 6) at idx 958
+Inserted block : (0, -5, 14) at idx 957
+Inserted block : (0, -4, 13) at idx 956
+Inserted block : (1, -4, 14) at idx 955
+Inserted block : (-2, -2, 6) at idx 953
+Inserted block : (-2, -2, 7) at idx 954
+Inserted block : (-1, -2, 7) at idx 952
+Inserted block : (1, -4, 13) at idx 951
+Inserted block : (1, -4, 15) at idx 950
+Inserted block : (0, -2, 7) at idx 949
+Inserted block : (0, -4, 15) at idx 948
+Inserted block : (-2, -2, 9) at idx 947
+Inserted block : (-3, -2, 9) at idx 946
+Inserted block : (5, -2, 10) at idx 945
+Inserted block : (-4, -1, 6) at idx 941
+Inserted block : (-3, -1, 6) at idx 944
+Inserted block : (-4, -1, 5) at idx 943
+Inserted block : (-3, -1, 5) at idx 942
+Inserted block : (-2, -1, 7) at idx 940
+Inserted block : (-3, -2, 8) at idx 939
+Inserted block : (-2, -2, 8) at idx 938
+Inserted block : (-1, -1, 7) at idx 937
+Inserted block : (0, -1, 7) at idx 936
+Inserted block : (-4, -1, 7) at idx 935
+Inserted block : (-3, -1, 7) at idx 934
+Inserted block : (-3, -1, 8) at idx 933
+Inserted block : (-2, -1, 8) at idx 932
+Inserted block : (4, -1, 11) at idx 931
+Inserted block : (4, -1, 10) at idx 930
+Inserted block : (5, -1, 10) at idx 929
+Inserted block : (3, -1, 12) at idx 928
+Inserted block : (3, -1, 11) at idx 927
+Inserted block : (-4, 0, 6) at idx 926
+Inserted block : (-3, 0, 6) at idx 924
+Inserted block : (-3, 0, 7) at idx 925
+Inserted block : (-2, 0, 7) at idx 923
+Inserted block : (-2, 0, 8) at idx 922
+Inserted block : (-1, 0, 8) at idx 920
+Inserted block : (-1, 0, 7) at idx 919
+Inserted block : (-1, -1, 8) at idx 921
+Inserted block : (0, 0, 7) at idx 918
+Inserted block : (1, 0, 7) at idx 915
+Inserted block : (1, 0, 10) at idx 916
+Inserted block : (2, 0, 10) at idx 917
+Inserted block : (2, 0, 11) at idx 913
+Inserted block : (4, 0, 11) at idx 914
+Inserted block : (3, 0, 12) at idx 912
+Inserted block : (3, 0, 11) at idx 911
+Inserted block : (4, 0, 10) at idx 910
+Inserted block : (-4, 0, 5) at idx 908
+Inserted block : (5, 0, 10) at idx 909
+Inserted block : (-2, 0, 6) at idx 907
+Inserted block : (0, 0, 8) at idx 906
+Inserted block : (1, 0, 9) at idx 905
+Inserted block : (0, 0, 9) at idx 904
+Inserted block : (-3, 0, 5) at idx 903
+Inserted block : (2, 0, 9) at idx 902
+Inserted block : (3, 0, 10) at idx 901
+Inserted block : (5, 0, 9) at idx 900
+Inserted block : (1, 0, 8) at idx 899
+Inserted block : (3, 1, 11) at idx 898
+Inserted block : (2, 1, 10) at idx 897
+Inserted block : (4, 1, 11) at idx 896
+Inserted block : (4, 1, 10) at idx 895
+Inserted block : (5, 1, 10) at idx 894
+Inserted block : (0, 1, 8) at idx 893
+Inserted block : (1, 1, 9) at idx 892
+Inserted block : (2, 1, 9) at idx 891
+Inserted block : (3, 1, 9) at idx 890
+Inserted block : (3, 1, 10) at idx 889
+Inserted block : (3, 0, 9) at idx 888
+Inserted block : (5, 1, 9) at idx 887
+Inserted block : (-3, 1, 6) at idx 886
+Inserted block : (0, 1, 7) at idx 885
+Inserted block : (2, 1, 8) at idx 884
+Inserted block : (-4, 1, 5) at idx 883
+Inserted block : (-3, 1, 5) at idx 882
+Inserted block : (4, 2, 10) at idx 880
+Inserted block : (4, 2, 11) at idx 881
+Inserted block : (3, 2, 10) at idx 878
+Inserted block : (3, 2, 9) at idx 879
+Inserted block : (4, 2, 9) at idx 877
+Inserted block : (5, 2, 10) at idx 876
+Inserted block : (5, 2, 9) at idx 875
+Inserted block : (1, 2, 8) at idx 874
+Inserted block : (3, 2, 11) at idx 873
+Inserted block : (0, 2, 7) at idx 872
+Inserted block : (0, 1, 6) at idx 871
+Inserted block : (1, 2, 7) at idx 870
+Inserted block : (3, 3, 12) at idx 869
+Inserted block : (3, 3, 11) at idx 868
+Inserted block : (4, 3, 11) at idx 867
+Inserted block : (4, 3, 10) at idx 866
+Inserted block : (3, 2, 8) at idx 865
+Inserted block : (0, 2, 6) at idx 864
+Inserted block : (4, 3, 9) at idx 863
+Inserted block : (5, 3, 10) at idx 862
+Inserted block : (5, 3, 9) at idx 861
+Inserted block : (-3, 1, 4) at idx 860
+Inserted block : (3, 3, 8) at idx 858
+Inserted block : (3, 3, 9) at idx 859
+Inserted block : (4, 3, 8) at idx 857
+Inserted block : (2, 3, 7) at idx 856
+Inserted block : (2, 3, 8) at idx 855
+Inserted block : (3, 2, 7) at idx 854
+Inserted block : (3, 2, 6) at idx 853
+Inserted block : (1, 2, 6) at idx 852
+Inserted block : (3, 3, 7) at idx 851
+Inserted block : (0, 3, 6) at idx 850
+Inserted block : (1, 3, 7) at idx 849
+Inserted block : (3, 3, 6) at idx 848
+occupiedBlockCount : 152
+depth map integrated into volume!
+CUDA device pointers unmapped!

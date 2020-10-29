@@ -34,6 +34,7 @@ unique_ptr<ShaderProgram> setupDepthWriteShader()	{
 	//depthWriteShader->addUniform("VP");
 	depthWriteShader->addUniform("VoxelID_tex");
 	depthWriteShader->addUniform("invMVP");
+	depthWriteShader->addUniform("camPos");
 	//depthWriteShader->addUniform("invModelViewMat");
 	//depthWriteShader->addUniform("invProjMat");
 	return depthWriteShader;

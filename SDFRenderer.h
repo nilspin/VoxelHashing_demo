@@ -48,7 +48,7 @@ public:
 	~SDFRenderer();
 	//void CreateImageBuffer(); //TODO : not needed. get rid of this
 	void printSDFdata();
-	void render(const glm::mat4&, const glm::mat4&);
+	void render(const glm::mat4&, const glm::mat4&, const glm::vec3&);
 
 	/**
 	 * Draws the Container Blocks twice to determine start/stop ranges
