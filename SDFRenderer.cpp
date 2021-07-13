@@ -47,7 +47,7 @@ SDFRenderer::SDFRenderer() {
 		glGenBuffers(1, &compactHashTable_handle);
 		glBindBuffer(GL_ARRAY_BUFFER, compactHashTable_handle);
 			glEnableVertexAttribArray(1);
-			glBufferData(GL_ARRAY_BUFFER, sizeof(VoxelEntry) * numBuckets * bucketSize, nullptr, GL_STATIC_DRAW);
+			glBufferData(GL_ARRAY_BUFFER, sizeof(VoxelEntry) * numBuckets * bucketSize, nullptr, GL_DYNAMIC_DRAW);
 			glVertexAttribIPointer(1, 3, GL_INT, sizeof(VoxelEntry), nullptr); //boxCenters
 			glVertexAttribDivisor(1, 1);
 			//attrib2 - PtrId
@@ -63,16 +63,16 @@ SDFRenderer::SDFRenderer() {
 
 	glGenBuffers(1, &numOccupiedBlocks_handle);
 	glBindBuffer(GL_ARRAY_BUFFER, numOccupiedBlocks_handle);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(unsigned int), &numOccupiedBlocks, GL_STATIC_COPY);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(unsigned int), &numOccupiedBlocks, GL_DYNAMIC_COPY);
 
 	//TODO : eventually make this an SSBO, not a regular vertex buffer!
 	glGenBuffers(1, &SDF_VolumeBuffer_handle);
-	glBindBuffer(GL_ARRAY_BUFFER, SDF_VolumeBuffer_handle);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(Voxel) * voxelBlockSize * voxelBlockSize * voxelBlockSize * numVoxelBlocks, nullptr, GL_STATIC_COPY);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, SDF_VolumeBuffer_handle);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(Voxel) * voxelBlockSize * voxelBlockSize * voxelBlockSize * numVoxelBlocks, nullptr, GL_DYNAMIC_COPY);
 
 	//unbind
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	//glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 	//register with SDF_Hashtable class
 
 }
@@ -143,7 +143,7 @@ void SDFRenderer::drawToFrontAndBack(const glm::mat4& viewMat) {
 	//clear before writing anything
 	glClearTexImage(fbo_back->getSDFVolPtrTexID(), 0, GL_RED_INTEGER, GL_UNSIGNED_INT, nullptr);
 
-	glClear(GL_DEPTH_BUFFER_BIT);
+	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 	glCullFace(GL_BACK);
 	//glDepthFunc(GL_LESS);
 	glBindVertexArray(Scene);
@@ -153,7 +153,7 @@ void SDFRenderer::drawToFrontAndBack(const glm::mat4& viewMat) {
 	instancedCubeDrawShader->use();
 	//TODO : attach debug_ssbo here
 	glUniformMatrix4fv(instancedCubeDrawShader->uniform("MVP"), 1, false, glm::value_ptr(viewMat));
-	glDrawArraysInstanced(GL_TRIANGLES, 0, 36, 1);// numOccupiedBlocks);
+	glDrawArraysInstanced(GL_TRIANGLES, 0, 36,  numOccupiedBlocks);
 	glBindVertexArray(0);
 
 	fbo_back->disable();
@@ -162,7 +162,7 @@ void SDFRenderer::drawToFrontAndBack(const glm::mat4& viewMat) {
 
 	//---------------Second pass - render depth for front face--------------
 
-	 
+
 	fbo_front->enable();
 
 	//clear before writing anything
@@ -171,7 +171,7 @@ void SDFRenderer::drawToFrontAndBack(const glm::mat4& viewMat) {
 
 	//glEnable(GL_DEPTH_TEST);
 	//glDepthFunc(GL_GREATER);
-	glClear(GL_DEPTH_BUFFER_BIT);
+	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 	glCullFace(GL_FRONT);
 	//glDepthFunc(GL_LESS);	//ideally should be GL_GREATER as per groundai article, but GL_LESS with custom depth-compare-shader works
 
@@ -182,7 +182,7 @@ void SDFRenderer::drawToFrontAndBack(const glm::mat4& viewMat) {
 	instancedCubeDrawShader->use();
 	//TODO : attach debug_ssbo here
 	glUniformMatrix4fv(instancedCubeDrawShader->uniform("MVP"), 1, false, glm::value_ptr(viewMat));
-	glDrawArraysInstanced(GL_TRIANGLES, 0, 36, 1);// numOccupiedBlocks);
+	glDrawArraysInstanced(GL_TRIANGLES, 0, 36, numOccupiedBlocks);
 	glBindVertexArray(0);
 
 	fbo_front->disable();
@@ -201,6 +201,8 @@ void SDFRenderer::render(const glm::mat4& MV, const glm::mat4& P, const glm::vec
 	//glFrontFace(GL_CW);	//IMPORTANT - Need to do this because we're looking along +Z axis
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glDisable(GL_CULL_FACE);
+	glDisable(GL_DEPTH_TEST);
 	tempPassthroughShader->use();
 	glBindVertexArray(CanvasVAO);
 	glEnableVertexAttribArray(0);
@@ -208,14 +210,32 @@ void SDFRenderer::render(const glm::mat4& MV, const glm::mat4& P, const glm::vec
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, fbo_front->getSDFVolPtrTexID());
 	glUniform1i(tempPassthroughShader->uniform("VoxelID_tex"), 0);
-	glUniformMatrix4fv(tempPassthroughShader->uniform("invMVP"), 1, false, glm::value_ptr(glm::inverse(MVP)));
-	glUniform3fv(tempPassthroughShader->uniform("camPos"), 1, glm::value_ptr(camPos));
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, fbo_front->getRayhitTexID());
+	glUniform1i(tempPassthroughShader->uniform("rayHit_start"), 1);
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, fbo_back->getRayhitTexID());
+	glUniform1i(tempPassthroughShader->uniform("rayHit_end"), 2);
+	//glUniformMatrix4fv(tempPassthroughShader->uniform("invMVP"), 1, false, glm::value_ptr(glm::inverse(MVP)));
+	//glUniform3fv(tempPassthroughShader->uniform("camPos"), 1, glm::value_ptr(camPos));
+
+	//TODO: bind sdf_voxels buffer as SSBO
+	///GLuint sdfvoxels_ssbo_index = 0;
+	sdfvoxels_ssbo_index = glGetProgramResourceIndex(tempPassthroughShader->getProgramHandle(), GL_SHADER_STORAGE_BLOCK, "SDFVolume"); //Get block index
+	glShaderStorageBlockBinding(tempPassthroughShader->getProgramHandle(), sdfvoxels_ssbo_index, 3); //connect shader storage block to ssbo
+	glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, SDF_VolumeBuffer_handle);
+
+	//Below two lines not needed
 	//glUniformMatrix4fv(tempPassthroughShader->uniform("invModelViewMat"), 1, false, glm::value_ptr(glm::inverse(MV)));
 	//glUniformMatrix4fv(tempPassthroughShader->uniform("invProjMat"), 1, false, glm::value_ptr(glm::inverse(P)));
 
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 	glBindVertexArray(0);
-	glBindTexture(GL_TEXTURE_2D, 0);
+	glActiveTexture(GL_TEXTURE0);  glBindTexture(GL_TEXTURE_2D, 0);
+	glActiveTexture(GL_TEXTURE1);  glBindTexture(GL_TEXTURE_2D, 0);
+	glActiveTexture(GL_TEXTURE2);  glBindTexture(GL_TEXTURE_2D, 0);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 }
 
 SDFRenderer::~SDFRenderer() {

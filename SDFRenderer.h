@@ -17,7 +17,8 @@ class SDFRenderer {
 	//NOTE : we don't really use numOccupiedBlocks for rendering, so it might seem
 	//appropriate to keep this in SDF_Hashtable, but we keep it here for cleanliness.
 
-	GLuint SDF_VolumeBuffer_handle;	//actual sdf voxelblocks
+	GLuint SDF_VolumeBuffer_handle = 0;	//actual sdf voxelblocks
+	GLuint sdfvoxels_ssbo_index = 0; //ssbo binding index
 	GLuint compactHashTable_handle;	//voxelBlock metadata
 	std::unique_ptr<FBO> fbo_front;
 	std::unique_ptr<FBO> fbo_back;

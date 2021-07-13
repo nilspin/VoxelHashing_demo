@@ -1,96 +1,144 @@
 #version 430
 
-//layout(std430, binding =1) buffer DbgSSBO	{
-//	uint startPtr;
-//	vec3 rayStartPos; //where ray hits the block in world-space
-//	uint stopPtr;
-//	vec3 rayStopPos; //where ray exits the block in world-space
-//} dbg_ssbo;
-
-//flat in int PtrID_frag;
-//flat in int SDFVolumeBasePtr_frag;
-
+const float INFINITY = uintBitsToFloat(0x7F800000);
 
 in vec2 v_texcoords;
-in vec2 positions;
+out vec4 outColor;
 
+struct Voxel {
+	float SDF;
+	float WEIGHT;
+};
+layout(std430, packed, binding=3) readonly buffer SDFVolume	{
+	Voxel Voxels[];
+};
+
+uniform sampler2D rayHit_start;
+uniform sampler2D rayHit_end;
 uniform isampler2D VoxelID_tex;
-uniform mat4 invMVP;
-uniform vec3 camPos;
-//uniform mat4 invProjMat;
-//uniform mat4 invModelViewMat;
 
-layout(location=0) out vec4 outColor;
+const int blockSize = 8;
 
-vec3 near_o;
-vec3 far_o;
+//ivec3 voxel2Block(ivec3 voxel) 	{
+//	if(voxel.x < 0) voxel.x -= blockSize-1;	//i.e voxelBlockSize -1
+//	if(voxel.y < 0) voxel.y -= blockSize-1;
+//	if(voxel.z < 0) voxel.z -= blockSize-1;
+//	return ivec3(voxel.x/blockSize, voxel.y/blockSize, voxel.z/blockSize);
+//}
 
-void main()	{
+//int linearizeVoxelPos(const ivec3 pos)	{
+//	return  pos.z * blockSize * blockSize +
+//			pos.y * blockSize +
+//			pos.x;
+//}
 
-	//----------------------------copied from vert shader------------
-	vec4 near_p = vec4(positions.x, positions.y, -1.0, 1.0);
-	vec4 far_p = vec4(positions.x, positions.y, 1.0, 1.0);
-	
-	vec4 near_o_homo = invMVP * near_p;//object space
-	vec4 far_o_homo = invMVP * far_p;
-	
-	//divide by w before interpolation means linear depth
-	// according to https://community.khronos.org/t/ray-origin-through-view-and-projection-matrices/72579/4
-	//but I didn't understand
-	near_o_homo /= near_o_homo.w;
-	far_o_homo /= far_o_homo.w;
-	
-	//these values will be interpolated 
-	near_o = near_o_homo.xyz;
-	far_o = far_o_homo.xyz;
-	
-	//---------------------------------------------------------------
-	//uint ID = texelFetch(VoxelID_tex, ivec2(gl_FragCoord.xy), 0).w;
-	uint ID = texture(VoxelID_tex, v_texcoords).w;
-	
-	ivec3 boxPosition = ivec3(texture(VoxelID_tex, v_texcoords).xyz);
-	vec3 size = vec3(1,1,1);
-	vec3 boxMax = boxPosition + size;
-	vec3 boxMin = boxPosition - size;
-	
-	//boxMin *= 0.02;
-	//boxMax *= 0.02;
-	
-	//paramaterise the rayS
-	vec3 rayStart = near_o - camPos;
-	vec3 rayEnd = far_o - camPos;
-	vec3 rayDir = normalize(rayEnd - rayStart);
-
-	//From :
-	//https://developer.arm.com/documentation/100140/0302/advanced-graphics-techniques/implementing-reflections-with-a-local-cubemap/ray-box-intersection-algorithm
-	vec3 t_boxmin = (boxMin - rayStart)/rayDir;
-	vec3 t_boxmax = (boxMax - rayStart)/rayDir;
-	
-	vec3 t_absoluteMax = (rayEnd - rayStart)/rayDir;
-	float t_absoluteMax_component = -1;
-	t_absoluteMax_component = max(t_absoluteMax.x, t_absoluteMax.y);
-	t_absoluteMax_component = max(t_absoluteMax_component, t_absoluteMax.z);
-	
-	//we require the greater value of the t parameter for the intersection at the min plane
-	float t_min = (t_boxmin.x > t_boxmin.y) ? t_boxmin.x : t_boxmin.y;
-	t_min = (t_min > t_boxmin.z) ? t_min : t_boxmin.z;
-	
-	float t_max = (t_boxmax.x < t_boxmax.y) ? t_boxmax.x : t_boxmax.y;
-	t_max = (t_max < t_boxmax.z) ? t_max : t_boxmax.z;
-	
-	//----------------------
-	if(ID > 0)	{
-		//if(abs(t_min) < abs(t_max))	{
-		//if(t_min > 0) {
-		if((abs(t_min) < abs(t_max)) && (abs(t_max) < abs(t_absoluteMax_component)))	{
-			outColor = vec4((t_absoluteMax_component),0,0,1);
-		} else {
-			outColor = vec4(0,1,0,1);
-		}
-
-	}
-		//outColor = vec4(t_min, 0, 0, 1);
-	
-	
-	
+uint linearizeVoxelPos(const ivec3 pos)
+{
+	return (pos.z * blockSize * blockSize) +
+				 (pos.y * blockSize) +
+				 (pos.x);
 }
+
+vec4 getColor(ivec3 voxel, uint basePtr)
+{
+	uint voxIdx = linearizeVoxelPos(voxel);
+
+	const Voxel vox = Voxels[basePtr + voxIdx];
+
+	float sdf = vox.SDF;
+	float weight = vox.WEIGHT;
+
+	//if(sdf == 0.0f)	{
+	//	//color = vec4(vec3(abs(sdf)), weight);
+	//	color = vec4(0);
+	//}
+	//else {
+	//	color = vec4(0,0,1,1);
+	//	//color = vec4(vec3(abs(sdf)), weight);
+	//	//discard;
+	//}
+	vec4 color = vec4(vec3(abs(100*sdf)), weight);
+	return color;
+	//return vec4(vec3(1), 0.01);
+}
+
+vec4 calculateColor(ivec3 startVox, ivec3 endVox, vec3 rayDir, uint voxel_basePtr)
+{
+	//int localStartVox = linearizeVoxelPos(startVox);
+	//int localEndVox = linearizeVoxelPos(endVox);
+
+	if(startVox == endVox) discard;
+
+	ivec3 stepSize = ivec3(sign(rayDir.x), sign(rayDir.y), sign(rayDir.z));
+
+	vec3 next_boundary = vec3(startVox + stepSize);
+
+	//calculate max distance to next barrier
+	vec3 tMax = vec3(next_boundary - vec3(startVox))/rayDir;
+	vec3 tDelta = vec3((1/rayDir.x),(1/rayDir.y),(1/rayDir.z));
+	//tDelta *= stepSize;
+
+	//handle case when startVox = endVox
+	/*
+	if (rayDir.x == 0.0f) { tMax.x = INFINITY; tDelta.x = INFINITY; }
+	if (next_boundary.x - startVox.x == 0.0f) { tMax.x = INFINITY; tDelta.x = INFINITY; }
+
+	if (rayDir.y == 0.0f) { tMax.y = INFINITY; tDelta.y = INFINITY; }
+	if (next_boundary.y - startVox.y == 0.0f) { tMax.y = INFINITY; tDelta.y = INFINITY; }
+
+	if (rayDir.z == 0.0f) { tMax.z = INFINITY; tDelta.z = INFINITY; }
+	if (next_boundary.z - startVox.z == 0.0f) { tMax.z = INFINITY; tDelta.z = INFINITY; }
+	*/
+
+	//now traverse
+	ivec3 temp = startVox;
+	int iter = 0, maxIter = 20;
+	vec4 col = vec4(0);
+
+	//while(temp!= endVox)
+	//{
+	  while(iter <= maxIter)
+		{
+			if((tMax.x < tMax.y) && (tMax.x < tMax.z))
+			{
+				temp.x += stepSize.x;
+				if(temp.x == endVox.x) break;
+				tMax.x += tDelta.x;
+			}
+			if((tMax.y < tMax.x) && (tMax.y < tMax.z))
+			{
+				temp.y += stepSize.y;
+				if(temp.y == endVox.y) break;
+				tMax.y += tDelta.y;
+			}
+			if((tMax.z < tMax.x) && (tMax.z < tMax.y))
+			{
+				temp.z += stepSize.z;
+				if(temp.z == endVox.z) break;
+				tMax.z += tDelta.z;
+			}
+			col += getColor(temp, voxel_basePtr);
+			iter++;
+		}
+	//}
+
+	return col;
+}
+
+void main()
+{
+	uint VoxelBlockID = texture(VoxelID_tex, v_texcoords).w; //Not actual ID. It is base ptr of 8x8x8 voxel brick
+	if(VoxelBlockID == 0) discard;
+
+	vec3 rayStart = texture(rayHit_start, v_texcoords).xyz; //in 0..1
+	vec3 rayEnd = texture(rayHit_end, v_texcoords).xyz; //in 0..1
+	vec3 rayDir = normalize(rayEnd - rayStart);
+	//rayDir *= 8.0;
+
+	ivec3 irayStart = ivec3(rayStart*8); //voxel position on 8x8x8 block
+	ivec3 irayEnd = ivec3(rayEnd*8);
+
+	outColor = calculateColor(irayStart, irayEnd, rayDir, VoxelBlockID);
+}
+
+

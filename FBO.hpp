@@ -6,7 +6,8 @@
 class FBO {
 	int width, height;
 	GLuint fbo;
-	GLuint depthTex, integerTex;
+	GLuint depthTex, integerTex, rayhitTex; 
+	//rayhitTex is rgb tex that stores hit position on the cube
 
 	void init() {
 		initDepthTexture();
@@ -99,6 +100,7 @@ public:
 	}
 
 	GLuint getDepthTexID() { return depthTex; }
+	GLuint getRayhitTexID() { return rayhitTex; }
 	GLuint getSDFVolPtrTexID() { return integerTex; }
 
 	void enable() {
@@ -143,8 +145,46 @@ public:
 		glBindTexture(GL_TEXTURE_2D, 0);//we'll be storing ivec3(blockPos) + BlockID in texture
 
 		glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, integerTex, 0);
-		GLenum drawBuffers[1] = {GL_COLOR_ATTACHMENT0};
-		glDrawBuffers(1, drawBuffers);
+		//GLenum drawBuffers[1] = {GL_COLOR_ATTACHMENT0};
+		//glDrawBuffers(1, drawBuffers);
+
+		//checkFBO();
+
+		//disable();
+	}
+
+	void initRayHitTex() {
+		enable();	//We don't need to use regular textures anymore!
+		//use image instead
+
+		glGenTextures(1, &rayhitTex);
+		glBindTexture(GL_TEXTURE_2D, rayhitTex);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+		//TODO - verify and clean this
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGB32F, width, height);
+		glBindTexture(GL_TEXTURE_2D, 0);//we'll be storing x,y,z pos of rayhit on cube surface in texture
+
+		glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, rayhitTex, 0);
+		//GLenum drawBuffers[1] = {GL_COLOR_ATTACHMENT1};
+		//glDrawBuffers(1, drawBuffers);
+
+		//checkFBO();
+
+		//disable();
+	}
+
+	void initResources() {
+		initIntegerTexture();
+		initRayHitTex();
+
+		//0 = blockPtr, 1 = rayHit
+		GLenum drawBuffers[2] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
+		glDrawBuffers(2, drawBuffers);
 
 		checkFBO();
 

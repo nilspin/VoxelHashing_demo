@@ -44,8 +44,8 @@ const int voxelBlockSize = 8;
 const float voxelSize = 0.02f;
 const int numOccupiedBlocks = 0;
 const float maxIntegrationDistance = 4.0f;
-const float truncScale = 0.01f;
-const float truncation = 1.0f;
+const float truncScale = 0.1f;
+const float truncation = 5.0f;
 const int integrationWeightSample = 10;
 const float integrationWeightMax = 255;
 

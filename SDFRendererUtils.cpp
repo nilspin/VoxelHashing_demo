@@ -1,24 +1,13 @@
-#include "SDFRendererUtils.h"
+﻿#include "SDFRendererUtils.h"
 #include "common.h"
 
 using std::unique_ptr;
 
 unique_ptr<FBO> setupFBO_w_intTex()	{
 	std::unique_ptr<FBO> fbo = unique_ptr<FBO>(new FBO(windowWidth, windowHeight));
-	fbo->initIntegerTexture();
+	fbo->initResources();
 	return fbo;
 }
-
-
-//unique_ptr<ShaderProgram> setupRaycastShader()	{
-//	unique_ptr<ShaderProgram> raycast_shader = unique_ptr<ShaderProgram>(new ShaderProgram());
-//	raycast_shader->initFromFiles("shaders/drawBox.vert", "shaders/drawBox.geom", "shaders/drawBox.frag");
-//	raycast_shader->addAttribute("voxentry");
-//	raycast_shader->addUniform("VP");
-//	//raycast_shader->addUniform("Proj");
-//	//raycast_shader->addUniform("invProj");
-//	return raycast_shader;
-//}
 
 
 unique_ptr<ShaderProgram> setupInstancedCubeDrawShader()	{
@@ -33,10 +22,8 @@ unique_ptr<ShaderProgram> setupDepthWriteShader()	{
 	depthWriteShader->initFromFiles("shaders/depthWrite.vert", "shaders/depthWrite.frag");
 	//depthWriteShader->addUniform("VP");
 	depthWriteShader->addUniform("VoxelID_tex");
-	depthWriteShader->addUniform("invMVP");
-	depthWriteShader->addUniform("camPos");
-	//depthWriteShader->addUniform("invModelViewMat");
-	//depthWriteShader->addUniform("invProjMat");
+	depthWriteShader->addUniform("rayHit_start");
+	depthWriteShader->addUniform("rayHit_end");
 	return depthWriteShader;
 }
 
@@ -79,64 +66,65 @@ void generateCanvas(GLuint& CanvasVAO, GLuint& CanvasVBO, GLuint& CanvasTexCoord
 void generateUnitCube(GLuint &InstanceCubeVBO)	{
 	float cube_tri_data[] = {
 	/* face 1 */
-	1.0, -1.0, -1.0,
-	-1.0, 1.0, -1.0,
-	1.0, 1.0, -1.0,
+	1.0, 0.0, 0.0,
+	0.0, 1.0, 0.0,
+	1.0, 1.0, 0.0,
 
-	-1.0, 1.0, -1.0,
-	1.0, -1.0, -1.0,
-	-1.0, -1.0, -1.0,
+	0.0, 1.0, 0.0,
+	1.0, 0.0, 0.0,
+	0.0, 0.0, 0.0,
 
 	/* face 2 */
-	-1.0, 1.0, 1.0,
-	1.0, -1.0, 1.0,
+	0.0, 1.0, 1.0,
+	1.0, 0.0, 1.0,
 	1.0, 1.0, 1.0,
 
-	1.0, -1.0, 1.0,
-	-1.0, 1.0, 1.0,
-	-1.0, -1.0, 1.0,
+	1.0, 0.0, 1.0,
+	0.0, 1.0, 1.0,
+	0.0, 0.0, 1.0,
 
 	/* face 3 */
-	-1.0, 1.0, -1.0,
-	-1.0, 1.0, 1.0,
-	1.0, 1.0, -1.0,
+	0.0, 1.0, 0.0,
+	0.0, 1.0, 1.0,
+	1.0, 1.0, 0.0,
 
-	-1.0, 1.0, 1.0,
+	0.0, 1.0, 1.0,
 	1.0, 1.0, 1.0,
-	1.0, 1.0, -1.0,
+	1.0, 1.0, 0.0,
 
 	/* face 4 */
-	-1.0, -1.0, 1.0,
-	-1.0, -1.0, -1.0,
-	1.0, -1.0, -1.0,
+	0.0, 0.0, 1.0,
+	0.0, 0.0, 0.0,
+	1.0, 0.0, 0.0,
 
-	1.0, -1.0, 1.0,
-	-1.0, -1.0, 1.0,
-	1.0, -1.0, -1.0,
+	1.0, 0.0, 1.0,
+	0.0, 0.0, 1.0,
+	1.0, 0.0, 0.0,
 
 	/* face 5 */
-	1.0, 1.0, -1.0,
+	1.0, 1.0, 0.0,
 	1.0, 1.0, 1.0,
-	1.0, -1.0, 1.0,
+	1.0, 0.0, 1.0,
 
-	1.0, 1.0, -1.0,
-	1.0, -1.0, 1.0,
-	1.0, -1.0, -1.0,
+	1.0, 1.0, 0.0,
+	1.0, 0.0, 1.0,
+	1.0, 0.0, 0.0,
 
 	/* face 6 */
-	-1.0, 1.0, 1.0,
-	-1.0, 1.0, -1.0,
-	-1.0, -1.0, 1.0,
+	0.0, 1.0, 1.0,
+	0.0, 1.0, 0.0,
+	0.0, 0.0, 1.0,
 
-	-1.0, -1.0, 1.0,
-	-1.0, 1.0, -1.0,
-	-1.0, -1.0, -1.0,
+	0.0, 0.0, 1.0,
+	0.0, 1.0, 0.0,
+	0.0, 0.0, 0.0,
 	};
 
 	glGenBuffers(1, &InstanceCubeVBO);
 	glBindBuffer(GL_ARRAY_BUFFER, InstanceCubeVBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(cube_tri_data), &cube_tri_data, GL_STATIC_DRAW);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
 }
 
 GLuint setup_Debug_SSBO()	{
@@ -160,20 +148,4 @@ GLuint setup_Debug_SSBO()	{
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 	return dbg_ssbo;
 }
-//unique_ptr<ShaderProgram> setupDrawLinearDepthShader()	{
-//	unique_ptr<ShaderProgram> drawLinearDepth = unique_ptr<ShaderProgram>(new ShaderProgram());
-//	//drawLinearDepth->initFromFiles("shaders/passthrough.vert", "shaders/linearDepth.frag");
-//	drawLinearDepth->initFromFiles("shaders/raycastSDF.vert", "shaders/raycastSDF.geom", "shaders/raycastSDF.frag");
-//	drawLinearDepth->addAttribute("voxentry");
-//	//drawLinearDepth->addAttribute("SDFVolumeBasePtr_vert");
-//	drawLinearDepth->addUniform("startDepthTex");
-//	drawLinearDepth->addUniform("endDepthTex");
-//	drawLinearDepth->addUniform("windowWidth");
-//	drawLinearDepth->addUniform("windowHeight");
-//	//drawLinearDepth->addUniform("zNear");
-//	//drawLinearDepth->addUniform("zFar");
-//	drawLinearDepth->addUniform("VP");
-//	drawLinearDepth->addUniform("invVP");
-//	return drawLinearDepth;
-//}
 

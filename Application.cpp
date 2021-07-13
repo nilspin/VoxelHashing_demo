@@ -150,7 +150,6 @@ void Application::run() {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	//sdfRenderer->render(MVP); //MV, P
 	sdfRenderer->render(MV, proj, camPos); //MV, P
-	//sdfRenderer->drawToFrontAndBack(MVP);
 	//glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	//glDepthFunc(GL_TRUE);
 	//glDisable(GL_DEPTH_TEST);

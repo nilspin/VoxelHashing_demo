@@ -826,7 +826,7 @@ void integrateDepthMapKernel(const float4* verts) {
 		//Sets updation weight based on sensor noise. Farther depths have less weight. Copied from prof. Niessner's implementation
 		//float weightUpdate = fmaxf(d_hashtableParams.integrationWeightSample * 1.5 * (1.0 - depthZeroOne), 1.0f);
 		//unsigned int weightUpdate = 10;	//let's keep this constant for now
-		float  weightUpdate = 0.1f;
+		float  weightUpdate = 0.2f;
 
 		Voxel curr;
 		curr.sdf = sdf;
@@ -834,8 +834,8 @@ void integrateDepthMapKernel(const float4* verts) {
 		//curr.color = make_uchar3(0, 255, 0);	//TODO : later
 
 		const int oldVoxIdx = entry.ptr + linearizeVoxelPos(i);
-
-		Voxel fusedVoxel = combineVoxel(d_ptrHldr.d_SDFBlocks[oldVoxIdx], curr);
+		const Voxel oldVox = d_ptrHldr.d_SDFBlocks[oldVoxIdx];
+		Voxel fusedVoxel = combineVoxel(oldVox, curr);
 		//printf("(%f, %f)", fusedVoxel.sdf, fusedVoxel.weight);	//Working fine till here
 		d_ptrHldr.d_SDFBlocks[oldVoxIdx] = fusedVoxel;	//replace old voxel with new fused one
 	}
