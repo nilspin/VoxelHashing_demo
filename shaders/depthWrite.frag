@@ -57,7 +57,11 @@ vec4 getColor(ivec3 voxel, uint basePtr)
 	//	//color = vec4(vec3(abs(sdf)), weight);
 	//	//discard;
 	//}
-	vec4 color = vec4(vec3(abs(100*sdf)), weight);
+	//vec4 color = vec4(vec3(abs(100*sdf)), weight);
+	vec4 color = vec4(0);
+	if(sdf > 0.0) {
+	color = vec4(vec3(sdf), weight);
+	}
 	return color;
 	//return vec4(vec3(1), 0.01);
 }

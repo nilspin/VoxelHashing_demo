@@ -41,13 +41,13 @@ const int bucketSize = 5;
 const int attachedLinkedListSize = 4;
 const int numVoxelBlocks = 1000;
 const int voxelBlockSize = 8;
-const float voxelSize = 0.02f;
+const float voxelSize = 0.015f;
 const int numOccupiedBlocks = 0;
 const float maxIntegrationDistance = 4.0f;
 const float truncScale = 0.1f;
-const float truncation = 5.0f;
+const float truncation = 2.0f;
 const int integrationWeightSample = 10;
-const float integrationWeightMax = 255;
+const float integrationWeightMax = 1.0f;
 
 
 #endif

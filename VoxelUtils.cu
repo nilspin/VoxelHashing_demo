@@ -224,7 +224,7 @@ void deviceFree()	{
 __host__
 void calculateKinectProjectionMatrix()	{
 
-	float3x3 m(intrinsicsTranspose);
+	float3x3 m(intrinsics);
 	//Now upload to device
 	std::cout<<"Uploading projection matrix to device..\n";
 	checkCudaErrors(cudaMemcpyToSymbol(kinectProjectionMatrix, &m, sizeof(m)));
@@ -343,19 +343,20 @@ void removeSingleBlockInHeap(int ptr)	{
 //Frustum culling
 __inline__ __device__
 bool blockInFrustum(int3 blockId) {
-	float3 worldPos = block2World(blockId);
-	float4 pos = make_float4(worldPos.x, worldPos.y, worldPos.z, 1);
-	pos = d_hashtableParams.global_transform * pos;	//TODO : shouldn't this be inv_global_transform?
-	float3 projected = make_float3(pos.x, pos.y, pos.z);
-	projected = kinectProjectionMatrix * projected;
-	projected = projected / projected.z;
+	return true;
+	//float3 worldPos = block2World(blockId);
+	//float4 pos = make_float4(worldPos.x, worldPos.y, worldPos.z, 1);
+	//pos = d_hashtableParams.global_transform * pos;	//TODO : shouldn't this be inv_global_transform?
+	//float3 projected = make_float3(pos.x, pos.y, pos.z);
+	//projected = kinectProjectionMatrix * projected;
+	//projected = projected / projected.z;
 
-	int x = __float2int_rz(projected.x);
-	int y = __float2int_rz(projected.y);
-	if (x < 640 && x >= 0 && y < 480 && y >= 0) {
-		return true;
-	}
-	return false;
+	//int x = __float2int_rz(projected.x);
+	//int y = __float2int_rz(projected.y);
+	//if (x < 640 && x >= 0 && y < 480 && y >= 0) {
+	//	return true;
+	//}
+	//return false;
 }
 
 //Hacky but cool code below
@@ -789,6 +790,35 @@ Voxel combineVoxel(const Voxel& oldVox, const Voxel& currVox) {
 //Implementation of Curless & Levoy paper(1996)
 __global__
 void integrateDepthMapKernel(const float4* verts) {
+
+	/*
+	//Testing : draw SDF sphere to ensure this integration kernel is working ok
+	const VoxelEntry& entry = d_ptrHldr.d_compactifiedHashTable[blockIdx.x];
+	int3 base_voxel = block2Voxel(entry.pos);
+	int3 i = make_int3(threadIdx.x, threadIdx.y, threadIdx.z);
+	int3 curr_voxel = base_voxel + i;// delinearizeVoxelPos(i);
+	float sdf = (i.x * i.x) + (i.y * i.y) + (i.z * i.z) - (220*220); //220 radii sphere
+	sdf = sqrt(sdf);
+	const float temp_truncation_val = 20;
+	
+	if (abs(sdf) < temp_truncation_val)
+	{
+		//float weightUpdate = fmaxf(1.0 - (abs(sdf)/temp_truncation_val), 1.0f); //ie more weight when near 0
+		float weightUpdate = 0.5f;
+		Voxel curr;
+		curr.sdf = sdf;
+		curr.weight = weightUpdate;
+		//curr.color = make_uchar3(0, 255, 0);	//TODO : later
+
+		const int oldVoxIdx = entry.ptr + linearizeVoxelPos(i);
+		const Voxel oldVox = d_ptrHldr.d_SDFBlocks[oldVoxIdx];
+		Voxel fusedVoxel = combineVoxel(oldVox, curr);
+		//printf("(%f, %f)", fusedVoxel.sdf, fusedVoxel.weight);	//Working fine till here
+		d_ptrHldr.d_SDFBlocks[oldVoxIdx] = fusedVoxel;	//replace old voxel with new fused one
+
+	}
+	*/
+	//-------------------------------------------------------
 	const VoxelEntry& entry = d_ptrHldr.d_compactifiedHashTable[blockIdx.x];
 	int3 base_voxel = block2Voxel(entry.pos);
 
@@ -797,6 +827,7 @@ void integrateDepthMapKernel(const float4* verts) {
 	float4 curr_voxel_float = make_float4(curr_voxel.x, curr_voxel.y, curr_voxel.z, 1.0);
 	curr_voxel_float = d_hashtableParams.inv_global_transform * curr_voxel_float;
 	curr_voxel = make_int3(curr_voxel_float.x, curr_voxel_float.y, curr_voxel_float.z);
+
 	float3 voxel_worldPos = voxel2World(curr_voxel);
 	int2 screenPos = project(voxel_worldPos);
 
@@ -810,6 +841,7 @@ void integrateDepthMapKernel(const float4* verts) {
 	float depthRangeMax = 5.0;
 	float depthZeroOne = (depth - depthRangeMin) / (depthRangeMax - depthRangeMin);	//normalize current depth
 
+	//assert(voxel_worldPos.z > 0)
 	float sdf = depth - voxel_worldPos.z;
 	//printf("%f", sdf);	//Working fine till here
 	float truncation = d_hashtableParams.truncation;	// +(d_hashtableParams.truncScale*depth);
@@ -825,8 +857,9 @@ void integrateDepthMapKernel(const float4* verts) {
 
 		//Sets updation weight based on sensor noise. Farther depths have less weight. Copied from prof. Niessner's implementation
 		//float weightUpdate = fmaxf(d_hashtableParams.integrationWeightSample * 1.5 * (1.0 - depthZeroOne), 1.0f);
+		float weightUpdate = fmaxf(d_hashtableParams.integrationWeightSample * (depthZeroOne), 1.0f);
 		//unsigned int weightUpdate = 10;	//let's keep this constant for now
-		float  weightUpdate = 0.2f;
+		//float  weightUpdate = 0.2f;
 
 		Voxel curr;
 		curr.sdf = sdf;
