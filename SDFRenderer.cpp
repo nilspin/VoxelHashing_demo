@@ -153,7 +153,8 @@ void SDFRenderer::drawToFrontAndBack(const glm::mat4& viewMat) {
 	instancedCubeDrawShader->use();
 	//TODO : attach debug_ssbo here
 	glUniformMatrix4fv(instancedCubeDrawShader->uniform("MVP"), 1, false, glm::value_ptr(viewMat));
-	glDrawArraysInstanced(GL_TRIANGLES, 0, 36,  numOccupiedBlocks);
+	//glDrawArraysInstanced(GL_TRIANGLES, 0, 36,  numOccupiedBlocks);
+	glDrawArraysInstanced(GL_TRIANGLES, 0, 36,  1);
 	glBindVertexArray(0);
 
 	fbo_back->disable();
@@ -182,7 +183,8 @@ void SDFRenderer::drawToFrontAndBack(const glm::mat4& viewMat) {
 	instancedCubeDrawShader->use();
 	//TODO : attach debug_ssbo here
 	glUniformMatrix4fv(instancedCubeDrawShader->uniform("MVP"), 1, false, glm::value_ptr(viewMat));
-	glDrawArraysInstanced(GL_TRIANGLES, 0, 36, numOccupiedBlocks);
+	//glDrawArraysInstanced(GL_TRIANGLES, 0, 36, numOccupiedBlocks);
+	glDrawArraysInstanced(GL_TRIANGLES, 0, 36,  1);
 	glBindVertexArray(0);
 
 	fbo_front->disable();

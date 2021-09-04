@@ -18,19 +18,7 @@ uniform sampler2D rayHit_end;
 uniform isampler2D VoxelID_tex;
 
 const int blockSize = 8;
-
-//ivec3 voxel2Block(ivec3 voxel) 	{
-//	if(voxel.x < 0) voxel.x -= blockSize-1;	//i.e voxelBlockSize -1
-//	if(voxel.y < 0) voxel.y -= blockSize-1;
-//	if(voxel.z < 0) voxel.z -= blockSize-1;
-//	return ivec3(voxel.x/blockSize, voxel.y/blockSize, voxel.z/blockSize);
-//}
-
-//int linearizeVoxelPos(const ivec3 pos)	{
-//	return  pos.z * blockSize * blockSize +
-//			pos.y * blockSize +
-//			pos.x;
-//}
+const float truncation = 2.0;
 
 uint linearizeVoxelPos(const ivec3 pos)
 {
@@ -48,30 +36,26 @@ vec4 getColor(ivec3 voxel, uint basePtr)
 	float sdf = vox.SDF;
 	float weight = vox.WEIGHT;
 
-	//if(sdf == 0.0f)	{
-	//	//color = vec4(vec3(abs(sdf)), weight);
-	//	color = vec4(0);
-	//}
-	//else {
-	//	color = vec4(0,0,1,1);
-	//	//color = vec4(vec3(abs(sdf)), weight);
-	//	//discard;
-	//}
-	//vec4 color = vec4(vec3(abs(100*sdf)), weight);
+	float col = abs(truncation - abs(sdf))/truncation;
+	//float col = sdf;
 	vec4 color = vec4(0);
-	if(sdf > 0.0) {
-	color = vec4(vec3(sdf), weight);
+	if(sdf < 0.0) {
+		color = vec4(abs(col), 0, 0, weight);
+	}else{
+		color = vec4(0, abs(col), 0, weight);
 	}
 	return color;
 	//return vec4(vec3(1), 0.01);
 }
 
-vec4 calculateColor(ivec3 startVox, ivec3 endVox, vec3 rayDir, uint voxel_basePtr)
+vec4 calculateColor(vec3 startVec, vec3 endVec, vec3 rayDir, uint voxel_basePtr)
 {
-	//int localStartVox = linearizeVoxelPos(startVox);
-	//int localEndVox = linearizeVoxelPos(endVox);
-
-	if(startVox == endVox) discard;
+	startVec = startVec * 8; startVec += vec3(0.5); //add offset
+	endVec = endVec * 8; endVec += vec3(0.5);
+	//voxels
+	ivec3 startVox = ivec3(startVec.x, startVec.y, startVec.z);
+	ivec3 endVox = ivec3(endVec.x, endVec.y, endVec.z);
+	//if(startVox == endVox) discard;
 
 	ivec3 stepSize = ivec3(sign(rayDir.x), sign(rayDir.y), sign(rayDir.z));
 
@@ -95,13 +79,13 @@ vec4 calculateColor(ivec3 startVox, ivec3 endVox, vec3 rayDir, uint voxel_basePt
 	*/
 
 	//now traverse
-	ivec3 temp = startVox;
+	ivec3 temp = startVox ;//+ ivec3(1, 1, 1);
 	int iter = 0, maxIter = 20;
 	vec4 col = vec4(0);
 
 	//while(temp!= endVox)
 	//{
-	  while(iter <= maxIter)
+	  while(iter < maxIter)
 		{
 			if((tMax.x < tMax.y) && (tMax.x < tMax.z))
 			{
@@ -122,6 +106,8 @@ vec4 calculateColor(ivec3 startVox, ivec3 endVox, vec3 rayDir, uint voxel_basePt
 				tMax.z += tDelta.z;
 			}
 			col += getColor(temp, voxel_basePtr);
+			//debug
+			//if(iter == maxIter-1) col = vec4(0,0,1,1); //print blue
 			iter++;
 		}
 	//}
@@ -136,13 +122,9 @@ void main()
 
 	vec3 rayStart = texture(rayHit_start, v_texcoords).xyz; //in 0..1
 	vec3 rayEnd = texture(rayHit_end, v_texcoords).xyz; //in 0..1
-	vec3 rayDir = normalize(rayEnd - rayStart);
-	//rayDir *= 8.0;
+	vec3 rayDir = normalize(rayStart - rayEnd); //notice the reversed direction!
 
-	ivec3 irayStart = ivec3(rayStart*8); //voxel position on 8x8x8 block
-	ivec3 irayEnd = ivec3(rayEnd*8);
-
-	outColor = calculateColor(irayStart, irayEnd, rayDir, VoxelBlockID);
+	outColor = calculateColor(rayStart, rayEnd, rayDir, VoxelBlockID); //traverses the grid
 }
 
 

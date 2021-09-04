@@ -146,7 +146,8 @@ void Application::run() {
 	//std::cout<<"\n"<<glm::to_string(MVP)<<"\n\n";
     //tracker.Align(d_input, d_inputNormals, d_target, d_targetNormals, d_depthInput, d_depthTarget);
     //checkCudaErrors(cudaDeviceSynchronize());
-	glEnable(GL_DEPTH_TEST);
+	glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	//sdfRenderer->render(MVP); //MV, P
 	sdfRenderer->render(MV, proj, camPos); //MV, P

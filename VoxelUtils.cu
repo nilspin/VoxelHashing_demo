@@ -5,6 +5,8 @@
 #include <cuda.h>
 #include <cuda_runtime_api.h>
 #include <cuda_runtime.h>
+#include <math_functions.h>
+
 #include <iostream>
 
 #include <thrust/device_vector.h>
@@ -343,20 +345,20 @@ void removeSingleBlockInHeap(int ptr)	{
 //Frustum culling
 __inline__ __device__
 bool blockInFrustum(int3 blockId) {
-	return true;
-	//float3 worldPos = block2World(blockId);
-	//float4 pos = make_float4(worldPos.x, worldPos.y, worldPos.z, 1);
-	//pos = d_hashtableParams.global_transform * pos;	//TODO : shouldn't this be inv_global_transform?
-	//float3 projected = make_float3(pos.x, pos.y, pos.z);
-	//projected = kinectProjectionMatrix * projected;
-	//projected = projected / projected.z;
+	//return true;
+	float3 worldPos = block2World(blockId);
+	float4 pos = make_float4(worldPos.x, worldPos.y, worldPos.z, 1);
+	pos = d_hashtableParams.global_transform * pos;	//TODO : shouldn't this be inv_global_transform?
+	float3 projected = make_float3(pos.x, pos.y, pos.z);
+	projected = kinectProjectionMatrix * projected;
+	projected = projected / projected.z;
 
-	//int x = __float2int_rz(projected.x);
-	//int y = __float2int_rz(projected.y);
-	//if (x < 640 && x >= 0 && y < 480 && y >= 0) {
-	//	return true;
-	//}
-	//return false;
+	int x = __float2int_rz(projected.x);
+	int y = __float2int_rz(projected.y);
+	if (x < 640 && x >= 0 && y < 480 && y >= 0) {
+		return true;
+	}
+	return false;
 }
 
 //Hacky but cool code below
@@ -634,74 +636,12 @@ void allocBlocksKernel(const float4* verts, const float4* normals)	{	//Do we nee
 	//float3 rayEnd = p + (d_hashtableParams.truncation * pn);
 
 	//Now find their voxel blocks
+	//check if block is in view, then insert into table
 	int3 startBlock = world2Block(rayStart);
-	/*TODO : Maybe we don't need this???
-	int3 endBlock = world2Block(rayEnd);
-	float3 rayDir = normalize(rayEnd - rayStart);
-
-	int3 step = make_int3(signbit(rayDir.x),signbit(rayDir.y),signbit(rayDir.z));	//block stepping size
-	float3 next_boundary = (rayStart + make_float3(step));
-
-	//calculate distance to next barrier
-	float3 tMax = ((next_boundary - rayStart)) / rayDir;
-	float3 tDelta = (voxelSize / rayDir);
-	tDelta.x *= step.x;
-	tDelta.y *= step.y;
-	tDelta.z *= step.z;
-
-	//convert to voxel-blocks
-	int3 idStart = world2Block(rayStart);
-	float3 wrldPos = block2World(idStart);
-	//printf("Vertex = (%f, %f, %f) idStart : (%d, %d, %d) and back (%f, %f, %f)\n",verts[idx].x, verts[idx].y, verts[idx].z, idStart.x, idStart.y, idStart.z, wrldPos.x, wrldPos.y, wrldPos.z);
-
-	int3 idEnd = world2Block(rayEnd);
-	int3 temp = idStart;
-
-	if (rayDir.x == 0.0f) { tMax.x = INF; tDelta.x = INF; }
-	if (next_boundary.x - rayStart.x == 0.0f) { tMax.x = INF; tDelta.x = INF; }
-
-	if (rayDir.y == 0.0f) { tMax.y = INF; tDelta.y = INF; }
-	if (next_boundary.y - rayStart.y == 0.0f) { tMax.y = INF; tDelta.y = INF; }
-
-	if (rayDir.z == 0.0f) { tMax.z = INF; tDelta.z = INF; }
-	if (next_boundary.z - rayStart.z == 0.0f) { tMax.z = INF; tDelta.z = INF; }
-
-
-	//first insert idStart block into the hashtable
-	//bool status = vertexInFrustum(tempPos);
-	*/
-	//TODO : NOTE these blockInFrustum checks are useless since having depth data means vertex is visible
 	if(blockInFrustum(startBlock))	{	//blockInFrustum(temp)
 		insertVoxelEntry(startBlock);
 	}	//, instead simply
-	//insertVoxelEntry(temp);
 
-	/*	TODO: Maybe we don't need this???
-	while((temp.x != idEnd.x) && (temp.y != idEnd.y) && (temp.z != idEnd.z))	{
-
-		if(tMax.x < tMax.y && tMax.x < tMax.z)	{
-			temp.x += step.x;
-			//if(temp.x == idEnd.x) break;
-			tMax.x += tDelta.x;
-		}
-		else if(tMax.z < tMax.y)	{
-			temp.z += step.z;
-			//if(temp.z == idEnd.z) break;
-			tMax.z += tDelta.z;
-		}
-		else{
-			temp.y += step.y;
-			//if(temp.y == idEnd.y) break;
-			tMax.y += tDelta.y;
-		}
-
-		//check if block is in view, then insert into table
-		if(blockInFrustum(temp))	{
-			bool status = insertVoxelEntry(temp);
-		}
-		//iter++;
-	}
-	*/
 	//By now all necessary blocks should have been allocated
 }
 
@@ -791,34 +731,38 @@ Voxel combineVoxel(const Voxel& oldVox, const Voxel& currVox) {
 __global__
 void integrateDepthMapKernel(const float4* verts) {
 
-	/*
+	
 	//Testing : draw SDF sphere to ensure this integration kernel is working ok
 	const VoxelEntry& entry = d_ptrHldr.d_compactifiedHashTable[blockIdx.x];
 	int3 base_voxel = block2Voxel(entry.pos);
 	int3 i = make_int3(threadIdx.x, threadIdx.y, threadIdx.z);
-	int3 curr_voxel = base_voxel + i;// delinearizeVoxelPos(i);
-	float sdf = (i.x * i.x) + (i.y * i.y) + (i.z * i.z) - (220*220); //220 radii sphere
-	sdf = sqrt(sdf);
-	const float temp_truncation_val = 20;
+	int3 curr_voxel = base_voxel + i;
+	int3 i_temp = make_int3(-4, -4, -4); i_temp = i_temp + i;
+	float sdf = (i_temp.x * i_temp.x) + (i_temp.y * i_temp.y) + (i_temp.z * i_temp.z) - (3*3); //sphere
+	int sign = signbit(sdf) ? 1 : -1;
+	sdf = sqrt(sdf)*sign; 
+	const float temp_truncation_val = 2.0;
 	
 	if (abs(sdf) < temp_truncation_val)
 	{
-		//float weightUpdate = fmaxf(1.0 - (abs(sdf)/temp_truncation_val), 1.0f); //ie more weight when near 0
-		float weightUpdate = 0.5f;
+		//float weightUpdate = fmaxf(temp_truncation_val - (abs(sdf)/temp_truncation_val), 1.0f); //ie more weight when near 0
+		float weightUpdate = 0.1f;
 		Voxel curr;
 		curr.sdf = sdf;
 		curr.weight = weightUpdate;
 		//curr.color = make_uchar3(0, 255, 0);	//TODO : later
 
-		const int oldVoxIdx = entry.ptr + linearizeVoxelPos(i);
+		int linIdx = linearizeVoxelPos(i);
+		const int oldVoxIdx = entry.ptr + linIdx;
 		const Voxel oldVox = d_ptrHldr.d_SDFBlocks[oldVoxIdx];
 		Voxel fusedVoxel = combineVoxel(oldVox, curr);
 		//printf("(%f, %f)", fusedVoxel.sdf, fusedVoxel.weight);	//Working fine till here
 		d_ptrHldr.d_SDFBlocks[oldVoxIdx] = fusedVoxel;	//replace old voxel with new fused one
 
 	}
-	*/
+	
 	//-------------------------------------------------------
+	/*
 	const VoxelEntry& entry = d_ptrHldr.d_compactifiedHashTable[blockIdx.x];
 	int3 base_voxel = block2Voxel(entry.pos);
 
@@ -833,16 +777,17 @@ void integrateDepthMapKernel(const float4* verts) {
 
 	if ((screenPos.x < 0) || (screenPos.x >= 640) || (screenPos.y < 0) || (screenPos.y >= 480)) return;
 	const int idx = (screenPos.y * 640) + screenPos.x;
-	float depth = verts[idx].z;
-	if (depth <= 0)	return;
+
+	float inDepth = verts[idx].z; //depth from depth-map
+	if (inDepth <= 0)	return;
 
 	//TODO : define these explicitly, somewhere safe outside of here!
 	float depthRangeMin = 0.5;	//metres
 	float depthRangeMax = 5.0;
-	float depthZeroOne = (depth - depthRangeMin) / (depthRangeMax - depthRangeMin);	//normalize current depth
+	float depthZeroOne = (inDepth - depthRangeMin) / (depthRangeMax - depthRangeMin);	//normalize current depth
 
 	//assert(voxel_worldPos.z > 0)
-	float sdf = depth - voxel_worldPos.z;
+	float sdf = inDepth - voxel_worldPos.z;
 	//printf("%f", sdf);	//Working fine till here
 	float truncation = d_hashtableParams.truncation;	// +(d_hashtableParams.truncScale*depth);
 	//i.e calculate truncation of the SDF for given depth value
@@ -856,8 +801,9 @@ void integrateDepthMapKernel(const float4* verts) {
 		}
 
 		//Sets updation weight based on sensor noise. Farther depths have less weight. Copied from prof. Niessner's implementation
-		//float weightUpdate = fmaxf(d_hashtableParams.integrationWeightSample * 1.5 * (1.0 - depthZeroOne), 1.0f);
-		float weightUpdate = fmaxf(d_hashtableParams.integrationWeightSample * (depthZeroOne), 1.0f);
+		//float weightUpdate = fminf(d_hashtableParams.integrationWeightSample * (1.0 - depthZeroOne), 1.0f);
+		float weightUpdate = fminf(d_hashtableParams.integrationWeightSample * (depthZeroOne) * 0.125, 1.0f);
+		//float weightUpdate = fmaxf(d_hashtableParams.integrationWeightSample * (depthZeroOne), 1.0f);
 		//unsigned int weightUpdate = 10;	//let's keep this constant for now
 		//float  weightUpdate = 0.2f;
 
@@ -872,6 +818,7 @@ void integrateDepthMapKernel(const float4* verts) {
 		//printf("(%f, %f)", fusedVoxel.sdf, fusedVoxel.weight);	//Working fine till here
 		d_ptrHldr.d_SDFBlocks[oldVoxIdx] = fusedVoxel;	//replace old voxel with new fused one
 	}
+	*/
 }
 
 extern "C" void integrateDepthMap(const HashTableParams& params, const float4* verts) {

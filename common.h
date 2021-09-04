@@ -26,7 +26,8 @@ const int windowHeight = 768;
 //const float MINF = std::numeric_limits<float>::quiet_NaN();
 //const float MINF = std::numeric_limits<float>::min();
 const int pyramid_size = 2;
-const int pyramid_iters[pyramid_size+1] = {4,5,10};
+//const int pyramid_iters[pyramid_size+1] = {4,5,10};
+const int pyramid_iters[pyramid_size+1] = {0,0,0};
 
 //#define MINF 0xff800000
 //#define MAXF 0x7F7FFFFF
@@ -39,13 +40,13 @@ const float kinZFar = 1000.0f;
 const int numBuckets = 5000;
 const int bucketSize = 5;
 const int attachedLinkedListSize = 4;
-const int numVoxelBlocks = 1000;
+const int numVoxelBlocks = 10000;
 const int voxelBlockSize = 8;
-const float voxelSize = 0.015f;
+const float voxelSize = 0.05f;
 const int numOccupiedBlocks = 0;
-const float maxIntegrationDistance = 4.0f;
+const float maxIntegrationDistance = 2.0f;
 const float truncScale = 0.1f;
-const float truncation = 2.0f;
+const float truncation = 0.1f;
 const int integrationWeightSample = 10;
 const float integrationWeightMax = 1.0f;
 
