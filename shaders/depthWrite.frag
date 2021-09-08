@@ -9,6 +9,7 @@ struct Voxel {
 	float SDF;
 	float WEIGHT;
 };
+
 layout(std430, packed, binding=3) readonly buffer SDFVolume	{
 	Voxel Voxels[];
 };
@@ -50,14 +51,20 @@ vec4 getColor(ivec3 voxel, uint basePtr)
 
 vec4 calculateColor(vec3 startVec, vec3 endVec, vec3 rayDir, uint voxel_basePtr)
 {
-	startVec = startVec * 8; startVec += vec3(0.5); //add offset
-	endVec = endVec * 8; endVec += vec3(0.5);
+	startVec = startVec * 8; //startVec += vec3(0.5);
+	endVec = endVec * 8; //endVec += vec3(0.5);
+	ivec3 stepSize = ivec3(sign(rayDir.x), sign(rayDir.y), sign(rayDir.z));
+
+	//startVec -= vec3(0.5)*stepSize; //add offset
+	//endVec += vec3(0.5)*stepSize;
+
 	//voxels
 	ivec3 startVox = ivec3(startVec.x, startVec.y, startVec.z);
 	ivec3 endVox = ivec3(endVec.x, endVec.y, endVec.z);
 	//if(startVox == endVox) discard;
 
-	ivec3 stepSize = ivec3(sign(rayDir.x), sign(rayDir.y), sign(rayDir.z));
+	//startVox += stepSize; //move starting voxel ahead by one position
+	//endVox -= stepSize; //move end voxel behind by one position
 
 	vec3 next_boundary = vec3(startVox + stepSize);
 
@@ -122,9 +129,13 @@ void main()
 
 	vec3 rayStart = texture(rayHit_start, v_texcoords).xyz; //in 0..1
 	vec3 rayEnd = texture(rayHit_end, v_texcoords).xyz; //in 0..1
-	vec3 rayDir = normalize(rayStart - rayEnd); //notice the reversed direction!
+	vec3 rayDir = rayEnd - rayStart; //notice the reversed direction!
+	//vec3 rayDir = normalize(rayEnd - rayStart); //notice the reversed direction!
 
+	float len = length(rayStart - rayEnd)/ sqrt(2.0);
+	vec4 cloud = 	vec4(0, 0, 1, 0.2*len);
 	outColor = calculateColor(rayStart, rayEnd, rayDir, VoxelBlockID); //traverses the grid
+	outColor += cloud;
 }
 
 
