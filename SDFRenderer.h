@@ -12,7 +12,7 @@ class SDFRenderer {
 	unsigned int numOccupiedBlocks = 0;
 	GLuint Scene;
 	GLuint CanvasVAO, CanvasVertVBO, CanvasTexCoordsVBO;
-	GLuint InstanceCubeVBO;
+	GLuint CubeVAO,InstanceCubeVertVBO,InstanceCubeColVBO;
 	GLuint numOccupiedBlocks_handle = -1;//buffer contains single number.
 	//NOTE : we don't really use numOccupiedBlocks for rendering, so it might seem
 	//appropriate to keep this in SDF_Hashtable, but we keep it here for cleanliness.

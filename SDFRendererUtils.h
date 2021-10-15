@@ -14,7 +14,7 @@ std::unique_ptr<ShaderProgram> setupInstancedCubeDrawShader();
 //std::unique_ptr<ShaderProgram> setupDrawLinearDepthShader();
 //void setupSDF_GL_buffer(GLuint SDF_VAO,...);//
 void generateCanvas(GLuint&, GLuint&, GLuint&);
-void generateUnitCube(GLuint&);
+void generateUnitCube(GLuint&, GLuint&, GLuint&);
 GLuint setup_Debug_SSBO();
 
 #endif //SDFRENDERER_UTILS_H

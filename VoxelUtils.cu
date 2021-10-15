@@ -731,7 +731,7 @@ Voxel combineVoxel(const Voxel& oldVox, const Voxel& currVox) {
 __global__
 void integrateDepthMapKernel(const float4* verts) {
 
-	
+	/*
 	//Testing : draw SDF sphere to ensure this integration kernel is working ok
 	const VoxelEntry& entry = d_ptrHldr.d_compactifiedHashTable[blockIdx.x];
 	int3 base_voxel = block2Voxel(entry.pos);
@@ -739,9 +739,10 @@ void integrateDepthMapKernel(const float4* verts) {
 	int3 curr_voxel = base_voxel + i;
 	int3 i_temp = make_int3(-4, -4, -4); i_temp = i_temp + i;
 	float sdf = (i_temp.x * i_temp.x) + (i_temp.y * i_temp.y) + (i_temp.z * i_temp.z) - (3*3); //sphere
-	int sign = signbit(sdf) ? 1 : -1;
-	sdf = sqrt(sdf)*sign; 
-	const float temp_truncation_val = 2.0;
+	//int sign = signbit(sdf) ? 1 : -1;
+	//sdf = sqrt(sdf)*sign; 
+	sdf = sqrt(sdf); 
+	const float temp_truncation_val = 4.0;
 	
 	if (abs(sdf) < temp_truncation_val)
 	{
@@ -760,9 +761,8 @@ void integrateDepthMapKernel(const float4* verts) {
 		d_ptrHldr.d_SDFBlocks[oldVoxIdx] = fusedVoxel;	//replace old voxel with new fused one
 
 	}
-	
+	*/
 	//-------------------------------------------------------
-	/*
 	const VoxelEntry& entry = d_ptrHldr.d_compactifiedHashTable[blockIdx.x];
 	int3 base_voxel = block2Voxel(entry.pos);
 
@@ -818,7 +818,7 @@ void integrateDepthMapKernel(const float4* verts) {
 		//printf("(%f, %f)", fusedVoxel.sdf, fusedVoxel.weight);	//Working fine till here
 		d_ptrHldr.d_SDFBlocks[oldVoxIdx] = fusedVoxel;	//replace old voxel with new fused one
 	}
-	*/
+	//*/
 }
 
 extern "C" void integrateDepthMap(const HashTableParams& params, const float4* verts) {

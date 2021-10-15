@@ -63,7 +63,8 @@ void generateCanvas(GLuint& CanvasVAO, GLuint& CanvasVBO, GLuint& CanvasTexCoord
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-void generateUnitCube(GLuint &InstanceCubeVBO)	{
+void generateUnitCube(GLuint &CubeVAO, GLuint& InstanceCubeVertVBO, GLuint& InstanceCubeColVBO)	{
+
 	float cube_tri_data[] = {
 	/* face 1 */
 	1.0, 0.0, 0.0,
@@ -120,10 +121,72 @@ void generateUnitCube(GLuint &InstanceCubeVBO)	{
 	0.0, 0.0, 0.0,
 	};
 
-	glGenBuffers(1, &InstanceCubeVBO);
-	glBindBuffer(GL_ARRAY_BUFFER, InstanceCubeVBO);
+	//glGenVertexArrays(1, &CubeVAO);
+	//glBindVertexArray(CubeVAO);
+	glGenBuffers(1, &InstanceCubeVertVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, InstanceCubeVertVBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(cube_tri_data), &cube_tri_data, GL_STATIC_DRAW);
+	float cube_col_data[] = {
+	/* face 1 */
+	0.999, 0.001, 0.001,
+	0.001, 0.999, 0.001,
+	0.999, 0.999, 0.001,
+
+	0.001, 0.999, 0.001,
+	0.999, 0.001, 0.001,
+	0.001, 0.001, 0.001,
+
+	/* face 2 */
+	0.001, 0.999, 0.999,
+	0.999, 0.001, 0.999,
+	0.999, 0.999, 0.999,
+
+	0.999, 0.001, 0.999,
+	0.001, 0.999, 0.999,
+	0.001, 0.001, 0.999,
+
+	/* face 3 */
+	0.001, 0.999, 0.001,
+	0.001, 0.999, 0.999,
+	0.999, 0.999, 0.001,
+
+	0.001, 0.999, 0.999,
+	0.999, 0.999, 0.999,
+	0.999, 0.999, 0.001,
+
+	/* face 4 */
+	0.001, 0.001, 0.999,
+	0.001, 0.001, 0.001,
+	0.999, 0.001, 0.001,
+
+	0.999, 0.001, 0.999,
+	0.001, 0.001, 0.999,
+	0.999, 0.001, 0.001,
+
+	/* face 5 */
+	0.999, 0.999, 0.001,
+	0.999, 0.999, 0.999,
+	0.999, 0.001, 0.999,
+
+	0.999, 0.999, 0.001,
+	0.999, 0.001, 0.999,
+	0.999, 0.001, 0.001,
+
+	/* face 6 */
+	0.001, 0.999, 0.999,
+	0.001, 0.999, 0.001,
+	0.001, 0.001, 0.999,
+
+	0.001, 0.001, 0.999,
+	0.001, 0.999, 0.001,
+	0.001, 0.001, 0.001,
+	};
+	glGenBuffers(1, &InstanceCubeColVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, InstanceCubeColVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(cube_col_data), &cube_col_data, GL_STATIC_DRAW);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	//glBindVertexArray(CubeVAO);
 
 }
 

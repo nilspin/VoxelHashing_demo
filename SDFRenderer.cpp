@@ -31,29 +31,33 @@ SDFRenderer::SDFRenderer() {
 
 	/*----------Scene VAO-------------------*/
 	//first generate Box
-	generateUnitCube(InstanceCubeVBO);
+	generateUnitCube(CanvasVAO, InstanceCubeVertVBO, InstanceCubeColVBO);
 
 	//init rest of the GL resources required to render scene
 	glGenVertexArrays(1, &Scene);
 		glBindVertexArray(Scene);
 
 		//attrib0 - boxVerts
-		glBindBuffer(GL_ARRAY_BUFFER, InstanceCubeVBO); //no need for bufferdata, we've already set it up
+		glBindBuffer(GL_ARRAY_BUFFER, InstanceCubeVertVBO); //no need for bufferdata, we've already set it up
 			glEnableVertexAttribArray(0);
 			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
-			glVertexAttribDivisor(0, 0);
+		//attrib1 - boxColors
+		glBindBuffer(GL_ARRAY_BUFFER, InstanceCubeColVBO); //no need for bufferdata, we've already set it up
+			glEnableVertexAttribArray(1);
+			glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+			//glVertexAttribDivisor(0, 0);
 
-		//attrib1 - boxCenters
+		//attrib2 - boxCenters
 		glGenBuffers(1, &compactHashTable_handle);
 		glBindBuffer(GL_ARRAY_BUFFER, compactHashTable_handle);
-			glEnableVertexAttribArray(1);
-			glBufferData(GL_ARRAY_BUFFER, sizeof(VoxelEntry) * numBuckets * bucketSize, nullptr, GL_DYNAMIC_DRAW);
-			glVertexAttribIPointer(1, 3, GL_INT, sizeof(VoxelEntry), nullptr); //boxCenters
-			glVertexAttribDivisor(1, 1);
-			//attrib2 - PtrId
 			glEnableVertexAttribArray(2);
-			glVertexAttribIPointer(2, 1, GL_INT, sizeof(VoxelEntry), reinterpret_cast<void *>(offsetof(VoxelEntry, ptr))); //PtrID
+			glBufferData(GL_ARRAY_BUFFER, sizeof(VoxelEntry) * numBuckets * bucketSize, nullptr, GL_DYNAMIC_DRAW);
+			glVertexAttribIPointer(2, 3, GL_INT, sizeof(VoxelEntry), nullptr); //boxCenters
 			glVertexAttribDivisor(2, 1);
+			//attrib3 - PtrId
+			glEnableVertexAttribArray(3);
+			glVertexAttribIPointer(3, 1, GL_INT, sizeof(VoxelEntry), reinterpret_cast<void *>(offsetof(VoxelEntry, ptr))); //PtrID
+			glVertexAttribDivisor(3, 1);
 			std::cout << "Sizeof(VoxelEntry) = " << sizeof(VoxelEntry) << "\n";
 
 	//unbind
@@ -148,13 +152,14 @@ void SDFRenderer::drawToFrontAndBack(const glm::mat4& viewMat) {
 	//glDepthFunc(GL_LESS);
 	glBindVertexArray(Scene);
 	glEnableVertexAttribArray(0);	//boxVerts
-	glEnableVertexAttribArray(1);	//boxCenters
-	glEnableVertexAttribArray(2);	//VoxelBlockIDs
+	glEnableVertexAttribArray(1);	//boxVertColors
+	glEnableVertexAttribArray(2);	//boxCenters
+	glEnableVertexAttribArray(3);	//VoxelBlockIDs
 	instancedCubeDrawShader->use();
 	//TODO : attach debug_ssbo here
 	glUniformMatrix4fv(instancedCubeDrawShader->uniform("MVP"), 1, false, glm::value_ptr(viewMat));
-	//glDrawArraysInstanced(GL_TRIANGLES, 0, 36,  numOccupiedBlocks);
-	glDrawArraysInstanced(GL_TRIANGLES, 0, 36,  1);
+	glDrawArraysInstanced(GL_TRIANGLES, 0, 36,  numOccupiedBlocks);
+	//glDrawArraysInstanced(GL_TRIANGLES, 0, 36,  1);
 	glBindVertexArray(0);
 
 	fbo_back->disable();
@@ -178,13 +183,14 @@ void SDFRenderer::drawToFrontAndBack(const glm::mat4& viewMat) {
 
 	glBindVertexArray(Scene);
 	glEnableVertexAttribArray(0);	//boxVerts
-	glEnableVertexAttribArray(1);	//boxCenters
-	glEnableVertexAttribArray(2);	//VoxelBlockIDs
+	glEnableVertexAttribArray(1);	//boxVertCols
+	glEnableVertexAttribArray(2);	//boxCenters
+	glEnableVertexAttribArray(3);	//VoxelBlockIDs
 	instancedCubeDrawShader->use();
 	//TODO : attach debug_ssbo here
 	glUniformMatrix4fv(instancedCubeDrawShader->uniform("MVP"), 1, false, glm::value_ptr(viewMat));
-	//glDrawArraysInstanced(GL_TRIANGLES, 0, 36, numOccupiedBlocks);
-	glDrawArraysInstanced(GL_TRIANGLES, 0, 36,  1);
+	glDrawArraysInstanced(GL_TRIANGLES, 0, 36, numOccupiedBlocks);
+	//glDrawArraysInstanced(GL_TRIANGLES, 0, 36,  1);
 	glBindVertexArray(0);
 
 	fbo_front->disable();
@@ -218,19 +224,13 @@ void SDFRenderer::render(const glm::mat4& MV, const glm::mat4& P, const glm::vec
 	glActiveTexture(GL_TEXTURE2);
 	glBindTexture(GL_TEXTURE_2D, fbo_back->getRayhitTexID());
 	glUniform1i(tempPassthroughShader->uniform("rayHit_end"), 2);
-	//glUniformMatrix4fv(tempPassthroughShader->uniform("invMVP"), 1, false, glm::value_ptr(glm::inverse(MVP)));
-	//glUniform3fv(tempPassthroughShader->uniform("camPos"), 1, glm::value_ptr(camPos));
 
-	//TODO: bind sdf_voxels buffer as SSBO
+	//next: bind sdf_voxels buffer as SSBO
 	///GLuint sdfvoxels_ssbo_index = 0;
 	sdfvoxels_ssbo_index = glGetProgramResourceIndex(tempPassthroughShader->getProgramHandle(), GL_SHADER_STORAGE_BLOCK, "SDFVolume"); //Get block index
 	glShaderStorageBlockBinding(tempPassthroughShader->getProgramHandle(), sdfvoxels_ssbo_index, 3); //connect shader storage block to ssbo
 	glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, SDF_VolumeBuffer_handle);
-
-	//Below two lines not needed
-	//glUniformMatrix4fv(tempPassthroughShader->uniform("invModelViewMat"), 1, false, glm::value_ptr(glm::inverse(MV)));
-	//glUniformMatrix4fv(tempPassthroughShader->uniform("invProjMat"), 1, false, glm::value_ptr(glm::inverse(P)));
 
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 	glBindVertexArray(0);
