@@ -44,17 +44,17 @@ vec4 getColor(ivec3 voxel, uint basePtr)
 	if(sdf < 0.0) {
 		color = vec4(col, col, col, weight);
 	}
-	//else{
-	//	float c = abs(col);
-	//	color = vec4(c,c,c, weight);
-	//}
+	else{
+		float c = abs(col);
+		color = vec4(0,c,0, weight);
+	}
 	return color;
 	//return vec4(vec3(1), 0.01);
 }
 
 vec4 calculateColor2(vec3 startVec, vec3 endVec, uint voxel_basePtr)
 {
-	const float stepSize = 0.2;//1.41421356/8.0;
+	const float stepSize = 0.5;//1.41421356;
 
 	startVec *= 8.0;
 	endVec *= 8.0;
