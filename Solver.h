@@ -20,7 +20,7 @@ class Solver {
   public:
     unsigned int numIters = 10;
 
-    void BuildLinearSystem(const float4* , const float4* , const float4* , const float* , int , int );
+    void BuildLinearSystem(const float4* , const float4* , const float4* , const float* , int);
 
     void PrintSystem();
 
@@ -32,10 +32,10 @@ class Solver {
     Matrix4x4f getTransform() {return SE3Exp(estimate);};
     double getError() {return TotalError;};
   private:
-    int JAC_SIZE;
-    int RES_SIZE;
-    int JTJ_SIZE;
-    int JTr_SIZE;
+    int JAC_MAX_SIZE;
+    int RES_MAX_SIZE;
+    int JTJ_MAX_SIZE;
+    int JTr_MAX_SIZE;
     const int num_vars_in_jac = 6;
     std::array<float,36> raw_JTJ_matrix;
     Vector6f update, estimate; //Will hold solution
@@ -53,17 +53,21 @@ class Solver {
     Matrix4x4f DelinearizeTransform(const Vector6f& x);
 
     //CUDA stuff
-    cudaError_t cudaStat;
-    cublasStatus_t  stat;
-    cublasHandle_t handle;
+
+		const int pyr_size                 = 3;
+		std::array<dim3, 3> numBlocks  = {dim3(20, 15), dim3(20, 15), dim3(20, 15)}; //, dim3(16, 12)};
+		std::array<dim3, 3> numThreads = {dim3(32, 32), dim3(16, 16), dim3(8,   8)}; //, dim3(5, 5)}	;
+    float* 										 d_Jac 	 		= nullptr;
+    float* 										 d_JTr 	 		= nullptr;
+    float* 										 d_JTJ 	 		= nullptr;
     //thrust::device_vector<float> d_Jac;  //Computed on device
     //thrust::device_vector<float> d_residual; //Computed on device
     //thrust::device_vector<float> d_JTr;  //then multiplied on device
     //thrust::device_vector<float> d_JTJ;  //finally this is computed
-    float* d_Jac = nullptr;
-    float* d_JTr = nullptr;
-    float* d_JTJ = nullptr;
 
+    cudaError_t 							 cu_res;
+    cublasStatus_t  					 cuB_res;
+    cublasHandle_t  					 cuB_handle;
 
 };
 

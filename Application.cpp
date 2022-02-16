@@ -32,11 +32,11 @@ Application::Application() {
   if(image1 == nullptr) {cout<<"could not read first image file!"<<endl; exit(0);}
   if(image2 == nullptr) {cout<<"could not read second image file!"<<endl; exit(0);}
   //Start tracker
-  tracker = unique_ptr<CameraTracking>(new CameraTracking(DepthWidth, DepthHeight));
+  tracker = make_unique<CameraTracking>(DepthWidth, DepthHeight);
   //Depth Fusion
-  fusionModule = unique_ptr<SDF_Hashtable>(new SDF_Hashtable());
+  fusionModule = make_unique<SDF_Hashtable>();
   //Render to screen
-  sdfRenderer = unique_ptr<SDFRenderer>(new SDFRenderer());
+  sdfRenderer = make_unique<SDFRenderer>();
   //register renderer to depthfusion class so CUDA can directly write to GL's buffers
   fusionModule->registerGLtoCUDA(*sdfRenderer);
 
@@ -61,8 +61,8 @@ Application::Application() {
   size_t returnedBufferSize;
   //input-verts
   checkCudaErrors(cudaGraphicsMapResources(1, &cuda_input_resource, 0));
-  checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void**)&d_input, &returnedBufferSize, cuda_input_resource));
-  checkCudaErrors(cudaMemset(d_input, 0, returnedBufferSize));
+  checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void**)&d_inputVerts, &returnedBufferSize, cuda_input_resource));
+  checkCudaErrors(cudaMemset(d_inputVerts, 0, returnedBufferSize));
 
   //input-normals
   checkCudaErrors(cudaGraphicsMapResources(1, &cuda_inputNormals_resource, 0));
@@ -71,19 +71,19 @@ Application::Application() {
 
   //target-verts
   checkCudaErrors(cudaGraphicsMapResources(1, &cuda_target_resource, 0));
-  checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void**)&d_target, &returnedBufferSize, cuda_target_resource));
-  checkCudaErrors(cudaMemset(d_input, 0, returnedBufferSize));
+  checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void**)&d_targetVerts, &returnedBufferSize, cuda_target_resource));
+  checkCudaErrors(cudaMemset(d_inputVerts, 0, returnedBufferSize));
 
   //target-normals
   checkCudaErrors(cudaGraphicsMapResources(1, &cuda_targetNormals_resource, 0));
   checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void**)&d_targetNormals, &returnedBufferSize, cuda_targetNormals_resource));
-  checkCudaErrors(cudaMemset(d_input, 0, returnedBufferSize));
+  checkCudaErrors(cudaMemset(d_inputVerts, 0, returnedBufferSize));
 
   //VBOs allocated
   std::cout<<"\nAllocated input VBO size: "<<returnedBufferSize<<"\n";
-  preProcess(d_input, d_inputNormals, d_depthInput);
-  preProcess(d_target, d_targetNormals, d_depthTarget);
-  tracker->Align(d_input, d_inputNormals, d_target, d_targetNormals, d_depthInput, d_depthTarget);
+  preProcess(d_inputVerts, d_inputNormals, d_depthInput);
+  preProcess(d_targetVerts, d_targetNormals, d_depthTarget);
+  tracker->Align(d_inputVerts, d_inputNormals, d_targetVerts, d_targetNormals, d_depthInput, d_depthTarget);
   deltaT = glm::make_mat4(tracker->getTransform().data());
   //deltaT = glm::transpose(deltaT);
   std::cout << termcolor::on_blue<< "Final rigid transform : \n" << termcolor::reset<< glm::to_string(deltaT) << "\n";
@@ -92,9 +92,9 @@ Application::Application() {
   float4x4 global_transform = float4x4(tracker->getTransform().data());
   float4x4 identity;
   identity.setIdentity();
-  fusionModule->integrate(identity, d_input, d_inputNormals);
+  fusionModule->integrate(identity, d_inputVerts, d_inputNormals);
   //sdfRenderer->printSDFdata();
-  //fusionModule->integrate(global_transform, d_target, d_targetNormals);
+  //fusionModule->integrate(global_transform, d_targetVerts, d_targetNormals);
   checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_input_resource, 0));
   checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_inputNormals_resource, 0));
   checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_target_resource, 0));
@@ -102,7 +102,7 @@ Application::Application() {
 
   //*Testing output
   //   std::vector<glm::vec4> outputCUDA(640*480);
-  //   checkCudaErrors(cudaMemcpy(outputCUDA.data(), d_input, 640*480*sizeof(glm::vec4), cudaMemcpyDeviceToHost));
+  //   checkCudaErrors(cudaMemcpy(outputCUDA.data(), d_inputVerts, 640*480*sizeof(glm::vec4), cudaMemcpyDeviceToHost));
   //   std::ofstream fout("correspondenceData.txt");
   //   std::for_each(outputCUDA.begin(), outputCUDA.end(), [&fout](const glm::vec4 &n){fout<<n.x<<" "<<n.y<<" "<<n.z<<" "<<n.w<<"\n";});
   //std::cout<<"\nCHECKING: CUDA output: "<<" "<<outputCUDA[0].x<<" "<<outputCUDA[0].y<<" "<<outputCUDA[0].z<<" "<<outputCUDA[0].w<<"\n";
@@ -139,22 +139,21 @@ void Application::run() {
     GLfloat time = SDL_GetTicks();
     view = cam.getViewMatrix();
 	//scaling : convert voxelblock dims to world-space dims
-	mat4 model = glm::scale(glm::mat4(1.0f), glm::vec3(voxelSize*voxelBlockSize)); //glm::mat4(1.0f);// 
+	mat4 model = glm::scale(glm::mat4(1.0f), glm::vec3(voxelSize*voxelBlockSize)); //glm::mat4(1.0f);//
 	mat4 VP = proj*view;	// *model;
 	mat4 MV = view * model;
 	mat4 MVP = proj*view*model;
 	//std::cout<<"\n"<<glm::to_string(MVP)<<"\n\n";
-    //tracker.Align(d_input, d_inputNormals, d_target, d_targetNormals, d_depthInput, d_depthTarget);
+    //tracker.Align(d_inputVerts, d_inputNormals, d_targetVerts, d_targetNormals, d_depthInput, d_depthTarget);
     //checkCudaErrors(cudaDeviceSynchronize());
 	glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	//sdfRenderer->render(MVP); //MV, P
 	sdfRenderer->render(MV, proj, camPos); //MV, P
 	//glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	//glDepthFunc(GL_TRUE);
-	//glDisable(GL_DEPTH_TEST);
-	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glDisable(GL_DEPTH_TEST);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	//draw(VP);
 	//sdfRenderer->printSDFdata();
 
@@ -205,7 +204,7 @@ void Application::draw(const glm::mat4& vp)
 }
 
 void Application::SetupShaders() {
-  drawVertexMap = unique_ptr<ShaderProgram>(new ShaderProgram());
+  drawVertexMap = make_unique<ShaderProgram>();
   drawVertexMap->initFromFiles("shaders/MainShader.vert",
                                /*"shaders/MainShader.geom",*/
                                "shaders/MainShader.frag");

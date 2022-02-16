@@ -6,11 +6,12 @@
 #endif
 
 #include <iostream>
+#include <vector>
 #include <cstdio>
 #include <cuda_runtime_api.h>
 #include "cuda_helper/helper_cuda.h"
 #include "cuda_helper/helper_math.h"
-//#include <thrust/device_vector.h>
+#include <thrust/device_vector.h>
 #include <thrust/device_ptr.h>
 #include <thrust/fill.h>
 #include "common.h"
@@ -28,31 +29,37 @@
 #define numCols 640
 #define numRows 480
 
+using std::vector;
 //const float distThres = 5.0f;
 //const float normalThres = -1.0f;
 //const float idealError = 0.0f;
-//Since numCols = 640 and numRows = 480, we set blockDim according to 32x32 tile
-dim3 blocks = dim3(20, 15, 1);
-dim3 threads = dim3(32, 32, 1);
+const int pyr_size = 3;
+//Depth input res = 640x480. I set kernel launch params manually as per frames at each level in pyramid
+std::array<dim3, pyr_size> blocks  = {dim3(20, 15), dim3(20, 15), dim3(20, 15)}; //, dim3(16, 12)};
+std::array<dim3, pyr_size> threads = {dim3(32, 32), dim3(16, 16), dim3(8,   8)}; //, dim3(5, 5)}	;
 
-//using thrust::device_vector;
-//using thrust::device_ptr;
+using thrust::device_vector;
+using thrust::device_ptr;
 
 __device__ __constant__ float3x3 K;  //Camera intrinsic matrix
 __device__ __constant__ float3x3 K_inv;
+__device__ __constant__ float kGaussianKernel[9];
 __device__ float globalError;
 
 //__device__ inline
-//bool isValid(float4 v) {
+//bool isValid(float4 v)
+//{
 //	return v.w != MINF;
 //}
 
 __global__
-void calculateVertexPositions(float4* d_vertexPositions, const uint16_t* d_depthBuffer) {
+void calculateVertexPositions(float4* d_vertexPositions, const uint16_t* d_depthBuffer)
+{
 	int xidx = blockDim.x*blockIdx.x + threadIdx.x;
 	int yidx = blockDim.y*blockIdx.y + threadIdx.y;
 
-	if (xidx >= numCols || yidx >= numRows) {
+	if (xidx >= numCols || yidx >= numRows)
+	{
 		return;
 	}
 
@@ -68,7 +75,6 @@ void calculateVertexPositions(float4* d_vertexPositions, const uint16_t* d_depth
 
   float3 imageCoord = make_float3(xidx, yidx, 1.0);
   float3 point = K_inv*imageCoord*depth;
-  //float4 vertex = make_float4(point.x, -point.y, -point.z, w);
   float4 vertex = make_float4(point.x, point.y, point.z, w);
   d_vertexPositions[idx] = vertex;
 }
@@ -79,7 +85,8 @@ void calculateNormals(const float4* d_positions, float4* d_normals)
 	int xidx = blockDim.x*blockIdx.x + threadIdx.x;
 	int yidx = blockDim.y*blockIdx.y + threadIdx.y;
 
-	if (xidx >= numCols || yidx >= numRows) {
+	if (xidx >= numCols || yidx >= numRows)
+	{
 		return;
 	}
 
@@ -89,7 +96,8 @@ void calculateNormals(const float4* d_positions, float4* d_normals)
 	//d_normals[idx] = make_float4(MINF, MINF, MINF, MINF);
 	d_normals[idx] = make_float4(0, 0, 0, 0);
 
-	if (xidx > 0 && xidx < numCols - 1 && yidx > 0 && yidx < numRows - 1) {
+	if (xidx > 0 && xidx < numCols - 1 && yidx > 0 && yidx < numRows - 1)
+	{
 		const float4 CC = d_positions[(yidx + 0)*numCols + (xidx + 0)];
 		const float4 PC = d_positions[(yidx + 1)*numCols + (xidx + 0)];
 		const float4 CP = d_positions[(yidx + 0)*numCols + (xidx + 1)];
@@ -112,15 +120,16 @@ void calculateNormals(const float4* d_positions, float4* d_normals)
 	}
 }
 
-extern "C" void preProcess(float4 *positions, float4* normals, const uint16_t *depth) {
-	calculateVertexPositions <<<blocks, threads >>>(positions, depth);
-	calculateNormals <<<blocks, threads >>>(positions, normals);
+extern "C" void preProcess(float4 *positions, float4* normals, const uint16_t *depth)
+{
+	calculateVertexPositions <<<blocks[0], threads[0] >>>(positions, depth);
+	calculateNormals <<<blocks[0], threads[0] >>>(positions, normals);
 	checkCudaErrors(cudaDeviceSynchronize());
-
 }
 
 __device__
-static inline int2 cam2screenPos(float3 p) {
+static inline int2 cam2screenPos(float3 p)
+{
   float3 sp = K*p;
   //return make_int2(sp.x + 0.5, sp.y + 0.5);
 	//float x = ((p.x * fx) / p.z) + cx;
@@ -142,7 +151,8 @@ void FindCorrespondences(const float4* input,	const float4* target,
   //if (threadIdx.x==0 && threadIdx.y ==0)  {
   //  printf("Block is (%i, %i)\n",blockIdx.x, blockIdx.y);
   //}
-	if (xidx >= numCols || yidx >= numRows) {
+	if (xidx >= width || yidx >= height) //todo - should be based on mip-level width/height
+	{
 		return;
 	}
 
@@ -150,7 +160,9 @@ void FindCorrespondences(const float4* input,	const float4* target,
 
 	float4 pSrc = input[idx];
 
-	if (pSrc.z != 0) {	//if both pos and normal are valid points
+	if (pSrc.z != 0)
+	{
+		//if both pos and normal are valid points
     pSrc.w = 1.0f;
     float4 transPSrc = deltaT * pSrc;
 
@@ -167,7 +179,8 @@ void FindCorrespondences(const float4* input,	const float4* target,
       float4 nTar = targetNormals[targetIndex];
       float3 diff = make_float3(transPSrc - pTar);
       float d = dot(diff, make_float3(nTar));
-      if (d < distThres)  {
+      if (d < distThres)
+      {
         //if (threadIdx.x ==0 && threadIdx.y ==0)
         {
           //printf("%i) src- (%f, %f, %f), target- (%f, %f, %f), d= %f\n",idx, pSrc.x, pSrc.y, pSrc.z, pTar.x, pTar.y, pTar.z, d);
@@ -187,7 +200,7 @@ void FindCorrespondences(const float4* input,	const float4* target,
 extern "C" float computeCorrespondences(const float4* d_input, const float4* d_target,
     const float4* d_targetNormals, float4* corres,
     float4* corresNormals, float* residuals,
-    const float4x4 deltaTransform, const int width, const int height)
+    float4x4 deltaTransform, int width, int height, int pyrLevel)
 {
 	//First clear the previous correspondence calculation
   checkCudaErrors(cudaMemcpyToSymbol(globalError, &idealError, sizeof(float)));
@@ -204,7 +217,7 @@ extern "C" float computeCorrespondences(const float4* d_input, const float4* d_t
 
   checkCudaErrors(cudaDeviceSynchronize());
   //std::cerr<<"After clearing prev correspondences\n";
-	FindCorrespondences <<<blocks, threads>>>(d_input, d_target, d_targetNormals,
+	FindCorrespondences <<<blocks[pyrLevel], threads[pyrLevel]>>>(d_input, d_target, d_targetNormals,
       corres, corresNormals, residuals,	deltaTransform, distThres, normalThres, width, height);
   checkCudaErrors(cudaDeviceSynchronize());
 
@@ -215,9 +228,100 @@ extern "C" float computeCorrespondences(const float4* d_input, const float4* d_t
   return globalErrorReadback;
 }
 
-extern "C" bool SetCameraIntrinsic(const float* intrinsic, const float* invIntrinsic) {
-  checkCudaErrors(cudaMemcpyToSymbol(K, intrinsic, 9*sizeof(float)));
+extern "C" bool SetCameraIntrinsic(const float* intrinsic, const float* invIntrinsic)
+{
+  checkCudaErrors(cudaMemcpyToSymbol(K,     intrinsic,    9*sizeof(float)));
   checkCudaErrors(cudaMemcpyToSymbol(K_inv, invIntrinsic, 9*sizeof(float)));
   return true;
 }
+
+extern "C" bool SetGaussianKernel(const float* blurKernel)
+{
+  checkCudaErrors(cudaMemcpyToSymbol(kGaussianKernel, blurKernel, 9*sizeof(float)));
+  return true;
+}
+
+extern "C" void GenerateImagePyramids(const vector<device_ptr<uint16_t>>& d_PyramidDepths,
+																			const vector<device_ptr<float4>>& d_PyramidVerts,
+																			const vector<device_ptr<float4>>& d_PyramidNormals)
+{
+	//Blur kernel runs top-down, i.e process higher resolutions first and go decreasing order.
+	//[1] First raw depth
+	for(int pyrLevel = 0; pyrLevel < pyramid_size-1; ++pyrLevel)
+	{
+		const int width 										= pyramid_resolution[pyrLevel+1][0] ;
+		const int height 										= pyramid_resolution[pyrLevel+1][1] ;
+		const uint16_t* d_referenceDepthMap = thrust::raw_pointer_cast(d_PyramidDepths[pyrLevel]);
+		uint16_t* d_toFillDepthMap 					= thrust::raw_pointer_cast(d_PyramidDepths[pyrLevel+1]);
+		//GaussianBlur(d_referenceDepthMap, d_toFillDepthMap,
+		// TODO : Finish this!
+	}
+
+}
+
+__global__
+void gaussianBlurKernel(const uint16_t* d_depthBufferIn, uint16_t* d_depthBufferOut, const int width, const int height, const dim3 tileSize)
+{
+	extern __shared__ float scratchBuf[];
+
+	//todo : load data into float3x3 kernel
+
+	int xidx = blockDim.x*blockIdx.x + threadIdx.x;
+	int yidx = blockDim.y*blockIdx.y + threadIdx.y;
+	//trueDim is grid without halo cells
+	int trueDimx = blockDim.x - (3 - 1);
+	int trueDimy = blockDim.y - (3 - 1);
+
+  //if (threadIdx.x==0 && threadIdx.y ==0)  {
+  //  printf("Block is (%i, %i)\n",blockIdx.x, blockIdx.y);
+  //}
+	if (xidx >= width || yidx >= height)
+	{
+		return;
+	}
+
+	const int idx = (yidx*width) + xidx;
+
+	//now load a tile into scratchBuf
+	scratchBuf[threadIdx.y*tileSize.x + threadIdx.x] = d_depthBufferIn[idx];
+
+	__syncthreads();
+
+	//..and perform blur
+	float acc = 0.0f;
+	if(threadIdx.y < trueDimy && threadIdx.x < trueDimx)
+	{
+		for(int i=0;i<3;++i)
+		{
+			for(int j=0;j<3;++j)
+			{
+				const int tileIdx = (blockDim.x * (threadIdx.y + i)) + (threadIdx.x + j);
+				acc = scratchBuf[tileIdx];
+				acc *= kGaussianKernel[(i*3) + j];
+			}
+		}
+	}
+	else
+	{
+		scratchBuf[threadIdx.y*tileSize.x + threadIdx.x] = 0.0f;
+	}
+
+	//write to output
+	d_depthBufferOut[idx] = d_depthBufferIn[idx];
+}
+
+extern "C" void gaussianBlur(const uint16_t* d_depthBufferIn, uint16_t* d_depthBufferOut, const int width, const int height)
+{
+  checkCudaErrors(cudaDeviceSynchronize());
+	for(int lvl=0;lvl<pyramid_size;++lvl)
+	{
+		const auto blockSize = blocks[lvl];
+		const auto tileSize  = threads[lvl];
+		gaussianBlurKernel<<<
+			  blockSize, tileSize, (tileSize.x * tileSize.y *sizeof(float))
+			>>>(d_depthBufferIn, d_depthBufferOut, width, height, tileSize); //use shared memory the size of a threadblock
+	}
+  checkCudaErrors(cudaDeviceSynchronize());
+}
+
 #endif // CAMTRACKING_UTIL

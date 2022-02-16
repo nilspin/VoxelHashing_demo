@@ -10,8 +10,10 @@
 #endif
 
 #include <cuda_runtime_api.h>
-//#include <thrust/device_vector.h>
-//#include <thrust/device_ptr.h>
+#include <vector>
+#include <thrust/device_vector.h>
+#include <thrust/device_ptr.h>
+#include <thrust/fill.h>
 
 //This is a simple vector library. Use this with CUDA instead of GLM.
 #include "cuda_helper/cuda_SimpleMatrixUtil.h"
@@ -28,33 +30,58 @@
 //  int dummy = -2; //padding
 //};
 
-//using thrust::device_vector;
-//using thrust::device_ptr;
+using thrust::device_vector;
+using thrust::device_ptr;
 
 class CameraTracking  {
 
 private:
-  int width, height;
-  //LinearSystem linearSystem;
+  int g_width  = 0;
+	int g_height = 0;
+	bool pyramid_alloced = false;
+
   Solver solver;
-  int maxIters = 30;
-  float4* d_correspondenceNormals;
-  float4* d_correspondences;
-  float* d_residuals;
-  //thrust::device_vector<CorrPair> d_coordPair;
-  //device_vector<float4> d_correspondences;
-  //device_vector<float4> d_correspondenceNormals;
-  //device_vector<float> d_residuals;
+
+	//----raw handles to device_ptrs-----
+	float4* d_tmpCorrespondences = nullptr;
+	float4* d_tmpCorrespondenceNormals = nullptr;
+	float* d_tmpResiduals = nullptr;
+	//-----------------------------------
+
+  device_ptr<float4> d_correspondenceNormals;
+  device_ptr<float4> d_correspondences;
+  device_ptr<float>  d_residuals;
+
+  //----Image pyramid------------------
+  vector<device_ptr<float4>>   d_inputVerts_pyr;
+  vector<device_ptr<float4>>   d_inputNormals_pyr;
+  vector<device_ptr<uint16_t>> d_inputDepths_pyr;
+
+  vector<device_ptr<float4>>   d_targetVerts_pyr;
+  vector<device_ptr<float4>>   d_targetNormals_pyr;
+  vector<device_ptr<uint16_t>> d_targetDepths_pyr;
+
+  //----Matrices-----------------------
   Matrix4x4f deltaTransform;
+	float k_GaussianKernel[9] = {1.0f, 0.0f, 0.0f,
+	          									 0.0f, 1.0f, 0.0f,
+	          									 0.0f, 0.0f, 1.0f};
   float globalCorrespondenceError = 0.0f;
-  Matrix4x4f delinearizeTransformation(const Vector6f & sol);
+
+	//----Methods------------------------
+  Matrix4x4f delinearizeTransformation(const Vector6f& solution);
   Eigen::Matrix4f rigidAlignment(const float4*, const float4*, const Eigen::Matrix4f&);
+
+	void GaussianBlur(const uint16_t* d_inputDepthMap, uint16_t* d_outDepthMap, int width, int height);
+	//void GaussianBlurPyramid();
+	bool AllocImagePyramid(const float4*, vector<device_ptr<float4>>&);
+	bool AllocImagePyramid(const uint16_t*, vector<device_ptr<uint16_t>>&);
 
 public:
 
   CameraTracking(int, int);
   ~CameraTracking();
-  void Align(float4*, float4*, float4*, float4*, const uint16_t*, const uint16_t*);
+  void Align(const float4*, const float4*, const float4*, const float4*, const uint16_t*, const uint16_t*);
   Matrix4x4f getTransform() { return deltaTransform; }
 };
 

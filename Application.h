@@ -11,6 +11,8 @@
 #include "SDF_Hashtable.h"
 #include "helper_cuda.h"
 
+#include <thrust/device_vector.h>
+
 #define BUFFER_OFFSET(i) ((char*)NULL + (i))
 
 using uint16_t = std::uint16_t;
@@ -86,9 +88,11 @@ private:
 
 
   std::uint16_t *d_depthInput, *d_depthTarget;
-  float4* d_input;
+
+	//store per-pixel (viewframe coordinates)+(normals) here
+	float4* d_inputVerts;
   float4* d_inputNormals;
-  float4* d_target;
+  float4* d_targetVerts;
   float4* d_targetNormals;
 
 };

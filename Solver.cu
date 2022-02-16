@@ -6,10 +6,10 @@
 #include <thrust/device_ptr.h>
 
 #define numCols 640
-#define numRows 480
-//Since numCols = 640 and numRows = 480, we set blockDim according to 32x32 tile
-dim3 numBlocks = dim3(20, 15, 1);
-dim3 numThreads = dim3(32, 32, 1);
+
+const int pyr_size = 3;
+std::array<dim3, pyr_size> solver_blocks  = {dim3(20, 15), dim3(20, 15), dim3(20, 15)}; //, dim3(16, 12)};
+std::array<dim3, pyr_size> solver_threads = {dim3(32, 32), dim3(16, 16), dim3(8,   8)}; //, dim3(5, 5)}	;
 
 //using FloatVec = thrust::device_vector<float>;
 //using Float4Vec = thrust::device_vector<float4>;
@@ -17,13 +17,15 @@ dim3 numThreads = dim3(32, 32, 1);
 //using CorrPairVec = thrust::device_vector<CorrPair>;
 
 __device__ inline
-float CalculateResidual(const float3& n, const float3& d, const float3& s)  {
+float CalculateResidual(const float3& n, const float3& d, const float3& s)
+{
   float3 p = (d - s);
   return (dot(p,n));
 }
 
 __device__ inline
-void CalculateJacobians(float* JacMat, const float3& d, const float3& n, int index)  {
+void CalculateJacobians(float* JacMat, const float3& d, const float3& n, int index)
+{
   float3 T = (cross(d, n));
   // Calculate Jacobian for this correspondence pair. Probably most important piece
   // of code in entire project
@@ -37,12 +39,13 @@ void CalculateJacobians(float* JacMat, const float3& d, const float3& n, int ind
 }
 
 __global__
-void CalculateJacAndResKernel(const float4* d_src, const float4* d_dest, const float4* d_destNormals,float* d_JacMat) {
-
+void CalculateJacAndResKernel(const float4* d_src, const float4* d_dest, const float4* d_destNormals,float* d_JacMat,
+															const int width, const int height)
+{
 	int xidx = blockDim.x*blockIdx.x + threadIdx.x;
 	int yidx = blockDim.y*blockIdx.y + threadIdx.y;
 	//find globalIdx row-major
-	const int idx = (yidx*numCols) + xidx;
+	const int idx = (yidx*width) + xidx;
   float3 src = make_float3(d_src[idx]);
   float3 dest = make_float3(d_dest[idx]);
   float3 destNormal = make_float3(d_destNormals[idx]);
@@ -54,7 +57,8 @@ void CalculateJacAndResKernel(const float4* d_src, const float4* d_dest, const f
 //void CalculateJTJ
 
 extern "C" void CalculateJacobiansAndResiduals(const float4* d_src, const float4* d_targ, const float4* d_targNormals,
-    float* d_Jac) {
+    float* d_Jac, float* d_residuals, const int pyrLevel, const int width, const int height)
+{
 
   //First calculate Jacobian and Residual matrices
   //float4* d_targ = thrust::raw_pointer_cast(&targ[0]);
@@ -63,9 +67,11 @@ extern "C" void CalculateJacobiansAndResiduals(const float4* d_src, const float4
   //float* d_resVector = thrust::raw_pointer_cast(&residual[0]);
   //float* d_jtj = thrust::raw_pointer_cast(&JTJ[0]);
   //float* d_jtr = thrust::raw_pointer_cast(&JTr[0]);
+	int numCorrPairs = width*height; //number of correspondence pairs
   thrust::device_ptr<float> d_Jac_ptr = thrust::device_pointer_cast(d_Jac);
-  thrust::fill(d_Jac_ptr, d_Jac_ptr+(numCols*numRows*6), 0);  //TODO - is this redundant?
-  CalculateJacAndResKernel<<<numBlocks, numThreads>>>(d_src, d_targ, d_targNormals, d_Jac);
+  thrust::fill(d_Jac_ptr, d_Jac_ptr+(numCorrPairs*6), 0);  //TODO - is this redundant?
+  CalculateJacAndResKernel<<<solver_blocks[pyrLevel], solver_threads[pyrLevel]>>>(d_src, d_targ, d_targNormals, d_Jac,
+			width, height);
 
   //Then calculate Matrix-vector JTr and Matrix-matrix JTJ products
 }
