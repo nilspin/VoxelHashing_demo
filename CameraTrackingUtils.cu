@@ -13,6 +13,7 @@
 #include "cuda_helper/helper_math.h"
 #include <thrust/device_vector.h>
 #include <thrust/device_ptr.h>
+#include <thrust/memory.h>
 #include <thrust/fill.h>
 #include "common.h"
 
@@ -52,13 +53,72 @@ __device__ float globalError;
 //	return v.w != MINF;
 //}
 
+//getting bilinearFilt code from original Voxelhashing repo
+inline __device__
+float bilinearInterpolate(int x, int y, const uint16_t* d_depthInput, uint32_t inWidth, uint32_t inHeight)
+{
+	const int2 p00 = make_int2(x, y);
+	const int2 p01 = p00 + make_int2(0.0f, 1.0f);
+	const int2 p10 = p00 + make_int2(1.0f, 0.0f);
+	const int2 p11 = p00 + make_int2(1.0f, 1.0f);
+
+	const float alpha = x - p00.x;
+	const float beta  = y - p00.y;
+
+	float s0 = 0.0f; float w0 = 0.0f;
+	if(p00.x < inWidth && p00.y < inHeight) { float v00 = d_depthInput[p00.y*inWidth + p00.x]; if(v00 != MINF) { s0 += (1.0f-alpha)*v00; w0 += (1.0f-alpha); } }
+	if(p10.x < inWidth && p10.y < inHeight) { float v10 = d_depthInput[p10.y*inWidth + p10.x]; if(v10 != MINF) { s0 +=		 alpha *v10; w0 +=		 alpha ; } }
+
+	float s1 = 0.0f; float w1 = 0.0f;
+	if(p01.x < inWidth && p01.y < inHeight) { float v01 = d_depthInput[p01.y*inWidth + p01.x]; if(v01 != MINF) { s1 += (1.0f-alpha)*v01; w1 += (1.0f-alpha);} }
+	if(p11.x < inWidth && p11.y < inHeight) { float v11 = d_depthInput[p11.y*inWidth + p11.x]; if(v11 != MINF) { s1 +=		 alpha *v11; w1 +=		 alpha ;} }
+
+	const float p0 = s0/w0;
+	const float p1 = s1/w1;
+
+	float ss = 0.0f; float ww = 0.0f;
+	if(w0 > 0.0f) { ss += (1.0f-beta)*p0; ww += (1.0f-beta); }
+	if(w1 > 0.0f) { ss +=		beta *p1; ww +=		  beta ; }
+
+	if(ww > 0.0f) return ss/ww;
+	else		  return MINF;
+}
+
+__global__
+void downscaleKernel(const uint16_t* d_refDepthMap, uint16_t* d_toFillDepthMap, int inWidth, int inHeight, int outWidth, int outHeight)
+{
+	//extern __shared__ float scratchBuf[];
+
+	//todo : load data into float3x3 kernel
+
+	int xidx = blockDim.x*blockIdx.x + threadIdx.x;
+	int yidx = blockDim.y*blockIdx.y + threadIdx.y;
+	//trueDim is grid without halo cells
+	int trueDimx = blockDim.x - (3 - 1);
+	int trueDimy = blockDim.y - (3 - 1);
+
+  //if (threadIdx.x==0 && threadIdx.y ==0)  {
+  //  printf("Block is (%i, %i)\n",blockIdx.x, blockIdx.y);
+  //}
+	if (xidx >= outWidth || yidx >= outHeight)
+	{
+		return;
+	}
+
+	const int idx = (yidx*outWidth) + xidx;
+
+	d_toFillDepthMap[idx] = bilinearInterpolate(xidx, yidx, d_refDepthMap, inWidth, inHeight);
+}
+
 __global__
 void calculateVertexPositions(float4* d_vertexPositions, const uint16_t* d_depthBuffer)
 {
 	int xidx = blockDim.x*blockIdx.x + threadIdx.x;
 	int yidx = blockDim.y*blockIdx.y + threadIdx.y;
 
-	if (xidx >= numCols || yidx >= numRows)
+	int lvl_width  = blockDim.x * gridDim.x;
+	int lvl_height = blockDim.y * gridDim.y;
+	if (xidx >= lvl_width|| yidx >= lvl_height)
 	{
 		return;
 	}
@@ -85,24 +145,26 @@ void calculateNormals(const float4* d_positions, float4* d_normals)
 	int xidx = blockDim.x*blockIdx.x + threadIdx.x;
 	int yidx = blockDim.y*blockIdx.y + threadIdx.y;
 
-	if (xidx >= numCols || yidx >= numRows)
+	int lvl_width  = blockDim.x * gridDim.x;
+	int lvl_height = blockDim.y * gridDim.y;
+	if (xidx >= lvl_width|| yidx >= lvl_height)
 	{
 		return;
 	}
 
 	//find globalIdx row-major
-	const int idx = (yidx*numCols) + xidx;
+	const int idx = (yidx*lvl_width) + xidx;
 
 	//d_normals[idx] = make_float4(MINF, MINF, MINF, MINF);
 	d_normals[idx] = make_float4(0, 0, 0, 0);
 
-	if (xidx > 0 && xidx < numCols - 1 && yidx > 0 && yidx < numRows - 1)
+	if (xidx > 0 && xidx < lvl_width - 1 && yidx > 0 && yidx < lvl_height - 1)
 	{
-		const float4 CC = d_positions[(yidx + 0)*numCols + (xidx + 0)];
-		const float4 PC = d_positions[(yidx + 1)*numCols + (xidx + 0)];
-		const float4 CP = d_positions[(yidx + 0)*numCols + (xidx + 1)];
-		const float4 MC = d_positions[(yidx - 1)*numCols + (xidx + 0)];
-		const float4 CM = d_positions[(yidx + 0)*numCols + (xidx - 1)];
+		const float4 CC = d_positions[(yidx + 0)*lvl_width + (xidx + 0)];
+		const float4 PC = d_positions[(yidx + 1)*lvl_width + (xidx + 0)];
+		const float4 CP = d_positions[(yidx + 0)*lvl_width + (xidx + 1)];
+		const float4 MC = d_positions[(yidx - 1)*lvl_width + (xidx + 0)];
+		const float4 CM = d_positions[(yidx + 0)*lvl_width + (xidx - 1)];
 
 		if (CC.x != 0 && PC.x != 0 && CP.x != 0 && MC.x != 0 && CM.x != 0)
 		{
@@ -120,7 +182,7 @@ void calculateNormals(const float4* d_positions, float4* d_normals)
 	}
 }
 
-extern "C" void preProcess(float4 *positions, float4* normals, const uint16_t *depth)
+extern "C" void generatePositionAndNormals(float4 *positions, float4* normals, const uint16_t *depth)
 {
 	calculateVertexPositions <<<blocks[0], threads[0] >>>(positions, depth);
 	calculateNormals <<<blocks[0], threads[0] >>>(positions, normals);
@@ -181,9 +243,9 @@ void FindCorrespondences(const float4* input,	const float4* target,
       float d = dot(diff, make_float3(nTar));
       if (d < distThres)
       {
-        //if (threadIdx.x ==0 && threadIdx.y ==0)
+        if (threadIdx.x ==0 && threadIdx.y ==0)
         {
-          //printf("%i) src- (%f, %f, %f), target- (%f, %f, %f), d= %f\n",idx, pSrc.x, pSrc.y, pSrc.z, pTar.x, pTar.y, pTar.z, d);
+          printf("%i) src- (%f, %f, %f), target- (%f, %f, %f), d= %f\n",idx, pSrc.x, pSrc.y, pSrc.z, pTar.x, pTar.y, pTar.z, d);
         }
         atomicAdd(&globalError, d);
         correspondences[idx] = pTar;
@@ -241,22 +303,55 @@ extern "C" bool SetGaussianKernel(const float* blurKernel)
   return true;
 }
 
-extern "C" void GenerateImagePyramids(const vector<device_ptr<uint16_t>>& d_PyramidDepths,
+extern "C" bool GenerateImagePyramids(const vector<device_ptr<uint16_t>>& d_PyramidDepths,
 																			const vector<device_ptr<float4>>& d_PyramidVerts,
 																			const vector<device_ptr<float4>>& d_PyramidNormals)
 {
 	//Blur kernel runs top-down, i.e process higher resolutions first and go decreasing order.
 	//[1] First raw depth
-	for(int pyrLevel = 0; pyrLevel < pyramid_size-1; ++pyrLevel)
+  int inWidth  = -1, outWidth  = -1;
+	int inHeight = -1, outHeight = -1;
+
+	int inPyrLvl  = -1;
+	int outPyrLvl = -1;
+	//for(int pyrLevel = pyramid_size-1; pyrLevel > 0; --pyrLevel)
+	for(int pyrLevel = 1; pyrLevel < pyramid_size-1; ++pyrLevel)
 	{
-		const int width 										= pyramid_resolution[pyrLevel+1][0] ;
-		const int height 										= pyramid_resolution[pyrLevel+1][1] ;
-		const uint16_t* d_referenceDepthMap = thrust::raw_pointer_cast(d_PyramidDepths[pyrLevel]);
-		uint16_t* d_toFillDepthMap 					= thrust::raw_pointer_cast(d_PyramidDepths[pyrLevel+1]);
-		//GaussianBlur(d_referenceDepthMap, d_toFillDepthMap,
-		// TODO : Finish this!
+    inPyrLvl                    = pyrLevel - 1;
+    outPyrLvl                   = pyrLevel;
+
+		inWidth 												= pyramid_resolution[inPyrLvl][0] ;
+		inHeight 												= pyramid_resolution[inPyrLvl][1] ;
+		uint16_t* d_referenceDepthMap   = thrust::raw_pointer_cast(d_PyramidDepths[inPyrLvl]);
+
+		outWidth 												= pyramid_resolution[outPyrLvl][0] ;
+		outHeight 											= pyramid_resolution[outPyrLvl][1] ;
+		uint16_t* d_toFillDepthMap 		  = thrust::raw_pointer_cast(d_PyramidDepths[outPyrLvl]);
+
+		downscaleKernel<<<blocks[pyrLevel], threads[pyrLevel]>>>(d_referenceDepthMap, d_toFillDepthMap, inWidth, inHeight, outWidth, outHeight);
+		checkCudaErrors(cudaDeviceSynchronize());
 	}
 
+	//[2] and reconstruct camera-space vertices and normals
+	//for(int pyrLevel = pyramid_size-1; pyrLevel > 0; --pyrLevel)
+	for(int pyrLevel = 1; pyrLevel < pyramid_size; ++pyrLevel)
+	{
+
+		inWidth 											  = pyramid_resolution[pyrLevel][0] ;
+		inHeight 											  = pyramid_resolution[pyrLevel][1] ;
+
+		uint16_t* d_referenceDepthMap   = thrust::raw_pointer_cast(d_PyramidDepths[pyrLevel]);
+		float4* d_toFillVertMap					= thrust::raw_pointer_cast(d_PyramidVerts[pyrLevel]);
+		float4* d_toFillNormalMap				= thrust::raw_pointer_cast(d_PyramidNormals[pyrLevel]);
+
+		calculateVertexPositions <<<blocks[pyrLevel], threads[pyrLevel] >>>(d_toFillVertMap, d_referenceDepthMap);
+		checkCudaErrors(cudaDeviceSynchronize());
+
+		calculateNormals <<<blocks[pyrLevel], threads[pyrLevel] >>>(d_toFillVertMap, d_toFillNormalMap);
+		checkCudaErrors(cudaDeviceSynchronize());
+	}
+
+	return true;
 }
 
 __global__

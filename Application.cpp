@@ -19,7 +19,7 @@ using glm::mat4;
 //using namespace glm;
 
 //Takes device pointers, calculates correct position and normals
-extern "C" void preProcess(float4 *positions, float4* normals, const std::uint16_t *depth);
+extern "C" void generatePositionAndNormals(float4 *positions, float4* normals, const std::uint16_t *depth);
 
 //void SetupInputData(
 Application::Application() {
@@ -72,17 +72,18 @@ Application::Application() {
   //target-verts
   checkCudaErrors(cudaGraphicsMapResources(1, &cuda_target_resource, 0));
   checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void**)&d_targetVerts, &returnedBufferSize, cuda_target_resource));
-  checkCudaErrors(cudaMemset(d_inputVerts, 0, returnedBufferSize));
+  checkCudaErrors(cudaMemset(d_targetVerts, 0, returnedBufferSize));
 
   //target-normals
   checkCudaErrors(cudaGraphicsMapResources(1, &cuda_targetNormals_resource, 0));
   checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void**)&d_targetNormals, &returnedBufferSize, cuda_targetNormals_resource));
-  checkCudaErrors(cudaMemset(d_inputVerts, 0, returnedBufferSize));
+  checkCudaErrors(cudaMemset(d_targetNormals, 0, returnedBufferSize));
 
   //VBOs allocated
   std::cout<<"\nAllocated input VBO size: "<<returnedBufferSize<<"\n";
-  preProcess(d_inputVerts, d_inputNormals, d_depthInput);
-  preProcess(d_targetVerts, d_targetNormals, d_depthTarget);
+  generatePositionAndNormals(d_inputVerts,  d_inputNormals,  d_depthInput);
+  generatePositionAndNormals(d_targetVerts, d_targetNormals, d_depthTarget);
+
   tracker->Align(d_inputVerts, d_inputNormals, d_targetVerts, d_targetNormals, d_depthInput, d_depthTarget);
   deltaT = glm::make_mat4(tracker->getTransform().data());
   //deltaT = glm::transpose(deltaT);

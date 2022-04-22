@@ -46,7 +46,7 @@ vec4 getColor(ivec3 voxel, uint basePtr)
 	}
 	else{
 		float c = abs(col);
-		color = vec4(0,c,0, weight);
+		color = vec4(0,c,0, 0.01);
 	}
 	return color;
 	//return vec4(vec3(1), 0.01);

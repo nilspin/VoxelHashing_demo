@@ -69,19 +69,20 @@ private:
   float globalCorrespondenceError = 0.0f;
 
 	//----Methods------------------------
-  Matrix4x4f delinearizeTransformation(const Vector6f& solution);
+  bool            AllocTmpBuffers(float4*, float4*, float*);
+  Matrix4x4f      delinearizeTransformation(const Vector6f& solution);
   Eigen::Matrix4f rigidAlignment(const float4*, const float4*, const Eigen::Matrix4f&);
 
 	void GaussianBlur(const uint16_t* d_inputDepthMap, uint16_t* d_outDepthMap, int width, int height);
 	//void GaussianBlurPyramid();
-	bool AllocImagePyramid(const float4*, vector<device_ptr<float4>>&);
-	bool AllocImagePyramid(const uint16_t*, vector<device_ptr<uint16_t>>&);
+	bool AllocImagePyramid(float4*, vector<device_ptr<float4>>&);
+	bool AllocImagePyramid(uint16_t*, vector<device_ptr<uint16_t>>&);
 
 public:
 
   CameraTracking(int, int);
   ~CameraTracking();
-  void Align(const float4*, const float4*, const float4*, const float4*, const uint16_t*, const uint16_t*);
+  void Align(float4*,  float4*,  float4*,  float4*,  uint16_t*,  uint16_t*);
   Matrix4x4f getTransform() { return deltaTransform; }
 };
 

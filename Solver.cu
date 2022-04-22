@@ -39,34 +39,26 @@ void CalculateJacobians(float* JacMat, const float3& d, const float3& n, int ind
 }
 
 __global__
-void CalculateJacAndResKernel(const float4* d_src, const float4* d_dest, const float4* d_destNormals,float* d_JacMat,
+void CalculateJacAndResKernel(const float4* d_src, const float4* d_dest, 
+                              const float4* d_destNormals,float* d_JacMat,
 															const int width, const int height)
 {
-	int xidx = blockDim.x*blockIdx.x + threadIdx.x;
-	int yidx = blockDim.y*blockIdx.y + threadIdx.y;
+	int xidx          = blockDim.x*blockIdx.x + threadIdx.x;
+	int yidx          = blockDim.y*blockIdx.y + threadIdx.y;
 	//find globalIdx row-major
-	const int idx = (yidx*width) + xidx;
-  float3 src = make_float3(d_src[idx]);
-  float3 dest = make_float3(d_dest[idx]);
+	const int idx     = (yidx*width) + xidx;
+  float3 src        = make_float3(d_src[idx]);
+  float3 dest       = make_float3(d_dest[idx]);
   float3 destNormal = make_float3(d_destNormals[idx]);
   CalculateJacobians(d_JacMat, dest, destNormal, idx);
   //residual[idx] = pair.distance;
 }
 
-//__device__ inline
-//void CalculateJTJ
-
+//First calculate Jacobian and Residual matrices
 extern "C" void CalculateJacobiansAndResiduals(const float4* d_src, const float4* d_targ, const float4* d_targNormals,
     float* d_Jac, float* d_residuals, const int pyrLevel, const int width, const int height)
 {
 
-  //First calculate Jacobian and Residual matrices
-  //float4* d_targ = thrust::raw_pointer_cast(&targ[0]);
-  //float4* d_targNormals = thrust::raw_pointer_cast(&targNormals[0]);
-  //float* d_jacobianMatrix = thrust::raw_pointer_cast(&Jac[0]);
-  //float* d_resVector = thrust::raw_pointer_cast(&residual[0]);
-  //float* d_jtj = thrust::raw_pointer_cast(&JTJ[0]);
-  //float* d_jtr = thrust::raw_pointer_cast(&JTr[0]);
 	int numCorrPairs = width*height; //number of correspondence pairs
   thrust::device_ptr<float> d_Jac_ptr = thrust::device_pointer_cast(d_Jac);
   thrust::fill(d_Jac_ptr, d_Jac_ptr+(numCorrPairs*6), 0);  //TODO - is this redundant?
