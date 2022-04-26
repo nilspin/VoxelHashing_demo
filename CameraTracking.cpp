@@ -129,7 +129,9 @@ void CameraTracking::Align(float4*   d_inputVerts,   float4* d_inputNormals,
 			pyramid_alloced = true;
 	}
 
+	std::cout << " Generating Image Pyramid : Input frame";
 	status &= GenerateImagePyramids(d_inputDepths_pyr,  d_inputVerts_pyr,  d_inputNormals_pyr);
+	std::cout << " Generating Image Pyramid : Target frame";
 	status &= GenerateImagePyramids(d_targetDepths_pyr, d_targetVerts_pyr, d_targetNormals_pyr);
 
 	if (!status)

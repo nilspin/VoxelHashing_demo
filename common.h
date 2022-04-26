@@ -11,7 +11,7 @@ const float fy =  516.5f;
 const float cx =  318.6f;
 const float cy =  255.3f;
 
-const float distThres = 0.08f;
+const float distThres = 0.5f;
 const float normalThres = 1.0f;
 const float idealError = 0.0f;
 const float intrinsics[] = {fx, 0, cx, 0, fy, cy, 0, 0, 1};
@@ -45,7 +45,7 @@ const int bucketSize = 5;
 const int attachedLinkedListSize = 4;
 const int numVoxelBlocks = 10000;
 const int voxelBlockSize = 8;
-const float voxelSize = 0.01f;
+const float voxelSize = 0.02f;
 const int numOccupiedBlocks = 0;
 const float maxIntegrationDistance = 2.0f;
 const float truncScale = 0.1f;

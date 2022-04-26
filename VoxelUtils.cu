@@ -699,6 +699,7 @@ extern "C" int flattenIntoBuffer(const HashTableParams& params)	{
 	resetHashTableKernel <<<blocks, threads >>> (h_ptrHldr.d_compactifiedHashTable);
 	checkCudaErrors(cudaDeviceSynchronize());
 	checkCudaErrors(cudaMemset(h_ptrHldr.d_compactifiedHashCounter, 0, sizeof(int)));
+	checkCudaErrors(cudaDeviceSynchronize());
 
 	flattenKernel<<<blocks, threads>>>();
 	checkCudaErrors(cudaDeviceSynchronize());
@@ -740,10 +741,10 @@ void integrateDepthMapKernel(const float4* verts) {
 	int3 i_temp = make_int3(-4, -4, -4); i_temp = i_temp + i;
 	float sdf = (i_temp.x * i_temp.x) + (i_temp.y * i_temp.y) + (i_temp.z * i_temp.z) - (3*3); //sphere
 	//int sign = signbit(sdf) ? 1 : -1;
-	//sdf = sqrt(sdf)*sign; 
-	sdf = sqrt(sdf); 
+	//sdf = sqrt(sdf)*sign;
+	sdf = sqrt(sdf);
 	const float temp_truncation_val = 4.0;
-	
+
 	if (abs(sdf) < temp_truncation_val)
 	{
 		//float weightUpdate = fmaxf(temp_truncation_val - (abs(sdf)/temp_truncation_val), 1.0f); //ie more weight when near 0

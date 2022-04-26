@@ -66,22 +66,67 @@ float bilinearInterpolate(int x, int y, const uint16_t* d_depthInput, uint32_t i
 	const float beta  = y - p00.y;
 
 	float s0 = 0.0f; float w0 = 0.0f;
-	if(p00.x < inWidth && p00.y < inHeight) { float v00 = d_depthInput[p00.y*inWidth + p00.x]; if(v00 != MINF) { s0 += (1.0f-alpha)*v00; w0 += (1.0f-alpha); } }
-	if(p10.x < inWidth && p10.y < inHeight) { float v10 = d_depthInput[p10.y*inWidth + p10.x]; if(v10 != MINF) { s0 +=		 alpha *v10; w0 +=		 alpha ; } }
+	if(p00.x < inWidth && p00.y < inHeight) 
+	{ 
+		float v00 = d_depthInput[p00.y*inWidth + p00.x]; 
+		if(v00 != MINF) 
+		{ 
+			s0 += (1.0f-alpha)*v00; 
+			w0 += (1.0f-alpha); 
+		} 
+	}
+	if(p10.x < inWidth && p10.y < inHeight) 
+	{ 
+		float v10 = d_depthInput[p10.y*inWidth + p10.x]; 
+		if(v10 != MINF) 
+		{ 
+			s0 +=		 alpha *v10; 
+			w0 +=		 alpha ; 
+		} 
+	}
 
 	float s1 = 0.0f; float w1 = 0.0f;
-	if(p01.x < inWidth && p01.y < inHeight) { float v01 = d_depthInput[p01.y*inWidth + p01.x]; if(v01 != MINF) { s1 += (1.0f-alpha)*v01; w1 += (1.0f-alpha);} }
-	if(p11.x < inWidth && p11.y < inHeight) { float v11 = d_depthInput[p11.y*inWidth + p11.x]; if(v11 != MINF) { s1 +=		 alpha *v11; w1 +=		 alpha ;} }
+	if(p01.x < inWidth && p01.y < inHeight) 
+	{ 
+		float v01 = d_depthInput[p01.y*inWidth + p01.x]; 
+		if(v01 != MINF) 
+		{
+			s1 += (1.0f-alpha)*v01; 
+		  w1 += (1.0f-alpha);
+		} 
+	}
+
+	if(p11.x < inWidth && p11.y < inHeight) 
+	{ 
+		float v11 = d_depthInput[p11.y*inWidth + p11.x]; if(v11 != MINF) 
+		{ 
+			s1 +=		 alpha *v11; 
+			w1 +=		 alpha ;
+		} 
+	}
 
 	const float p0 = s0/w0;
 	const float p1 = s1/w1;
 
 	float ss = 0.0f; float ww = 0.0f;
-	if(w0 > 0.0f) { ss += (1.0f-beta)*p0; ww += (1.0f-beta); }
-	if(w1 > 0.0f) { ss +=		beta *p1; ww +=		  beta ; }
+	if(w0 > 0.0f) 
+	{ 
+		ss += (1.0f-beta)*p0; 
+		ww += (1.0f-beta); 
+	}
+	if(w1 > 0.0f) 
+	{ 
+		ss +=		beta *p1; 
+		ww +=		  beta ; 
+	}
 
-	if(ww > 0.0f) return ss/ww;
-	else		  return MINF;
+	if (ww > 0.0f)
+  {
+    float ret = ss / ww;
+    return ret;
+  }
+  else
+    return MINF;
 }
 
 __global__
@@ -107,7 +152,8 @@ void downscaleKernel(const uint16_t* d_refDepthMap, uint16_t* d_toFillDepthMap, 
 
 	const int idx = (yidx*outWidth) + xidx;
 
-	d_toFillDepthMap[idx] = bilinearInterpolate(xidx, yidx, d_refDepthMap, inWidth, inHeight);
+	float interpolated = bilinearInterpolate(xidx, yidx, d_refDepthMap, inWidth, inHeight);
+	d_toFillDepthMap[idx] = interpolated;
 }
 
 __global__
@@ -124,7 +170,7 @@ void calculateVertexPositions(float4* d_vertexPositions, const uint16_t* d_depth
 	}
 
 	//find globalIdx row-major
-	const int idx = (yidx*numCols) + xidx;
+	const int idx = (yidx*lvl_width) + xidx;
 
 	const float w = 1.0f; //flag to tell whether this is valid vertex or not
 	uint16_t d = d_depthBuffer[idx];
@@ -271,14 +317,16 @@ extern "C" float computeCorrespondences(const float4* d_input, const float4* d_t
   thrust::device_ptr<float4> corresNormals_ptr = thrust::device_pointer_cast(corresNormals);
   thrust::device_ptr<float> residuals_ptr = thrust::device_pointer_cast(residuals);
 
-  //std::cerr<<"Before clearing prev correspondences\n";
+  std::cerr<<"Before clearing prev correspondences\n";
 
   thrust::fill(corres_ptr, corres_ptr + (width*height), float4{0,0,0,0});
   thrust::fill(corresNormals_ptr, corresNormals_ptr+ (width*height), float4{0,0,0,0});
   thrust::fill(residuals_ptr, residuals_ptr+ (width*height), (float)0.0f);
 
   checkCudaErrors(cudaDeviceSynchronize());
-  //std::cerr<<"After clearing prev correspondences\n";
+
+  std::cerr<<"After clearing prev correspondences\n";
+
 	FindCorrespondences <<<blocks[pyrLevel], threads[pyrLevel]>>>(d_input, d_target, d_targetNormals,
       corres, corresNormals, residuals,	deltaTransform, distThres, normalThres, width, height);
   checkCudaErrors(cudaDeviceSynchronize());
@@ -315,7 +363,7 @@ extern "C" bool GenerateImagePyramids(const vector<device_ptr<uint16_t>>& d_Pyra
 	int inPyrLvl  = -1;
 	int outPyrLvl = -1;
 	//for(int pyrLevel = pyramid_size-1; pyrLevel > 0; --pyrLevel)
-	for(int pyrLevel = 1; pyrLevel < pyramid_size-1; ++pyrLevel)
+	for(int pyrLevel = 1; pyrLevel < pyramid_size; ++pyrLevel)
 	{
     inPyrLvl                    = pyrLevel - 1;
     outPyrLvl                   = pyrLevel;
