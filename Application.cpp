@@ -148,13 +148,13 @@ void Application::run() {
     //tracker.Align(d_inputVerts, d_inputNormals, d_targetVerts, d_targetNormals, d_depthInput, d_depthTarget);
     //checkCudaErrors(cudaDeviceSynchronize());
 	glDisable(GL_DEPTH_TEST);
-    glDisable(GL_CULL_FACE);
+  glDisable(GL_CULL_FACE);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	sdfRenderer->render(MV, proj, camPos); //MV, P
 	//glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	//glDepthFunc(GL_TRUE);
-	glDisable(GL_DEPTH_TEST);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	//glDisable(GL_DEPTH_TEST);
+	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	//draw(VP);
 	//sdfRenderer->printSDFdata();
 

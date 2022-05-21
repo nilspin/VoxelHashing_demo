@@ -7,6 +7,7 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <type_traits>
 //#include <thrust/fill.h>
 #include "CameraTracking.h"
 #include "termcolor.hpp"
@@ -18,9 +19,9 @@ using uint16_pyramid = std::array<uint16_t*, 3>;
 extern "C" float computeCorrespondences(const float4* d_input, const float4* d_target, const float4* d_targetNormals, float4* corres, float4* corresNormals, float* residual, float4x4 deltaTransform, int width, int height, int pyrLevel);
 
 extern "C" float gaussianBlur(const uint16_t* d_inputDepth, uint16_t* d_outputDepth, const int width, const int height);
-extern "C" bool  GenerateImagePyramids(const vector<device_ptr<uint16_t>>& d_PyramidDepths,
-																			 const vector<device_ptr<float4>>& d_PyramidVerts,
-																			 const vector<device_ptr<float4>>& d_PyramidNormals);
+extern "C" bool  GenerateImagePyramids(vector<device_ptr<uint16_t>>& d_PyramidDepths,
+																			 vector<device_ptr<float4>>& d_PyramidVerts,
+																			 vector<device_ptr<float4>>& d_PyramidNormals);
 
 //extern "C" float computeCorrespondences_pyramid(const float4* d_input, const float4* d_target, const float4* d_targetNormals, float4* corres, float4* corresNormals, float* residual, const float4x4 deltaTransform, const int width, const int height);
 
@@ -91,7 +92,68 @@ bool CameraTracking::AllocImagePyramid(uint16_t* baseLayer, std::vector<device_p
 	return true;
 }
 
-//bool GaussianBlurPyramid()
+template <typename T>
+bool CameraTracking::CopyDeviceBufToHost(const vector<device_ptr<T>>& dev_vec, vector<vector<T>>& host_vec)
+{
+  int idx = 0;
+	for (const auto& dev_ptr : dev_vec)
+	{
+   int width  = pyramid_resolution[idx][0];
+   int height = pyramid_resolution[idx][1];
+   idx++;
+   vector<T>  h_curr_vec;
+   h_curr_vec.resize(width * height);
+   T* h_ptr = h_curr_vec.data();
+
+
+	 T* d_ptr = nullptr;
+	 //d_ptr         = thrust::raw_pointer_cast<float4>(dev_ptr);
+	 //copy actual buffer
+  thrust::copy(dev_ptr, dev_ptr + (width * height), h_curr_vec.begin());
+  // checkCudaErrors(cudaMemcpy(h_ptr, \
+	//														d_ptr, \
+	//														 width * height * sizeof(float4), \
+	//														 cudaMemcpyDeviceToHost));	\
+	 checkCudaErrors(cudaDeviceSynchronize());
+	
+	 host_vec.push_back(h_curr_vec);
+	}
+	return true;
+}
+
+template <typename T>
+bool CameraTracking::WriteVec2File(const vector<vector<T>>& inputVectors,
+																	 const std::string oFilePrefix)
+{
+ 
+	int i = 0;
+	for (const auto& vec2Stream : inputVectors)
+	{
+    std::string    pathName = oFilePrefix + "_" + std::to_string(i) + ".txt";
+    std::ofstream fout(pathName, std::ios::out);
+    if constexpr (std::is_same<T, float4>::value) 
+		{
+      for (const auto& vert : vec2Stream)
+      {
+        fout << vert.x << ", " << vert.y << ", " << vert.z << ", " << vert.w << "\n";
+      }
+    }
+		if constexpr (std::is_same<T, uint16_t>::value)
+		{
+			for (const auto& depth : vec2Stream)
+			{
+	      fout << depth << "\n";
+			}
+		}
+		//std::ostream_iterator<float> oIter { fout, " " };
+    //std::copy(vec2Stream.begin(), vec2Stream.end(), oIter);
+    fout.flush();
+    fout.close();
+    ++i;
+	}
+  return true;
+}
+    //bool GaussianBlurPyramid()
 //{
 //	//Blur kernel runs top-down, i.e process higher resolutions first and go decreasing order.
 //	//[1] First raw depth
@@ -129,10 +191,29 @@ void CameraTracking::Align(float4*   d_inputVerts,   float4* d_inputNormals,
 			pyramid_alloced = true;
 	}
 
-	std::cout << " Generating Image Pyramid : Input frame";
+	std::cout << " \n\nGenerating Image Pyramid : Input frame" << std::endl;
 	status &= GenerateImagePyramids(d_inputDepths_pyr,  d_inputVerts_pyr,  d_inputNormals_pyr);
-	std::cout << " Generating Image Pyramid : Target frame";
+	std::cout << " \n\nGenerating Image Pyramid : Target frame"<<std::endl;
 	status &= GenerateImagePyramids(d_targetDepths_pyr, d_targetVerts_pyr, d_targetNormals_pyr);
+
+//#ifdef DEBUG
+ /*
+	status &= CopyDeviceBufToHost<float4>(d_inputVerts_pyr, h_inputVerts_pyr);
+	status &= WriteVec2File<float4>(h_inputVerts_pyr, "inputVerts");
+	status &= CopyDeviceBufToHost<float4>(d_inputNormals_pyr, h_inputNormals_pyr);
+  status &= WriteVec2File<float4>(h_inputNormals_pyr,"inputNormals");
+	status &= CopyDeviceBufToHost<uint16_t>(d_inputDepths_pyr, h_inputDepths_pyr);
+  status &= WriteVec2File<uint16_t>(h_inputDepths_pyr, "inputDepths");
+
+	status &= CopyDeviceBufToHost<float4>(d_targetVerts_pyr, h_targetVerts_pyr);
+  status &= WriteVec2File<float4>(h_targetVerts_pyr, "targetVerts");
+	status &= CopyDeviceBufToHost<float4>(d_targetNormals_pyr, h_targetNormals_pyr);
+  status &= WriteVec2File<float4>(h_targetNormals_pyr, "targetNormals");
+  status &= CopyDeviceBufToHost<uint16_t>(d_targetDepths_pyr, h_targetDepths_pyr);
+  status &= WriteVec2File<uint16_t>(h_targetDepths_pyr, "targetDepths");
+	*/
+//#endif // DEBUG
+
 
 	if (!status)
    std::runtime_error("Failed to generate Image pyramids! ");
@@ -148,17 +229,17 @@ void CameraTracking::Align(float4*   d_inputVerts,   float4* d_inputNormals,
 		width  = pyramid_resolution[pyrLevel][0];
 		height = pyramid_resolution[pyrLevel][1];
 
-		std::cout << "\n" << termcolor::on_green << "PyrLevel : "<< pyrLevel << ", Resolution : "<< width <<" x  " << height << termcolor::reset << "\n";
-		std::cout << termcolor::underline << "                                               \n" << termcolor::reset;
+		std::cout << "\n" << termcolor::on_green << "PyrLevel : "<< pyrLevel << ", Resolution : "<< width <<" x  " << height << termcolor::reset << std::endl;
+		std::cout << termcolor::underline << std::endl << termcolor::reset;
 
     for (int iter = 0; iter < pyramid_iters[pyrLevel]; iter++)
     {
       //globalCorrespondenceError = 0.0f;
-      std::cout << "\n" << termcolor::on_red << "Iteration : " << iter << termcolor::reset << "\n";
-      std::cout << termcolor::underline << "                                               \n" << termcolor::reset;
+      std::cout << "\n" << termcolor::on_red << "Iteration : " << iter << termcolor::reset << std::endl;
+      std::cout << termcolor::underline << std::endl << termcolor::reset;
 
       //CUDA files cannot include any Eigen headers, don't know why. So convert eigen matrix to __device__ compatible float4x4.
-      cout << "deltaTransform = \n" << deltaTransform << "\n";
+      cout << "deltaTransform = \n" << deltaTransform << std::endl;
       float4x4 deltaT = float4x4(deltaTransform.data());
       deltaT.transpose();
 
@@ -181,14 +262,15 @@ void CameraTracking::Align(float4*   d_inputVerts,   float4* d_inputNormals,
 																												 d_tmpCorrespondenceNormals,
 																												 d_tmpResiduals, deltaT, width, 
 																												 height, pyrLevel);
-      std::cout << "\n" << termcolor::on_blue << termcolor::white << "globalCorrespondenceError = " << globalCorrespondenceError << termcolor::reset << "\n";
+      std::cout << "\n" << termcolor::on_blue << termcolor::white << "globalCorrespondenceError = " << globalCorrespondenceError << termcolor::reset << std::endl;
 
-      //if (globalCorrespondenceError == 0.0f) {
-      //  std::cout << "\n\n" << termcolor::bold << termcolor::grey << termcolor::on_white << "Correspondence error is zero. Stopping." << termcolor::reset << "\n\n";
-      //  break;
-      //}
+      if (fabs(globalCorrespondenceError) < 1.0f) //magic number value for tolerance threshold
+			{ 
+        std::cout << "\n\n" << termcolor::bold << termcolor::grey << termcolor::on_white << "Correspondence error is within tolerance. Stopping." << termcolor::reset << "\n\n";
+        break;
+      }
 
-      std::cout<<termcolor::green<<"Global correspondence error = "<<globalCorrespondenceError<<termcolor::reset<<" \n\n";
+      std::cout<<termcolor::green<<"Global correspondence error = "<<globalCorrespondenceError<<termcolor::reset<<" \n"<<std::endl;
       //Matrix4x4f deltaT = Matrix4x4f(deltaTransform.data());
 
       solver.BuildLinearSystem(d_inputVerts_lvl, d_tmpCorrespondences, d_tmpCorrespondenceNormals, d_tmpResiduals, pyrLevel);

@@ -53,6 +53,42 @@ __device__ float globalError;
 //	return v.w != MINF;
 //}
 
+__device__
+inline 
+uint16_t averagePixels(uint32_t x, uint32_t y, const uint16_t* d_depthInput, uint32_t inWidth, uint32_t inHeight)
+{
+  int2 curr				 = make_int2(x, y);
+  int2 right			 = make_int2(curr.x + 1, curr.y + 0);
+  int2 bottom			 = make_int2(curr.x + 0, curr.y + 1);
+  int2 bottomright = make_int2(curr.x + 1, curr.y + 1);
+
+	if (right.x >= inWidth || bottom.y >= inHeight)
+	{
+    return;
+	}
+
+  int idx1 = (curr.y * inWidth) + curr.x;
+  int idx2 = (right.y * inWidth) + right.x;
+  int idx3 = (bottom.y * inWidth) + bottom.x;
+  int idx4 = (bottomright.y * inWidth) + bottomright.x;
+
+	uint16_t d1 = d_depthInput[idx1];
+	uint16_t d2 = d_depthInput[idx2];
+	uint16_t d3 = d_depthInput[idx3];
+	uint16_t d4 = d_depthInput[idx4];
+
+	int sum = d1;
+  sum += d2;
+  sum += d3;
+  sum += d4;
+
+	int avg = sum / 4;
+
+	uint16_t ret = avg;
+  return ret;
+}
+
+/*
 //getting bilinearFilt code from original Voxelhashing repo
 inline __device__
 float bilinearInterpolate(int x, int y, const uint16_t* d_depthInput, uint32_t inWidth, uint32_t inHeight)
@@ -68,7 +104,7 @@ float bilinearInterpolate(int x, int y, const uint16_t* d_depthInput, uint32_t i
 	float s0 = 0.0f; float w0 = 0.0f;
 	if(p00.x < inWidth && p00.y < inHeight) 
 	{ 
-		float v00 = d_depthInput[p00.y*inWidth + p00.x]; 
+		uint16_t v00 = d_depthInput[p00.y*inWidth + p00.x]; 
 		if(v00 != MINF) 
 		{ 
 			s0 += (1.0f-alpha)*v00; 
@@ -77,7 +113,7 @@ float bilinearInterpolate(int x, int y, const uint16_t* d_depthInput, uint32_t i
 	}
 	if(p10.x < inWidth && p10.y < inHeight) 
 	{ 
-		float v10 = d_depthInput[p10.y*inWidth + p10.x]; 
+		uint16_t v10 = d_depthInput[p10.y*inWidth + p10.x]; 
 		if(v10 != MINF) 
 		{ 
 			s0 +=		 alpha *v10; 
@@ -88,7 +124,7 @@ float bilinearInterpolate(int x, int y, const uint16_t* d_depthInput, uint32_t i
 	float s1 = 0.0f; float w1 = 0.0f;
 	if(p01.x < inWidth && p01.y < inHeight) 
 	{ 
-		float v01 = d_depthInput[p01.y*inWidth + p01.x]; 
+		uint16_t v01 = d_depthInput[p01.y*inWidth + p01.x]; 
 		if(v01 != MINF) 
 		{
 			s1 += (1.0f-alpha)*v01; 
@@ -98,7 +134,8 @@ float bilinearInterpolate(int x, int y, const uint16_t* d_depthInput, uint32_t i
 
 	if(p11.x < inWidth && p11.y < inHeight) 
 	{ 
-		float v11 = d_depthInput[p11.y*inWidth + p11.x]; if(v11 != MINF) 
+		uint16_t v11 = d_depthInput[p11.y*inWidth + p11.x]; 
+		if(v11 != MINF) 
 		{ 
 			s1 +=		 alpha *v11; 
 			w1 +=		 alpha ;
@@ -128,6 +165,65 @@ float bilinearInterpolate(int x, int y, const uint16_t* d_depthInput, uint32_t i
   else
     return MINF;
 }
+*/
+
+inline __device__
+float bilinearInterpolate(int x, int y, const uint16_t* d_depthInput, uint32_t inWidth, uint32_t inHeight)
+{
+	const int2 p00 = make_int2(x, y);
+	const int2 p01 = p00 + make_int2(0, 1);
+	const int2 p10 = p00 + make_int2(1, 0);
+	const int2 p11 = p00 + make_int2(1, 1);
+
+	//const float alpha = x - p00.x; 0
+	//const float beta  = y - p00.y; 0
+  const float alpha = 0.0f;
+  const float beta  = 0.0f;
+
+	int s0 = 0; float w0 = 0.0f;
+	if(p00.x < inWidth && p00.y < inHeight) 
+	{ 
+		uint16_t v00 = d_depthInput[p00.y*inWidth + p00.x]; 
+		{ 
+			s0 += v00; 
+			w0 += 1.0f; 
+		} 
+	}
+	if(p10.x < inWidth && p10.y < inHeight) 
+	{ 
+		uint16_t v10 = d_depthInput[p10.y*inWidth + p10.x]; 
+		{ 
+			s0 +=	v10; 
+			w0 +=	1.0f ; 
+		} 
+	}
+
+	int s1 = 0; float w1 = 0.0f;
+	if(p01.x < inWidth && p01.y < inHeight) 
+	{ 
+		uint16_t v01 = d_depthInput[p01.y*inWidth + p01.x]; 
+		{
+			s1 += v01; 
+		  w1 += 1.0f;
+		} 
+	}
+
+	if(p11.x < inWidth && p11.y < inHeight) 
+	{ 
+		uint16_t v11 = d_depthInput[p11.y*inWidth + p11.x]; 
+		{ 
+			s1 +=	v11; 
+			w1 += 1.0f ;
+		} 
+	}
+
+	const float p0 = s0/w0;
+	const float p1 = s1/w1;
+
+	float ret = (p0 + p1) / 2.0f;
+	return ret;
+
+}
 
 __global__
 void downscaleKernel(const uint16_t* d_refDepthMap, uint16_t* d_toFillDepthMap, int inWidth, int inHeight, int outWidth, int outHeight)
@@ -150,15 +246,22 @@ void downscaleKernel(const uint16_t* d_refDepthMap, uint16_t* d_toFillDepthMap, 
 		return;
 	}
 
-	const int idx = (yidx*outWidth) + xidx;
+	const int scatter_idx = (yidx*outWidth) + xidx;
+  const int sample_idx  = (yidx * inWidth) + (xidx * (inWidth / outWidth));
 
-	float interpolated = bilinearInterpolate(xidx, yidx, d_refDepthMap, inWidth, inHeight);
-	d_toFillDepthMap[idx] = interpolated;
+	//uint16_t interpolated = bilinearInterpolate(xidx, yidx, d_refDepthMap, inWidth, inHeight);
+	//uint16_t interpolated = averagePixels(xidx, yidx, d_refDepthMap, inWidth, inHeight);
+	//d_toFillDepthMap[idx] = interpolated;
+  d_toFillDepthMap[scatter_idx] = d_refDepthMap[sample_idx];
 }
 
 __global__
 void calculateVertexPositions(float4* d_vertexPositions, const uint16_t* d_depthBuffer)
 {
+	if (blockIdx.x == 0 && blockIdx.y == 0 && threadIdx.x == 0 && threadIdx.y == 0)
+	{
+    printf("calculateVertPositions : Verts = %p \n depthBuff = %p\n", (void*)d_vertexPositions, (void*)d_depthBuffer);
+	}
 	int xidx = blockDim.x*blockIdx.x + threadIdx.x;
 	int yidx = blockDim.y*blockIdx.y + threadIdx.y;
 
@@ -188,6 +291,10 @@ void calculateVertexPositions(float4* d_vertexPositions, const uint16_t* d_depth
 __global__
 void calculateNormals(const float4* d_positions, float4* d_normals)
 {
+	if (blockIdx.x == 0 && blockIdx.y == 0 && threadIdx.x == 0 && threadIdx.y == 0)
+	{
+    printf("calculateNormals : Verts = %p \n Normals = %p\n", (void*)d_positions, (void*)d_normals);
+	}
 	int xidx = blockDim.x*blockIdx.x + threadIdx.x;
 	int yidx = blockDim.y*blockIdx.y + threadIdx.y;
 
@@ -236,23 +343,27 @@ extern "C" void generatePositionAndNormals(float4 *positions, float4* normals, c
 }
 
 __device__
-static inline int2 cam2screenPos(float3 p)
+static inline int2 cam2screenPos(float3 p, int offset)
 {
   float3 sp = K*p;
   //return make_int2(sp.x + 0.5, sp.y + 0.5);
 	//float x = ((p.x * fx) / p.z) + cx;
 	//float y = ((p.y * fy) / p.z) + cy;
-	return make_int2(sp.x/sp.z + 0.5, sp.y/sp.z + 0.5);
+	//return make_int2(sp.x/sp.z + 0.5, sp.y/sp.z + 0.5);
+  float2 tmp = make_float2(sp.x / (sp.z * offset) , sp.y / (sp.z * offset) );
+	return make_int2(tmp.x, tmp.y);
 }
 
 __global__
 void FindCorrespondences(const float4* input,	const float4* target,
     const float4* targetNormals, float4* correspondences, float4* correspondenceNormals,
     float* residuals,	const float4x4 deltaT,
-    float distThres, float normalThres, int width, int height)
+    float distThres, float normalThres, int width, int height, int pyrLevel)
 {
-
-  const int offset = 1;
+	if (blockIdx.x == 0 && blockIdx.y == 0 && threadIdx.x == 0 && threadIdx.y == 0)
+	{
+    printf("inputVerts = %p \n targetVerts = %p\n", (void*)input, (void*)target);
+	}
 	int xidx = blockDim.x*blockIdx.x + threadIdx.x;
 	int yidx = blockDim.y*blockIdx.y + threadIdx.y;
 
@@ -274,25 +385,37 @@ void FindCorrespondences(const float4* input,	const float4* target,
     pSrc.w = 1.0f;
     float4 transPSrc = deltaT * pSrc;
 
-		int2 projected = cam2screenPos(make_float3(transPSrc));
+    int offset = pow(2, pyrLevel); //scale projected screen-pos by pyramidLevel
+		int2 projected = cam2screenPos(make_float3(transPSrc), 1 /*offset*/);
+		
     int2 &sp = projected;
+		//sp.x /= divisor;
+    //sp.y /= divisor;
     //sp.x = sp.x/offset;
     //sp.y = sp.y/offset;
+		if ((sp.x > width) || (sp.y > height))
+		{
+      //printf("Projected pixel (%i, %i) out of bounds\n", sp.x, sp.y);
+      return;
+		}
 
     if(sp.x > 0 && sp.y > 0 && sp.x < width && sp.y < height)
     {
       //printf("%i) sp.x = %i
       int targetIndex = (sp.y * width) + sp.x;
       float4 pTar = target[targetIndex];
+			//printf("%i | input idx : (%i, %i) val=(%f, %f, %f), target idx: (%i, %i) val=(%f, %f, %f)\n", idx, xidx, yidx, pSrc.x, pSrc.y, pSrc.z, projected.x, projected.y, pTar.x, pTar.y, pTar.z);
       float4 nTar = targetNormals[targetIndex];
       float3 diff = make_float3(transPSrc - pTar);
       float d = dot(diff, make_float3(nTar));
       if (d < distThres)
       {
+        /*
         if (threadIdx.x ==0 && threadIdx.y ==0)
         {
           printf("%i) src- (%f, %f, %f), target- (%f, %f, %f), d= %f\n",idx, pSrc.x, pSrc.y, pSrc.z, pTar.x, pTar.y, pTar.z, d);
         }
+				*/
         atomicAdd(&globalError, d);
         correspondences[idx] = pTar;
         correspondenceNormals[idx] = nTar;
@@ -328,7 +451,7 @@ extern "C" float computeCorrespondences(const float4* d_input, const float4* d_t
   std::cerr<<"After clearing prev correspondences\n";
 
 	FindCorrespondences <<<blocks[pyrLevel], threads[pyrLevel]>>>(d_input, d_target, d_targetNormals,
-      corres, corresNormals, residuals,	deltaTransform, distThres, normalThres, width, height);
+      corres, corresNormals, residuals,	deltaTransform, distThres, normalThres, width, height, pyrLevel);
   checkCudaErrors(cudaDeviceSynchronize());
 
   float globalErrorReadback = 0.0;
@@ -351,9 +474,9 @@ extern "C" bool SetGaussianKernel(const float* blurKernel)
   return true;
 }
 
-extern "C" bool GenerateImagePyramids(const vector<device_ptr<uint16_t>>& d_PyramidDepths,
-																			const vector<device_ptr<float4>>& d_PyramidVerts,
-																			const vector<device_ptr<float4>>& d_PyramidNormals)
+extern "C" bool GenerateImagePyramids(vector<device_ptr<uint16_t>>& d_PyramidDepths,
+																			vector<device_ptr<float4>>& d_PyramidVerts,
+																			vector<device_ptr<float4>>& d_PyramidNormals)
 {
 	//Blur kernel runs top-down, i.e process higher resolutions first and go decreasing order.
 	//[1] First raw depth
@@ -376,6 +499,9 @@ extern "C" bool GenerateImagePyramids(const vector<device_ptr<uint16_t>>& d_Pyra
 		outHeight 											= pyramid_resolution[outPyrLvl][1] ;
 		uint16_t* d_toFillDepthMap 		  = thrust::raw_pointer_cast(d_PyramidDepths[outPyrLvl]);
 
+    std::cout << "Downscaling depth frame (" << inWidth << ", " << inHeight << ") --> (" 
+																			 << outWidth << ", " << outHeight << ")"<<std::endl;
+
 		downscaleKernel<<<blocks[pyrLevel], threads[pyrLevel]>>>(d_referenceDepthMap, d_toFillDepthMap, inWidth, inHeight, outWidth, outHeight);
 		checkCudaErrors(cudaDeviceSynchronize());
 	}
@@ -392,9 +518,14 @@ extern "C" bool GenerateImagePyramids(const vector<device_ptr<uint16_t>>& d_Pyra
 		float4* d_toFillVertMap					= thrust::raw_pointer_cast(d_PyramidVerts[pyrLevel]);
 		float4* d_toFillNormalMap				= thrust::raw_pointer_cast(d_PyramidNormals[pyrLevel]);
 
+    std::cout << "Calculating Vertex on downscaled frame (" << inWidth << ", " << inHeight 
+			<<")" <<std::endl;
+
 		calculateVertexPositions <<<blocks[pyrLevel], threads[pyrLevel] >>>(d_toFillVertMap, d_referenceDepthMap);
 		checkCudaErrors(cudaDeviceSynchronize());
 
+    std::cout << "Calculating Normals on downscaled frame (" << inWidth << ", " << inHeight 
+			<<")" <<std::endl;
 		calculateNormals <<<blocks[pyrLevel], threads[pyrLevel] >>>(d_toFillVertMap, d_toFillNormalMap);
 		checkCudaErrors(cudaDeviceSynchronize());
 	}

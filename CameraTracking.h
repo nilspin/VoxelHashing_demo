@@ -61,6 +61,15 @@ private:
   vector<device_ptr<float4>>   d_targetNormals_pyr;
   vector<device_ptr<uint16_t>> d_targetDepths_pyr;
 
+  //----Debug-Analogs of dev buffers above on host--
+  vector<vector<float4>>               h_inputVerts_pyr;
+  vector<vector<float4>>               h_inputNormals_pyr;
+  vector<vector<uint16_t>>             h_inputDepths_pyr;
+
+  vector<vector<float4>>               h_targetVerts_pyr;
+  vector<vector<float4>>               h_targetNormals_pyr;
+  vector<vector<uint16_t>>             h_targetDepths_pyr;
+
   //----Matrices-----------------------
   Matrix4x4f deltaTransform;
 	float k_GaussianKernel[9] = {1.0f, 0.0f, 0.0f,
@@ -77,6 +86,13 @@ private:
 	//void GaussianBlurPyramid();
 	bool AllocImagePyramid(float4*, vector<device_ptr<float4>>&);
 	bool AllocImagePyramid(uint16_t*, vector<device_ptr<uint16_t>>&);
+ 
+  //----Debug methods for copying back to host and manually inspecting shit----------
+ template <typename T>
+  bool CopyDeviceBufToHost(const vector<device_ptr<T>>& , vector<vector<T>>& );
+
+  template<typename T>
+  bool WriteVec2File(const vector<vector<T>>&, const std::string);
 
 public:
 
