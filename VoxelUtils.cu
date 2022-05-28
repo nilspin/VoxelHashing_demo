@@ -722,8 +722,8 @@ __inline __device__
 Voxel combineVoxel(const Voxel& oldVox, const Voxel& currVox) {
 	//TODO: add color later
 	Voxel newVox;
-	newVox.sdf = ((oldVox.sdf * (float)oldVox.weight) + (currVox.sdf * (float)currVox.weight)) / ((float)oldVox.weight + (float)currVox.weight);
 	newVox.weight = min(d_hashtableParams.integrationWeightMax, (float)oldVox.weight + (float)currVox.weight);
+	newVox.sdf = ((oldVox.sdf * (float)oldVox.weight) + (currVox.sdf * (float)currVox.weight)) / (newVox.weight);
 
 	return newVox;
 }
@@ -793,8 +793,8 @@ void integrateDepthMapKernel(const float4* verts) {
 	float truncation = d_hashtableParams.truncation;	// +(d_hashtableParams.truncScale*depth);
 	//i.e calculate truncation of the SDF for given depth value
 
-	if (sdf > -truncation) {
-		if (sdf >= 0) {
+	if (abs(sdf) < abs(truncation)) {
+		if (sdf >= 0.0f) {
 			sdf = fminf(truncation, sdf);
 		}
 		else {
@@ -803,7 +803,7 @@ void integrateDepthMapKernel(const float4* verts) {
 
 		//Sets updation weight based on sensor noise. Farther depths have less weight. Copied from prof. Niessner's implementation
 		//float weightUpdate = fminf(d_hashtableParams.integrationWeightSample * (1.0 - depthZeroOne), 1.0f);
-		float weightUpdate = fminf(d_hashtableParams.integrationWeightSample * (depthZeroOne) * 0.025, 1.0f);
+		float weightUpdate = fminf(d_hashtableParams.integrationWeightSample * (depthZeroOne) * d_hashtableParams.voxelSize, 1.0f);
 		//float weightUpdate = fmaxf(d_hashtableParams.integrationWeightSample * (depthZeroOne), 1.0f);
 		//unsigned int weightUpdate = 10;	//let's keep this constant for now
 		//float  weightUpdate = 0.2f;
