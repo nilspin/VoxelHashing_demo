@@ -25,9 +25,9 @@ public:
 	~Application();
 private:
 	//Dims
-	int DepthWidth = 0;
-	int DepthHeight = 0;
-	int channels = 0;
+	int DepthWidth = 640;
+	int DepthHeight = 480;
+	int channels = 1;
 	float wide = 0.1;
 
 	//Window and events
@@ -80,10 +80,10 @@ private:
 
   //CUDA stuff
   //----for out incoming frame-----
-  struct cudaGraphicsResource *cuda_input_resource;
+  struct cudaGraphicsResource *cuda_inputVerts_resource;
   struct cudaGraphicsResource *cuda_inputNormals_resource;
     //----for frame to be compared against----
-  struct cudaGraphicsResource *cuda_target_resource;
+  struct cudaGraphicsResource *cuda_targetVerts_resource;
   struct cudaGraphicsResource *cuda_targetNormals_resource;
 
 
