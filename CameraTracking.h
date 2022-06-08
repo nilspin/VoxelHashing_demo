@@ -38,7 +38,7 @@ class CameraTracking  {
 private:
   int g_width  = 0;
 	int g_height = 0;
-	bool pyramid_alloced = false;
+	bool m_pyramid_alloced = false;
 
   Solver solver;
 
@@ -60,6 +60,10 @@ private:
   vector<device_ptr<float4>>   d_targetVerts_pyr;
   vector<device_ptr<float4>>   d_targetNormals_pyr;
   vector<device_ptr<uint16_t>> d_targetDepths_pyr;
+
+  vector<device_ptr<float4>>   d_tempVerts_pyr; //these are used for swapping
+  vector<device_ptr<float4>>   d_tempNormals_pyr;
+  vector<device_ptr<uint16_t>> d_tempDepths_pyr;
 
   //----Debug-Analogs of dev buffers above on host--
   vector<vector<float4>>               h_inputVerts_pyr;
@@ -84,11 +88,11 @@ private:
 
 	void GaussianBlur(const uint16_t* d_inputDepthMap, uint16_t* d_outDepthMap, int width, int height);
 	//void GaussianBlurPyramid();
-	bool AllocImagePyramid(float4*, vector<device_ptr<float4>>&);
-	bool AllocImagePyramid(uint16_t*, vector<device_ptr<uint16_t>>&);
- 
+	template <typename T>
+	bool AllocImagePyramid(T*, vector<device_ptr<T>>&);
+
   //----Debug methods for copying back to host and manually inspecting shit----------
- template <typename T>
+  template <typename T>
   bool CopyDeviceBufToHost(const vector<device_ptr<T>>& , vector<vector<T>>& );
 
   template<typename T>
@@ -99,6 +103,8 @@ public:
   CameraTracking(int, int);
   ~CameraTracking();
   void Align(float4*,  float4*,  float4*,  float4*,  uint16_t*,  uint16_t*);
+	void swapBuffers();
+	bool AllocImagePyramids(float4*, float4*, uint16_t*, float4*, float4*, uint16_t*);
   Matrix4x4f getTransform() { return deltaTransform; }
 };
 

@@ -29,7 +29,8 @@ void SDF_Hashtable::integrate(const float4x4& viewMat, const float4* verts, cons
 	//consolidate visible entries into a flat buffer
 	int occupiedBlockCount = flattenIntoBuffer(h_hashtableParams);
 	std::cout<<"occupiedBlockCount : "<<occupiedBlockCount<<"\n";
-	h_hashtableParams.numOccupiedBlocks = occupiedBlockCount;
+	h_hashtableParams.currentOccupiedBlocks = occupiedBlockCount; //blocks in current view
+	h_hashtableParams.totalOccupiedBlocks += occupiedBlockCount; //total blocks accumulated since beginning
 	updateConstantHashTableParams(h_hashtableParams);
 
 	//integrate vertices into SDF volume
@@ -65,7 +66,8 @@ SDF_Hashtable::SDF_Hashtable()	{
 	h_hashtableParams.numVoxelBlocks = numVoxelBlocks;
 	h_hashtableParams.voxelBlockSize = voxelBlockSize;
 	h_hashtableParams.voxelSize = voxelSize;
-	h_hashtableParams.numOccupiedBlocks = numOccupiedBlocks;
+	h_hashtableParams.currentOccupiedBlocks = currentOccupiedBlocks;
+	h_hashtableParams.totalOccupiedBlocks = totalOccupiedBlocks;
 	h_hashtableParams.maxIntegrationDistance = maxIntegrationDistance;
 	h_hashtableParams.truncScale = truncScale;
 	h_hashtableParams.truncation = truncation;

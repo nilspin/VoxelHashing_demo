@@ -7,6 +7,7 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <cassert>
 #include <type_traits>
 //#include <thrust/fill.h>
 #include "CameraTracking.h"
@@ -35,10 +36,11 @@ extern "C" bool SetGaussianKernel(const float* kernel);
 
 //-------------------------------------------------------------------------------
 //----Two versions----for float4, uint16_t-----------
-bool CameraTracking::AllocImagePyramid(float4* baseLayer, std::vector<device_ptr<float4>>& toFill_pyr)
+template <typename T>
+bool CameraTracking::AllocImagePyramid(T* baseLayer, std::vector<device_ptr<T>>& toFill_pyr)
 {
 	//[1] Set (already computed) input as 1st level of pyramid
-	device_ptr<float4> imgLvl_0 = thrust::device_pointer_cast(baseLayer); //image level 0
+	device_ptr<T> imgLvl_0 = thrust::device_pointer_cast(baseLayer); //image level 0
 	toFill_pyr.push_back(imgLvl_0);
 
 	//[2] Alloc other levels of pyramid
@@ -49,44 +51,15 @@ bool CameraTracking::AllocImagePyramid(float4* baseLayer, std::vector<device_ptr
 		//get width, height for this level
 		size_t LEVEL_NUMPIXELS = width * height;
 
-		float4* d_tmpPtr = nullptr;
-    checkCudaErrors(cudaMalloc((void**)&d_tmpPtr, LEVEL_NUMPIXELS*sizeof(float4)));
+		T* d_tmpPtr = nullptr;
+    checkCudaErrors(cudaMalloc((void**)&d_tmpPtr, LEVEL_NUMPIXELS*sizeof(T)));
 		checkCudaErrors(cudaDeviceSynchronize());
 		if(d_tmpPtr == nullptr) return false;
 
-		device_ptr<float4> d_ptr = thrust::device_pointer_cast(d_tmpPtr);
-		checkCudaErrors(cudaMemset(d_tmpPtr, 0, LEVEL_NUMPIXELS*sizeof(float4)));
+		device_ptr<T> d_ptr = thrust::device_pointer_cast(d_tmpPtr);
+		checkCudaErrors(cudaMemset(d_tmpPtr, 0, LEVEL_NUMPIXELS*sizeof(T)));
 		checkCudaErrors(cudaDeviceSynchronize());
 		//thrust::fill(d_ptr, d_ptr + LEVEL_NUMPIXELS, 0.0f); //this doesn't work cus this isn't a .cu file
-		toFill_pyr.push_back(d_ptr);
-	}
-	return true;
-}
-
-bool CameraTracking::AllocImagePyramid(uint16_t* baseLayer, std::vector<device_ptr<uint16_t>>& toFill_pyr)
-{
-	//[1] Set (already computed) input as 1st level of pyramid
-	device_ptr<uint16_t> imgLvl_0 = thrust::device_pointer_cast(baseLayer); //image level 0
-	toFill_pyr.push_back(imgLvl_0);
-
-	//[2] Alloc other levels of pyramid
-	for(int pyrLevel=1; pyrLevel < pyramid_size; ++pyrLevel)
-	{
-		int width  = pyramid_resolution[pyrLevel][0];
-		int height = pyramid_resolution[pyrLevel][1];
-		//get width, height for this level
-		size_t LEVEL_NUMPIXELS = width * height;
-
-		uint16_t* d_tmpPtr = nullptr;
-    checkCudaErrors(cudaMalloc((void**)&d_tmpPtr, LEVEL_NUMPIXELS*sizeof(uint16_t)));
-		checkCudaErrors(cudaDeviceSynchronize());
-
-		if(d_tmpPtr == nullptr) return false;
-
-		device_ptr<uint16_t> d_ptr = thrust::device_pointer_cast(d_tmpPtr);
-		checkCudaErrors(cudaMemset(d_tmpPtr, 0, LEVEL_NUMPIXELS*sizeof(uint16_t)));
-		checkCudaErrors(cudaDeviceSynchronize());
-		//thrust::fill(d_ptr, d_ptr + LEVEL_NUMPIXELS, 0); //this doesn't work cus this isn't a cu file
 		toFill_pyr.push_back(d_ptr);
 	}
 	return true;
@@ -115,7 +88,7 @@ bool CameraTracking::CopyDeviceBufToHost(const vector<device_ptr<T>>& dev_vec, v
 	//														 width * height * sizeof(float4), \
 	//														 cudaMemcpyDeviceToHost));	\
 	 checkCudaErrors(cudaDeviceSynchronize());
-	
+
 	 host_vec.push_back(h_curr_vec);
 	}
 	return true;
@@ -125,13 +98,13 @@ template <typename T>
 bool CameraTracking::WriteVec2File(const vector<vector<T>>& inputVectors,
 																	 const std::string oFilePrefix)
 {
- 
+
 	int i = 0;
 	for (const auto& vec2Stream : inputVectors)
 	{
     std::string    pathName = oFilePrefix + "_" + std::to_string(i) + ".txt";
     std::ofstream fout(pathName, std::ios::out);
-    if constexpr (std::is_same<T, float4>::value) 
+    if constexpr (std::is_same<T, float4>::value)
 		{
       for (const auto& vert : vec2Stream)
       {
@@ -168,31 +141,42 @@ bool CameraTracking::WriteVec2File(const vector<vector<T>>& inputVectors,
 //
 //}
 
+bool CameraTracking::AllocImagePyramids(float4* d_inputVerts, float4* d_inputNormals, uint16_t* d_inputDepths,
+																				float4* d_targetVerts, float4* d_targetNormals, uint16_t* d_targetDepths)
+{
+	bool status = true;
+
+	//Alloc resources
+	if(!m_pyramid_alloced)
+	{
+		status &=AllocImagePyramid<float4>(d_inputVerts,    d_inputVerts_pyr);
+		status &=AllocImagePyramid<float4>(d_inputNormals,  d_inputNormals_pyr);
+		status &=AllocImagePyramid<uint16_t>(d_inputDepths, 	 d_inputDepths_pyr);
+
+		status &=AllocImagePyramid<float4>(d_targetVerts,   d_targetVerts_pyr);
+		status &=AllocImagePyramid<float4>(d_targetNormals, d_targetNormals_pyr);
+		status &=AllocImagePyramid<uint16_t>(d_targetDepths,  d_targetDepths_pyr);
+
+		if (!status)
+		 std::runtime_error("Failed to generate Image pyramids! ");
+		else {
+			m_pyramid_alloced = true;
+			d_tempVerts_pyr.resize(d_inputVerts_pyr.size());
+			d_tempNormals_pyr.resize(d_inputNormals_pyr.size());
+			d_tempDepths_pyr.resize(d_inputDepths_pyr.size());
+		}
+	}
+	return status;
+}
+
 void CameraTracking::Align(float4*   d_inputVerts,   float4* d_inputNormals,
 													 float4*   d_targetVerts,  float4* d_targetNormals,
 													 uint16_t* d_inputDepths,  uint16_t* d_targetDepths)
 {
 	bool status = true;
 
-	//Alloc resources
-	if(!pyramid_alloced)
-	{
-		status &=AllocImagePyramid(d_inputVerts,    d_inputVerts_pyr);
-		status &=AllocImagePyramid(d_inputNormals,  d_inputNormals_pyr);
-		status &=AllocImagePyramid(d_inputDepths, 	 d_inputDepths_pyr);
-
-		status &=AllocImagePyramid(d_targetVerts,   d_targetVerts_pyr);
-		status &=AllocImagePyramid(d_targetNormals, d_targetNormals_pyr);
-		status &=AllocImagePyramid(d_targetDepths,  d_targetDepths_pyr);
-
-		if (!status)
-		 std::runtime_error("Failed to generate Image pyramids! ");
-		else 
-			pyramid_alloced = true;
-	}
-
-	std::cout << " \n\nGenerating Image Pyramid : Input frame" << std::endl;
-	status &= GenerateImagePyramids(d_inputDepths_pyr,  d_inputVerts_pyr,  d_inputNormals_pyr);
+	//std::cout << " \n\nGenerating Image Pyramid : Input frame" << std::endl;
+	//status &= GenerateImagePyramids(d_inputDepths_pyr,  d_inputVerts_pyr,  d_inputNormals_pyr);
 	std::cout << " \n\nGenerating Image Pyramid : Target frame"<<std::endl;
 	status &= GenerateImagePyramids(d_targetDepths_pyr, d_targetVerts_pyr, d_targetNormals_pyr);
 
@@ -258,14 +242,14 @@ void CameraTracking::Align(float4*   d_inputVerts,   float4* d_inputNormals,
 
       globalCorrespondenceError = computeCorrespondences(d_inputVerts_lvl, d_targetVerts_lvl,
 																												 d_targetNormals_lvl,
-																												 d_tmpCorrespondences, 
+																												 d_tmpCorrespondences,
 																												 d_tmpCorrespondenceNormals,
-																												 d_tmpResiduals, deltaT, width, 
+																												 d_tmpResiduals, deltaT, width,
 																												 height, pyrLevel);
       std::cout << "\n" << termcolor::on_blue << termcolor::white << "globalCorrespondenceError = " << globalCorrespondenceError << termcolor::reset << std::endl;
 
       if (fabs(globalCorrespondenceError) < 1.0f) //magic number value for tolerance threshold
-			{ 
+			{
         std::cout << "\n\n" << termcolor::bold << termcolor::grey << termcolor::on_white << "Correspondence error is within tolerance. Stopping." << termcolor::reset << "\n\n";
         break;
       }
@@ -335,7 +319,7 @@ void CameraTracking::GaussianBlur(const uint16_t* d_inputDepthMap, uint16_t* d_o
 	gaussianBlur(d_inputDepthMap, d_outputDepthMap, width, height);
 }
 
-bool CameraTracking::AllocTmpBuffers(float4* d_tmpCorrespondences, 
+bool CameraTracking::AllocTmpBuffers(float4* d_tmpCorrespondences,
 																		 float4* d_tmpCorrespondenceNormals ,
 																		 float* d_tmpResiduals)
 {
@@ -346,7 +330,7 @@ bool CameraTracking::AllocTmpBuffers(float4* d_tmpCorrespondences,
 CameraTracking::CameraTracking(int w, int h):
 	g_width(w),
 	g_height(h),
-	pyramid_alloced(false),
+	m_pyramid_alloced(false),
 	d_tmpResiduals(nullptr),
 	d_tmpCorrespondences(nullptr),
 	d_tmpCorrespondenceNormals(nullptr)
@@ -355,7 +339,7 @@ CameraTracking::CameraTracking(int w, int h):
   const size_t ARRAY_SIZE    = w*h*sizeof(float);
 
   bool status = true;
-	//alloc device buffers 
+	//alloc device buffers
   checkCudaErrors(cudaMalloc((void**)&d_tmpCorrespondences, F4_ARRAY_SIZE));
 	d_correspondences = thrust::device_pointer_cast(d_tmpCorrespondences);
 	checkCudaErrors(cudaMemset(d_tmpCorrespondences, 0, F4_ARRAY_SIZE));
@@ -401,6 +385,19 @@ CameraTracking::CameraTracking(int w, int h):
   SetCameraIntrinsic(K.data(), K_inv.data());
 	SetGaussianKernel(k_GaussianKernel);
   //float4x4 transposed = deltaTransform.transpose();
+}
+
+void CameraTracking::swapBuffers()
+{
+	assert(d_tempVerts_pyr.size() == 3);
+	std::copy(d_inputVerts_pyr.begin(), d_inputVerts_pyr.end(), d_tempVerts_pyr.begin());
+	std::copy(d_targetVerts_pyr.begin(), d_targetVerts_pyr.end(), d_inputVerts_pyr.begin());
+
+	std::copy(d_inputNormals_pyr.begin(), d_inputNormals_pyr.end(), d_tempNormals_pyr.begin());
+	std::copy(d_targetNormals_pyr.begin(), d_targetNormals_pyr.end(), d_inputNormals_pyr.begin());
+
+	std::copy(d_inputDepths_pyr.begin(), d_inputDepths_pyr.end(), d_tempDepths_pyr.begin());
+	std::copy(d_targetDepths_pyr.begin(), d_targetDepths_pyr.end(), d_inputDepths_pyr.begin());
 }
 
 CameraTracking::~CameraTracking()

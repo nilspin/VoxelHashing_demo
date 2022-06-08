@@ -40,7 +40,8 @@ struct HashTableParams	{
 
 	int voxelBlockSize;	// = 8;
 	float voxelSize;	// = 0.05f;
-	unsigned int numOccupiedBlocks;	// = 0;	//occupied blocks in view frustum
+	unsigned int currentOccupiedBlocks;	// = 0;	//occupied blocks in view frustum
+	unsigned int totalOccupiedBlocks;	// = 0;	//total occupied blocks integrated
 
 	float maxIntegrationDistance;	// = 4.0f;
 	float truncScale;	// = 0.01f;
