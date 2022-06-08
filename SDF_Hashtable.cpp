@@ -27,7 +27,8 @@ void SDF_Hashtable::integrate(const float4x4& viewMat, const float4* verts, cons
 	allocBlocks(verts, normals);
 
 	//consolidate visible entries into a flat buffer
-	int occupiedBlockCount = flattenIntoBuffer(h_hashtableParams);
+	int occupiedBlockCount = 0;
+	occupiedBlockCount = flattenIntoBuffer(h_hashtableParams);
 	std::cout<<"occupiedBlockCount : "<<occupiedBlockCount<<"\n";
 	h_hashtableParams.currentOccupiedBlocks = occupiedBlockCount; //blocks in current view
 	h_hashtableParams.totalOccupiedBlocks += occupiedBlockCount; //total blocks accumulated since beginning

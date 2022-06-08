@@ -260,7 +260,7 @@ void CameraTracking::Align(float4*   d_inputVerts,   float4* d_inputNormals,
       solver.BuildLinearSystem(d_inputVerts_lvl, d_tmpCorrespondences, d_tmpCorrespondenceNormals, d_tmpResiduals, pyrLevel);
       Matrix4x4f intermediateT = solver.getTransform();
       //Matrix4x4f intermediateT = rigidAlignment(d_input, d_inputNormals, deltaTransform);
-      deltaTransform = intermediateT;//intermediateT*deltaTransform;
+      deltaTransform = intermediateT;//intermediateT*deltaTransform; //TODO : Get the proper matrix! This is BLOCKING!
       //float4x4 transposed = deltaTransform.transpose(); //TODO : remove later
     }
   }

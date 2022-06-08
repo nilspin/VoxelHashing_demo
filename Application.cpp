@@ -18,7 +18,7 @@ using glm::vec4;
 using glm::mat4;
 //using namespace glm;
 
-int tempFramesToIntegrate = 2;
+int tempFramesToIntegrate = 5;
 //Takes device pointers, calculates correct position and normals
 extern "C" void generatePositionAndNormals(float4 *positions, float4* normals, const std::uint16_t *depth);
 
@@ -94,6 +94,7 @@ void Application::run()
 
 	if(!image1) {
 		image1 = stbi_load_16(inputPath1.c_str(), &m_DepthWidth, &m_DepthHeight, &m_colorChannels, 0);
+		cout<<"Loaded image : "<<inputPath1<<"\n";
 	}
 	if(image1 == nullptr)
 	{
@@ -121,7 +122,12 @@ void Application::run()
 	//integrate the first frame at origin
 	float4x4 identity;
 	identity.setIdentity();
-	fusionModule->integrate(identity, d_targetVerts, d_targetNormals);
+	fusionModule->integrate(identity, d_inputVerts, d_inputNormals);
+
+	//sanity-check
+	checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_inputVerts_resource, 0));
+	checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_inputNormals_resource, 0));
+	d_inputVerts = d_inputNormals = nullptr;
 
   while (!quit)
   {
@@ -132,6 +138,7 @@ void Application::run()
 			std::string inputPath2 = rootPath + inputFile2 + format;
 			if(!image2) {
 				image2 = stbi_load_16(inputPath2.c_str(), &m_DepthWidth, &m_DepthHeight, &m_colorChannels, 0);
+				cout<<"Loaded image : "<<inputPath2<<"\n";
 			}
 			if(image2 == nullptr)
 			{
@@ -141,6 +148,9 @@ void Application::run()
 			//copy depth frame to GPU
 			checkCudaErrors(cudaMemcpy(d_targetDepths, image2, DEPTH_SIZE, cudaMemcpyHostToDevice));
 			checkCudaErrors(cudaDeviceSynchronize());
+
+			stbi_image_free(image2);
+			image2 = nullptr;
 
 			//Map GL resources to CUDA -- TODO : do I need to do this each frame?
 			size_t returnedBufferSize;
@@ -184,6 +194,7 @@ void Application::run()
 
 			//Depth integration into volume
 			float4x4 global_transform = float4x4(tracker->getTransform().data());
+			//global_transform.transpose();
 			fusionModule->integrate(global_transform, d_targetVerts, d_targetNormals);
 
 			//sdfRenderer->printSDFdata();
