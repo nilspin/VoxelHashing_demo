@@ -17,7 +17,7 @@
 using float4_pyramid = std::array<float4*, 3>;
 using uint16_pyramid = std::array<uint16_t*, 3>;
 
-extern "C" float computeCorrespondences(const float4* d_input, const float4* d_target, const float4* d_targetNormals, float4* corres, float4* corresNormals, float* residual, float4x4 deltaTransform, int width, int height, int pyrLevel);
+extern "C" float computeCorrespondences(const float4* d_input, const float4* d_target, const float4* d_targetNormals, float4* corres, float4* corresNormals, float* residual, float4x4 deltaTransform, int width, int height, int pyrLevel, float corresThres, unsigned int& numCorresPairs);
 
 extern "C" float gaussianBlur(const uint16_t* d_inputDepth, uint16_t* d_outputDepth, const int width, const int height);
 extern "C" bool  GenerateImagePyramids(vector<device_ptr<uint16_t>>& d_PyramidDepths,
@@ -175,35 +175,16 @@ void CameraTracking::Align(float4*   d_inputVerts,   float4* d_inputNormals,
 {
 	bool status = true;
 
-	//std::cout << " \n\nGenerating Image Pyramid : Input frame" << std::endl;
-	//status &= GenerateImagePyramids(d_inputDepths_pyr,  d_inputVerts_pyr,  d_inputNormals_pyr);
 	std::cout << " \n\nGenerating Image Pyramid : Target frame"<<std::endl;
 	status &= GenerateImagePyramids(d_targetDepths_pyr, d_targetVerts_pyr, d_targetNormals_pyr);
-
-//#ifdef DEBUG
- /*
-	status &= CopyDeviceBufToHost<float4>(d_inputVerts_pyr, h_inputVerts_pyr);
-	status &= WriteVec2File<float4>(h_inputVerts_pyr, "inputVerts");
-	status &= CopyDeviceBufToHost<float4>(d_inputNormals_pyr, h_inputNormals_pyr);
-  status &= WriteVec2File<float4>(h_inputNormals_pyr,"inputNormals");
-	status &= CopyDeviceBufToHost<uint16_t>(d_inputDepths_pyr, h_inputDepths_pyr);
-  status &= WriteVec2File<uint16_t>(h_inputDepths_pyr, "inputDepths");
-
-	status &= CopyDeviceBufToHost<float4>(d_targetVerts_pyr, h_targetVerts_pyr);
-  status &= WriteVec2File<float4>(h_targetVerts_pyr, "targetVerts");
-	status &= CopyDeviceBufToHost<float4>(d_targetNormals_pyr, h_targetNormals_pyr);
-  status &= WriteVec2File<float4>(h_targetNormals_pyr, "targetNormals");
-  status &= CopyDeviceBufToHost<uint16_t>(d_targetDepths_pyr, h_targetDepths_pyr);
-  status &= WriteVec2File<uint16_t>(h_targetDepths_pyr, "targetDepths");
-	*/
-//#endif // DEBUG
-
 
 	if (!status)
    std::runtime_error("Failed to generate Image pyramids! ");
 
 	int width  = -1; //numCols;
   int height = -1; //numRows;
+	float corresThres = distThres;
+	unsigned int numCorresPairs = 0;
 
 	//GaussianBlurPyramid();
   //for (int iter = 0; iter < maxIters; iter++) {
@@ -212,6 +193,7 @@ void CameraTracking::Align(float4*   d_inputVerts,   float4* d_inputNormals,
 		//todo cleanup
 		width  = pyramid_resolution[pyrLevel][0];
 		height = pyramid_resolution[pyrLevel][1];
+		corresThres = corresThres/2.0f;
 
 		std::cout << "\n" << termcolor::on_green << "PyrLevel : "<< pyrLevel << ", Resolution : "<< width <<" x  " << height << termcolor::reset << std::endl;
 		std::cout << termcolor::underline << std::endl << termcolor::reset;
@@ -225,14 +207,7 @@ void CameraTracking::Align(float4*   d_inputVerts,   float4* d_inputNormals,
       //CUDA files cannot include any Eigen headers, don't know why. So convert eigen matrix to __device__ compatible float4x4.
       cout << "deltaTransform = \n" << deltaTransform << std::endl;
       float4x4 deltaT = float4x4(deltaTransform.data());
-      deltaT.transpose();
-
-      //Clear previous data
-      //TODO All move all this to .cu file
-      //thrust::fill(d_correspondences.begin(), d_correspondences.end(), make_float4(0));
-      //thrust::fill(d_correspondenceNormals.begin(), d_correspondenceNormals.end(), make_float4(0));
-      //thrust::fill(d_residuals.begin(), d_residuals.end(), (float)0.0f);
-
+      //deltaT.transpose();
 
       //We now have all data we need. Find correspondence pairs.
 			float4* d_inputVerts_lvl = thrust::raw_pointer_cast(d_inputVerts_pyr[pyrLevel]);
@@ -245,7 +220,9 @@ void CameraTracking::Align(float4*   d_inputVerts,   float4* d_inputNormals,
 																												 d_tmpCorrespondences,
 																												 d_tmpCorrespondenceNormals,
 																												 d_tmpResiduals, deltaT, width,
-																												 height, pyrLevel);
+																												 height, pyrLevel,
+																												 corresThres, numCorresPairs);
+      std::cout << "\n" << termcolor::on_blue << termcolor::white << "numCorrespondencePairs = " << numCorresPairs << termcolor::reset << std::endl;
       std::cout << "\n" << termcolor::on_blue << termcolor::white << "globalCorrespondenceError = " << globalCorrespondenceError << termcolor::reset << std::endl;
 
       if (fabs(globalCorrespondenceError) < 1.0f) //magic number value for tolerance threshold
@@ -261,6 +238,7 @@ void CameraTracking::Align(float4*   d_inputVerts,   float4* d_inputNormals,
       Matrix4x4f intermediateT = solver.getTransform();
       //Matrix4x4f intermediateT = rigidAlignment(d_input, d_inputNormals, deltaTransform);
       deltaTransform = intermediateT;//intermediateT*deltaTransform; //TODO : Get the proper matrix! This is BLOCKING!
+			globalTransform = intermediateT * globalTransform;
       //float4x4 transposed = deltaTransform.transpose(); //TODO : remove later
     }
   }
@@ -335,6 +313,8 @@ CameraTracking::CameraTracking(int w, int h):
 	d_tmpCorrespondences(nullptr),
 	d_tmpCorrespondenceNormals(nullptr)
 {
+
+	deltaTransform = globalTransform = Matrix4x4f::Identity();
   const size_t F4_ARRAY_SIZE = w*h*sizeof(float4);
   const size_t ARRAY_SIZE    = w*h*sizeof(float);
 

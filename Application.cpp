@@ -18,12 +18,13 @@ using glm::vec4;
 using glm::mat4;
 //using namespace glm;
 
-int tempFramesToIntegrate = 5;
+int tempFramesToIntegrate = 10;
 //Takes device pointers, calculates correct position and normals
 extern "C" void generatePositionAndNormals(float4 *positions, float4* normals, const std::uint16_t *depth);
 
 //void SetupInputData(
 Application::Application() {
+
 	glPixelStorei(GL_PACK_ALIGNMENT, 1);
 	//Set up frustum
   frustum.setFromVectors(vec3(0,0,1), vec3(0,0,0), vec3(1,0,0), vec3(0,1,0), 0.1, 500.0, 45, 1.3333);
@@ -136,10 +137,10 @@ void Application::run()
 		{
 			std::string inputFile2 = std::to_string(framesIntegrated+1);
 			std::string inputPath2 = rootPath + inputFile2 + format;
-			if(!image2) {
+			//if(!image2) {
 				image2 = stbi_load_16(inputPath2.c_str(), &m_DepthWidth, &m_DepthHeight, &m_colorChannels, 0);
 				cout<<"Loaded image : "<<inputPath2<<"\n";
-			}
+			//}
 			if(image2 == nullptr)
 			{
 				cout<<"could not read second image file!"<<endl; exit(0);
@@ -188,12 +189,20 @@ void Application::run()
 			//</HACKY, NON_ELEGANT SHIT>
 
 			tracker->Align(d_inputVerts, d_inputNormals, d_targetVerts, d_targetNormals, d_inputDepths, d_targetDepths);
-			deltaT = glm::make_mat4(tracker->getTransform().data());
-			//deltaT = glm::transpose(deltaT);
-			std::cout << termcolor::on_blue<< "Final rigid transform : \n" << termcolor::reset<< glm::to_string(deltaT) << "\n";
+			globalT = glm::make_mat4(tracker->getGlobalTransform().data());
+			deltaT  = glm::make_mat4(tracker->getDeltaTransform().data());
+
+			localTransforms.push_back(deltaT);
+			globalTransforms.push_back(globalT);
+			//globalT = glm::transpose(globalT);
+			std::cout << termcolor::on_blue  << "Final global transform : \n" << termcolor::reset<< glm::to_string(globalT) << "\n";
+			std::cout << termcolor::on_yellow<< "Final delta  transform : \n" << termcolor::reset<< glm::to_string(deltaT) << "\n";
 
 			//Depth integration into volume
-			float4x4 global_transform = float4x4(tracker->getTransform().data());
+			auto transMat = tracker->getGlobalTransform();
+			transMat = transMat.inverse().eval();
+			float4x4 global_transform = float4x4(transMat.data());
+			//float4x4 global_transform = float4x4(tracker->getGlobalTransform().data());
 			//global_transform.transpose();
 			fusionModule->integrate(global_transform, d_targetVerts, d_targetNormals);
 
@@ -236,23 +245,23 @@ void Application::run()
 		mat4 VP = proj*view;	// *model;
 		mat4 MV = view * model;
 		mat4 MVP = proj*view*model;
-		//std::cout<<"\n"<<glm::to_string(MVP)<<"\n\n";
-    //tracker.Align(d_inputVerts, d_inputNormals, d_targetVerts, d_targetNormals, d_inputDepths, d_targetDepths);
-    //checkCudaErrors(cudaDeviceSynchronize());
+
+		//render TSDFs
 		glDisable(GL_DEPTH_TEST);
 		glDisable(GL_CULL_FACE);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		sdfRenderer->render(MV, proj, camPos); //MV, P
+
+		//or render input point-cloud
 		//glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		//glDepthFunc(GL_TRUE);
 		//glDisable(GL_DEPTH_TEST);
 		//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		//draw(VP);
+
+		//dump SDF data
 		//sdfRenderer->printSDFdata();
 
-
-    //mat4 scaleMat =  glm::scale(vec3(1000));
-    //mat4 newMVP = proj*view;//*scaleMat
     //Draw frustum
     //frustum.draw(VP);
 

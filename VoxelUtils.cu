@@ -452,7 +452,7 @@ void printDeviceMatrix(const float3x3& mat)	{
 					int ptrIdx = allocSingleBlockInHeap() * 512;
 					if (ptrIdx < 0)	return false;	//all VoxelBlocks occupied
 					curr.ptr = ptrIdx;
-					printf("Inserted block : (%d, %d, %d) at idx %d\n", data.x, data.y, data.z, ptrIdx/512);
+					//printf("Inserted block : (%d, %d, %d) at idx %d\n", data.x, data.y, data.z, ptrIdx/512);
 					return true;
 				}
 			}
@@ -722,9 +722,13 @@ void printDeviceMatrix(const float3x3& mat)	{
 	Voxel combineVoxel(const Voxel& oldVox, const Voxel& currVox) {
 		//TODO: add color later
 		Voxel newVox;
-		newVox.weight = min(d_hashtableParams.integrationWeightMax, (float)oldVox.weight + (float)currVox.weight);
-		newVox.sdf = ((oldVox.sdf * (float)oldVox.weight) + (currVox.sdf * (float)currVox.weight)) / (newVox.weight);
+		//supposedly 'correct' code - doesn't produce right viz tho
+		//newVox.weight = min(d_hashtableParams.integrationWeightMax, (float)oldVox.weight + (float)currVox.weight);
+		//newVox.sdf = ((oldVox.sdf * (float)oldVox.weight) + (currVox.sdf * (float)currVox.weight)) / (newVox.weight);
 
+		//old, wrong code -> but right viz
+		newVox.sdf = ((oldVox.sdf * (float)oldVox.weight) + (currVox.sdf * (float)currVox.weight)) / ((float)oldVox.weight + (float)currVox.weight);
+		newVox.weight = min(d_hashtableParams.integrationWeightMax, (float)oldVox.weight + (float)currVox.weight);
 		return newVox;
 	}
 

@@ -76,6 +76,7 @@ private:
 
   //----Matrices-----------------------
   Matrix4x4f deltaTransform;
+  Matrix4x4f globalTransform;
 	float k_GaussianKernel[9] = {1.0f, 0.0f, 0.0f,
 	          									 0.0f, 1.0f, 0.0f,
 	          									 0.0f, 0.0f, 1.0f};
@@ -105,7 +106,8 @@ public:
   void Align(float4*,  float4*,  float4*,  float4*,  uint16_t*,  uint16_t*);
 	void swapBuffers();
 	bool AllocImagePyramids(float4*, float4*, uint16_t*, float4*, float4*, uint16_t*);
-  Matrix4x4f getTransform() { return deltaTransform; }
+  Matrix4x4f getDeltaTransform() { return deltaTransform; }
+  Matrix4x4f getGlobalTransform() { return globalTransform; }
 };
 
 #endif

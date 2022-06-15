@@ -42,7 +42,11 @@ private:
 	glm::mat4 view = glm::mat4(1);
 	glm::mat4 proj = glm::perspective(45.0f, 1.3333f, 0.01f, 5.0f);
 	glm::mat4 MVP = glm::mat4(1);
-	glm::mat4 deltaT = glm::mat4(1);  //we need to find this each iteration
+	glm::mat4 deltaT  = glm::mat4(1);  //transform from prev frame to latest
+	glm::mat4 globalT = glm::mat4(1);  //global frame transformation
+
+	vector<glm::mat4> localTransforms;
+	vector<glm::mat4> globalTransforms;
 
 	//Frustum
 	Frustum frustum;

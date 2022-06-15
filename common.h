@@ -11,9 +11,10 @@ const float fy =  516.5f;
 const float cx =  318.6f;
 const float cy =  255.3f;
 
-const float distThres = 0.15f; //2.5f;
+const float distThres = 0.2f; //2.5f;
 const float normalThres = 1.0f;
-const float idealError = 0.0f;
+const float ZERO_FLOAT = 0.0f;
+const unsigned int ZERO_UINT = 0;
 const float intrinsics[] = {fx, 0.0f, cx, 0.0f, fy, cy, 0.0f, 0.0f, 1};
 const float intrinsicsTranspose[] = {fx, 0.0f, 0.0f, 0.0f, fy, 0.0f, cx, cy, 1};
 const int numCols =  640;
