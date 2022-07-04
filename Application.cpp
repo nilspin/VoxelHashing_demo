@@ -18,7 +18,7 @@ using glm::vec4;
 using glm::mat4;
 //using namespace glm;
 
-int tempFramesToIntegrate = 10;
+int tempFramesToIntegrate = 1;
 //Takes device pointers, calculates correct position and normals
 extern "C" void generatePositionAndNormals(float4 *positions, float4* normals, const std::uint16_t *depth);
 
@@ -158,22 +158,18 @@ void Application::run()
 			//input-verts
 			checkCudaErrors(cudaGraphicsMapResources(1, &cuda_inputVerts_resource, 0));
 			checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void**)&d_inputVerts, &returnedBufferSize, cuda_inputVerts_resource));
-			checkCudaErrors(cudaMemset(d_inputVerts, 0, returnedBufferSize));
 
 			//input-normals
 			checkCudaErrors(cudaGraphicsMapResources(1, &cuda_inputNormals_resource, 0));
 			checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void**)&d_inputNormals, &returnedBufferSize, cuda_inputNormals_resource));
-			checkCudaErrors(cudaMemset(d_inputNormals, 0, returnedBufferSize));
 
 			//target-verts
 			checkCudaErrors(cudaGraphicsMapResources(1, &cuda_targetVerts_resource, 0));
 			checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void**)&d_targetVerts, &returnedBufferSize, cuda_targetVerts_resource));
-			checkCudaErrors(cudaMemset(d_targetVerts, 0, returnedBufferSize));
 
 			//target-normals
 			checkCudaErrors(cudaGraphicsMapResources(1, &cuda_targetNormals_resource, 0));
 			checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void**)&d_targetNormals, &returnedBufferSize, cuda_targetNormals_resource));
-			checkCudaErrors(cudaMemset(d_targetNormals, 0, returnedBufferSize));
 
 			//VBOs allocated
 			std::cout<<"\nAllocated input VBO size: "<<returnedBufferSize<<"\n";
@@ -200,19 +196,29 @@ void Application::run()
 
 			//Depth integration into volume
 			auto transMat = tracker->getGlobalTransform();
-			transMat = transMat.inverse().eval();
+			//transMat = transMat.inverse().eval();
 			float4x4 global_transform = float4x4(transMat.data());
 			//float4x4 global_transform = float4x4(tracker->getGlobalTransform().data());
 			//global_transform.transpose();
 			fusionModule->integrate(global_transform, d_targetVerts, d_targetNormals);
 
 			//sdfRenderer->printSDFdata();
-			//fusionModule->integrate(global_transform, d_targetVerts, d_targetNormals);
-			checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_inputVerts_resource, 0));
-			checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_inputNormals_resource, 0));
-			checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_targetVerts_resource, 0));
-			checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_targetNormals_resource, 0));
-			checkCudaErrors(cudaDeviceSynchronize());
+			{
+				//Cleanup
+				checkCudaErrors(cudaMemset(d_inputVerts, 0, returnedBufferSize));
+				checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_inputVerts_resource, 0));
+
+				checkCudaErrors(cudaMemset(d_inputNormals, 0, returnedBufferSize));
+				checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_inputNormals_resource, 0));
+
+				checkCudaErrors(cudaMemset(d_targetVerts, 0, returnedBufferSize));
+				checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_targetVerts_resource, 0));
+
+				checkCudaErrors(cudaMemset(d_targetNormals, 0, returnedBufferSize));
+				checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_targetNormals_resource, 0));
+
+				checkCudaErrors(cudaDeviceSynchronize());
+			}
 
 			//now make the target frames as new input
 			auto temp = image1;

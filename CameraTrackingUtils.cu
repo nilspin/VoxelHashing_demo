@@ -225,7 +225,7 @@ float bilinearInterpolate(int x, int y, const uint16_t* d_depthInput, uint32_t i
 }
 
 __global__
-void downscaleKernel(const uint16_t* d_refDepthMap, uint16_t* d_toFillDepthMap, int inWidth, int inHeight, int outWidth, int outHeight)
+void downscaleKernel(const float4* d_refVertexMap, float4* d_toFillVertexMap, int inWidth, int inHeight, int outWidth, int outHeight)
 {
 	//extern __shared__ float scratchBuf[];
 
@@ -248,10 +248,10 @@ void downscaleKernel(const uint16_t* d_refDepthMap, uint16_t* d_toFillDepthMap, 
 	const int scatter_idx = (yidx*outWidth) + xidx;
   const int sample_idx  = (yidx * inWidth) + (xidx * (inWidth / outWidth));
 
-	//uint16_t interpolated = bilinearInterpolate(xidx, yidx, d_refDepthMap, inWidth, inHeight);
-	//uint16_t interpolated = averagePixels(xidx, yidx, d_refDepthMap, inWidth, inHeight);
-	//d_toFillDepthMap[idx] = interpolated;
-  d_toFillDepthMap[scatter_idx] = d_refDepthMap[sample_idx];
+	//uint16_t interpolated = bilinearInterpolate(xidx, yidx, d_refVertexMap, inWidth, inHeight);
+	//uint16_t interpolated = averagePixels(xidx, yidx, d_refVertexMap, inWidth, inHeight);
+	//d_toFillVertexMap[idx] = interpolated;
+  d_toFillVertexMap[scatter_idx] = d_refVertexMap[sample_idx];
 }
 
 __global__
@@ -478,9 +478,9 @@ extern "C" bool SetGaussianKernel(const float* blurKernel)
   return true;
 }
 
-extern "C" bool GenerateImagePyramids(vector<device_ptr<uint16_t>>& d_PyramidDepths,
-																			vector<device_ptr<float4>>& d_PyramidVerts,
-																			vector<device_ptr<float4>>& d_PyramidNormals)
+extern "C" bool FillImagePyramids(vector<device_ptr<uint16_t>>& d_PyramidDepths,
+																  vector<device_ptr<float4>>& d_PyramidVerts,
+																  vector<device_ptr<float4>>& d_PyramidNormals)
 {
 	//Blur kernel runs top-down, i.e process higher resolutions first and go decreasing order.
 	//[1] First raw depth
@@ -497,19 +497,24 @@ extern "C" bool GenerateImagePyramids(vector<device_ptr<uint16_t>>& d_PyramidDep
 
 		inWidth 												= pyramid_resolution[inPyrLvl][0] ;
 		inHeight 												= pyramid_resolution[inPyrLvl][1] ;
-		uint16_t* d_referenceDepthMap   = thrust::raw_pointer_cast(d_PyramidDepths[inPyrLvl]);
+		float4* d_referenceVertexMap    = thrust::raw_pointer_cast(d_PyramidVerts[inPyrLvl]);
+		float4* d_referenceNormalMap    = thrust::raw_pointer_cast(d_PyramidNormals[inPyrLvl]);
 
 		outWidth 												= pyramid_resolution[outPyrLvl][0] ;
 		outHeight 											= pyramid_resolution[outPyrLvl][1] ;
-		uint16_t* d_toFillDepthMap 		  = thrust::raw_pointer_cast(d_PyramidDepths[outPyrLvl]);
+		float4* d_toFillVertexMap 	  	= thrust::raw_pointer_cast(d_PyramidVerts[outPyrLvl]);
+		float4* d_toFillNormalMap 	  	= thrust::raw_pointer_cast(d_PyramidNormals[outPyrLvl]);
 
     std::cout << "Downscaling depth frame (" << inWidth << ", " << inHeight << ") --> ("
 																			 << outWidth << ", " << outHeight << ")"<<std::endl;
 
-		downscaleKernel<<<blocks[pyrLevel], threads[pyrLevel]>>>(d_referenceDepthMap, d_toFillDepthMap, inWidth, inHeight, outWidth, outHeight);
+		downscaleKernel<<<blocks[pyrLevel], threads[pyrLevel]>>>(d_referenceVertexMap, d_toFillVertexMap, inWidth, inHeight, outWidth, outHeight);
+		downscaleKernel<<<blocks[pyrLevel], threads[pyrLevel]>>>(d_referenceNormalMap, d_toFillNormalMap, inWidth, inHeight, outWidth, outHeight);
 		checkCudaErrors(cudaDeviceSynchronize());
 	}
 
+	// -- Update : not explicitly generating vertices for now. The solver doesn't seem to be converging with this ---
+	/*
 	//[2] and reconstruct camera-space vertices and normals
 	//for(int pyrLevel = pyramid_size-1; pyrLevel > 0; --pyrLevel)
 	for(int pyrLevel = 1; pyrLevel < pyramid_size; ++pyrLevel)
@@ -533,6 +538,7 @@ extern "C" bool GenerateImagePyramids(vector<device_ptr<uint16_t>>& d_PyramidDep
 		calculateNormals <<<blocks[pyrLevel], threads[pyrLevel] >>>(d_toFillVertMap, d_toFillNormalMap);
 		checkCudaErrors(cudaDeviceSynchronize());
 	}
+	*/
 
 	return true;
 }

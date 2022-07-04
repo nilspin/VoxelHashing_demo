@@ -20,7 +20,7 @@ using uint16_pyramid = std::array<uint16_t*, 3>;
 extern "C" float computeCorrespondences(const float4* d_input, const float4* d_target, const float4* d_targetNormals, float4* corres, float4* corresNormals, float* residual, float4x4 deltaTransform, int width, int height, int pyrLevel, float corresThres, unsigned int& numCorresPairs);
 
 extern "C" float gaussianBlur(const uint16_t* d_inputDepth, uint16_t* d_outputDepth, const int width, const int height);
-extern "C" bool  GenerateImagePyramids(vector<device_ptr<uint16_t>>& d_PyramidDepths,
+extern "C" bool  FillImagePyramids(vector<device_ptr<uint16_t>>& d_PyramidDepths,
 																			 vector<device_ptr<float4>>& d_PyramidVerts,
 																			 vector<device_ptr<float4>>& d_PyramidNormals);
 
@@ -173,10 +173,18 @@ void CameraTracking::Align(float4*   d_inputVerts,   float4* d_inputNormals,
 													 float4*   d_targetVerts,  float4* d_targetNormals,
 													 uint16_t* d_inputDepths,  uint16_t* d_targetDepths)
 {
+	static int frameIdx = 0;
+
 	bool status = true;
 
+	if(frameIdx == 0) //first frame; need to fill the input pyramid as well
+	{
+		std::cout << " \n\nGenerating Image Pyramid : Input frame"<<std::endl;
+		status &= FillImagePyramids(d_inputDepths_pyr, d_inputVerts_pyr, d_inputNormals_pyr);
+	}
+
 	std::cout << " \n\nGenerating Image Pyramid : Target frame"<<std::endl;
-	status &= GenerateImagePyramids(d_targetDepths_pyr, d_targetVerts_pyr, d_targetNormals_pyr);
+	status &= FillImagePyramids(d_targetDepths_pyr, d_targetVerts_pyr, d_targetNormals_pyr);
 
 	if (!status)
    std::runtime_error("Failed to generate Image pyramids! ");
@@ -242,6 +250,8 @@ void CameraTracking::Align(float4*   d_inputVerts,   float4* d_inputNormals,
       //float4x4 transposed = deltaTransform.transpose(); //TODO : remove later
     }
   }
+
+	frameIdx++;
 }
 
 /*
