@@ -106,16 +106,16 @@ void Application::run()
 	checkCudaErrors(cudaMemcpy(d_inputDepths, image1, DEPTH_SIZE, cudaMemcpyHostToDevice));
 
 	//Map GL resources to CUDA once for initial frame -- do it just for input
-	size_t returnedBufferSize;
+	size_t allocdDeviceBufSize;
 	//input-verts
 	checkCudaErrors(cudaGraphicsMapResources(1, &cuda_inputVerts_resource, 0));
-	checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void**)&d_inputVerts, &returnedBufferSize, cuda_inputVerts_resource));
-	checkCudaErrors(cudaMemset(d_inputVerts, 0, returnedBufferSize));
+	checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void**)&d_inputVerts, &allocdDeviceBufSize, cuda_inputVerts_resource));
+	checkCudaErrors(cudaMemset(d_inputVerts, 0, allocdDeviceBufSize));
 
 	//input-normals
 	checkCudaErrors(cudaGraphicsMapResources(1, &cuda_inputNormals_resource, 0));
-	checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void**)&d_inputNormals, &returnedBufferSize, cuda_inputNormals_resource));
-	checkCudaErrors(cudaMemset(d_inputNormals, 0, returnedBufferSize));
+	checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void**)&d_inputNormals, &allocdDeviceBufSize, cuda_inputNormals_resource));
+	checkCudaErrors(cudaMemset(d_inputNormals, 0, allocdDeviceBufSize));
 
 	//generate verts/normals from depth -- just for first input frame
 	generatePositionAndNormals(d_inputVerts,  d_inputNormals,  d_inputDepths);
@@ -154,25 +154,28 @@ void Application::run()
 			image2 = nullptr;
 
 			//Map GL resources to CUDA -- TODO : do I need to do this each frame?
-			size_t returnedBufferSize;
+			size_t allocdDeviceBufSize_inputVerts;
+			size_t allocdDeviceBufSize_inputNormals;
+			size_t allocdDeviceBufSize_targetVerts;
+			size_t allocdDeviceBufSize_targetNormals;
 			//input-verts
 			checkCudaErrors(cudaGraphicsMapResources(1, &cuda_inputVerts_resource, 0));
-			checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void**)&d_inputVerts, &returnedBufferSize, cuda_inputVerts_resource));
+			checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void**)&d_inputVerts, &allocdDeviceBufSize_inputVerts, cuda_inputVerts_resource));
 
 			//input-normals
 			checkCudaErrors(cudaGraphicsMapResources(1, &cuda_inputNormals_resource, 0));
-			checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void**)&d_inputNormals, &returnedBufferSize, cuda_inputNormals_resource));
+			checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void**)&d_inputNormals, &allocdDeviceBufSize_inputNormals, cuda_inputNormals_resource));
 
 			//target-verts
 			checkCudaErrors(cudaGraphicsMapResources(1, &cuda_targetVerts_resource, 0));
-			checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void**)&d_targetVerts, &returnedBufferSize, cuda_targetVerts_resource));
+			checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void**)&d_targetVerts, &allocdDeviceBufSize_targetVerts, cuda_targetVerts_resource));
 
 			//target-normals
 			checkCudaErrors(cudaGraphicsMapResources(1, &cuda_targetNormals_resource, 0));
-			checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void**)&d_targetNormals, &returnedBufferSize, cuda_targetNormals_resource));
+			checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void**)&d_targetNormals, &allocdDeviceBufSize_targetNormals, cuda_targetNormals_resource));
 
 			//VBOs allocated
-			std::cout<<"\nAllocated input VBO size: "<<returnedBufferSize<<"\n";
+			std::cout<<"\nAllocated input VBO size: "<<allocdDeviceBufSize<<"\n";
 			generatePositionAndNormals(d_targetVerts, d_targetNormals, d_targetDepths);
 
 			//<HACKY, NON_ELEGANT SHIT> -- allocate the image pyramid device buffers
@@ -205,16 +208,16 @@ void Application::run()
 			//sdfRenderer->printSDFdata();
 			{
 				//Cleanup
-				checkCudaErrors(cudaMemset(d_inputVerts, 0, returnedBufferSize));
+				checkCudaErrors(cudaMemset(d_inputVerts, 0, allocdDeviceBufSize_inputVerts));
 				checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_inputVerts_resource, 0));
 
-				checkCudaErrors(cudaMemset(d_inputNormals, 0, returnedBufferSize));
+				checkCudaErrors(cudaMemset(d_inputNormals, 0, allocdDeviceBufSize_inputNormals));
 				checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_inputNormals_resource, 0));
 
-				checkCudaErrors(cudaMemset(d_targetVerts, 0, returnedBufferSize));
+				checkCudaErrors(cudaMemset(d_targetVerts, 0, allocdDeviceBufSize_targetVerts));
 				checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_targetVerts_resource, 0));
 
-				checkCudaErrors(cudaMemset(d_targetNormals, 0, returnedBufferSize));
+				checkCudaErrors(cudaMemset(d_targetNormals, 0, allocdDeviceBufSize_targetNormals));
 				checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_targetNormals_resource, 0));
 
 				checkCudaErrors(cudaDeviceSynchronize());
