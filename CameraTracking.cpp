@@ -2,6 +2,8 @@
   #include <Windows.h>
 #endif
 
+//#define DUMP_VECTORS 1
+
 #include <stdio.h>
 #include <algorithm>
 #include <iostream>
@@ -108,7 +110,8 @@ bool CameraTracking::WriteVec2File(const vector<vector<T>>& inputVectors,
 		{
       for (const auto& vert : vec2Stream)
       {
-        fout << vert.x << ", " << vert.y << ", " << vert.z << ", " << vert.w << "\n";
+        //fout << vert.x << ", " << vert.y << ", " << vert.z << ", " << vert.w << "\n";
+        fout << vert.x << ", " << vert.y << ", " << vert.z << "\n";
       }
     }
 		if constexpr (std::is_same<T, uint16_t>::value)
@@ -186,6 +189,14 @@ void CameraTracking::Align(float4*   d_inputVerts,   float4* d_inputNormals,
 	std::cout << " \n\nGenerating Image Pyramid : Target frame"<<std::endl;
 	status &= FillImagePyramids(d_targetDepths_pyr, d_targetVerts_pyr, d_targetNormals_pyr);
 
+#ifdef DUMP_VECTORS
+ CopyDeviceBufToHost<float4>(d_inputVerts_pyr, h_inputVerts_pyr);
+ CopyDeviceBufToHost<float4>(d_targetVerts_pyr, h_targetVerts_pyr);
+ CopyDeviceBufToHost<float4>(d_targetNormals_pyr, h_targetNormals_pyr);
+  WriteVec2File<float4>(h_inputVerts_pyr, "gpu_inputVerts");
+  WriteVec2File<float4>(h_targetVerts_pyr, "gpu_targetVerts");
+  WriteVec2File<float4>(h_targetNormals_pyr, "gpu_targetNormals");
+#endif
 	if (!status)
    std::runtime_error("Failed to generate Image pyramids! ");
 

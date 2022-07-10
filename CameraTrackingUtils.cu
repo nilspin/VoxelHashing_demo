@@ -225,7 +225,7 @@ float bilinearInterpolate(int x, int y, const uint16_t* d_depthInput, uint32_t i
 }
 
 __global__
-void downscaleKernel(const float4* d_refVertexMap, float4* d_toFillVertexMap, int inWidth, int inHeight, int outWidth, int outHeight)
+void downscaleKernel(const float4* d_refVertexMap, float4* d_toFillVertexMap, int inWidth, int inHeight, int outWidth, int outHeight, int offset)
 {
 	//extern __shared__ float scratchBuf[];
 
@@ -246,12 +246,14 @@ void downscaleKernel(const float4* d_refVertexMap, float4* d_toFillVertexMap, in
 	}
 
 	const int scatter_idx = (yidx*outWidth) + xidx;
-  const int sample_idx  = (yidx * inWidth) + (xidx * (inWidth / outWidth));
+  const int sample_idx  = ((yidx * numCols) + xidx) * offset;
+  //const int sample_idx  = ((yidx * inWidth) + xidx) * offset;
 
 	//uint16_t interpolated = bilinearInterpolate(xidx, yidx, d_refVertexMap, inWidth, inHeight);
 	//uint16_t interpolated = averagePixels(xidx, yidx, d_refVertexMap, inWidth, inHeight);
 	//d_toFillVertexMap[idx] = interpolated;
-  d_toFillVertexMap[scatter_idx] = d_refVertexMap[sample_idx];
+  float4 val                     = d_refVertexMap[sample_idx];
+  d_toFillVertexMap[scatter_idx] = val;
 }
 
 __global__
@@ -385,7 +387,7 @@ void FindCorrespondences(const float4* input,	const float4* target,
     float4 transPSrc = deltaT * pSrc;
 
     int offset = pow(2, pyrLevel); //scale projected screen-pos by pyramidLevel
-		int2 projected = cam2screenPos(make_float3(transPSrc), 1 /*offset*/);
+		int2 projected = cam2screenPos(make_float3(transPSrc), offset);
 
     int2 &sp = projected;
 		//sp.x /= divisor;
@@ -398,7 +400,7 @@ void FindCorrespondences(const float4* input,	const float4* target,
       return;
 		}
 
-    if(sp.x > 0 && sp.y > 0 && sp.x < width && sp.y < height)
+    if(sp.x >= 0 && sp.y >= 0 && sp.x < width && sp.y < height)
     {
       //printf("%i) sp.x = %i
       int targetIndex = (sp.y * width) + sp.x;
@@ -497,8 +499,8 @@ extern "C" bool FillImagePyramids(vector<device_ptr<uint16_t>>& d_PyramidDepths,
 
 		inWidth 												= pyramid_resolution[inPyrLvl][0] ;
 		inHeight 												= pyramid_resolution[inPyrLvl][1] ;
-		float4* d_referenceVertexMap    = thrust::raw_pointer_cast(d_PyramidVerts[inPyrLvl]);
-		float4* d_referenceNormalMap    = thrust::raw_pointer_cast(d_PyramidNormals[inPyrLvl]);
+		float4* d_referenceVertexMap    = thrust::raw_pointer_cast(d_PyramidVerts[0]); //inPyrLvl
+		float4* d_referenceNormalMap    = thrust::raw_pointer_cast(d_PyramidNormals[0]); //inPyrLvl
 
 		outWidth 												= pyramid_resolution[outPyrLvl][0] ;
 		outHeight 											= pyramid_resolution[outPyrLvl][1] ;
@@ -508,8 +510,9 @@ extern "C" bool FillImagePyramids(vector<device_ptr<uint16_t>>& d_PyramidDepths,
     std::cout << "Downscaling depth frame (" << inWidth << ", " << inHeight << ") --> ("
 																			 << outWidth << ", " << outHeight << ")"<<std::endl;
 
-		downscaleKernel<<<blocks[pyrLevel], threads[pyrLevel]>>>(d_referenceVertexMap, d_toFillVertexMap, inWidth, inHeight, outWidth, outHeight);
-		downscaleKernel<<<blocks[pyrLevel], threads[pyrLevel]>>>(d_referenceNormalMap, d_toFillNormalMap, inWidth, inHeight, outWidth, outHeight);
+		int offset = pow(2, outPyrLvl);
+		downscaleKernel<<<blocks[pyrLevel], threads[pyrLevel]>>>(d_referenceVertexMap, d_toFillVertexMap, inWidth, inHeight, outWidth, outHeight, offset);
+		downscaleKernel<<<blocks[pyrLevel], threads[pyrLevel]>>>(d_referenceNormalMap, d_toFillNormalMap, inWidth, inHeight, outWidth, outHeight, offset);
 		checkCudaErrors(cudaDeviceSynchronize());
 	}
 
