@@ -226,7 +226,7 @@ void CameraTracking::Align(float4*   d_inputVerts,   float4* d_inputNormals,
       //CUDA files cannot include any Eigen headers, don't know why. So convert eigen matrix to __device__ compatible float4x4.
       cout << "deltaTransform = \n" << deltaTransform << std::endl;
       float4x4 deltaT = float4x4(deltaTransform.data());
-      //deltaT.transpose();
+      deltaT.transpose();
 
       //We now have all data we need. Find correspondence pairs.
 			float4* d_inputVerts_lvl = thrust::raw_pointer_cast(d_inputVerts_pyr[pyrLevel]);
@@ -257,11 +257,11 @@ void CameraTracking::Align(float4*   d_inputVerts,   float4* d_inputNormals,
       Matrix4x4f intermediateT = solver.getTransform();
       //Matrix4x4f intermediateT = rigidAlignment(d_input, d_inputNormals, deltaTransform);
       deltaTransform = intermediateT;//intermediateT*deltaTransform; //TODO : Get the proper matrix! This is BLOCKING!
-			globalTransform = intermediateT * globalTransform;
       //float4x4 transposed = deltaTransform.transpose(); //TODO : remove later
     }
   }
 
+	globalTransform = deltaTransform * globalTransform;
 	frameIdx++;
 }
 

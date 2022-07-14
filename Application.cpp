@@ -18,7 +18,7 @@ using glm::vec4;
 using glm::mat4;
 //using namespace glm;
 
-int tempFramesToIntegrate = 1;
+int tempFramesToIntegrate = 10;
 //Takes device pointers, calculates correct position and normals
 extern "C" void generatePositionAndNormals(float4 *positions, float4* normals, const std::uint16_t *depth);
 
@@ -198,9 +198,11 @@ void Application::run()
 			std::cout << termcolor::on_yellow<< "Final delta  transform : \n" << termcolor::reset<< glm::to_string(deltaT) << "\n";
 
 			//Depth integration into volume
-			auto transMat = tracker->getGlobalTransform();
+			auto transMatGlob = tracker->getGlobalTransform();
+			auto transMatLocal = tracker->getDeltaTransform();
 			//transMat = transMat.inverse().eval();
-			float4x4 global_transform = float4x4(transMat.data());
+			float4x4 global_transform = float4x4(transMatGlob.data());
+			float4x4 local_transform = float4x4(transMatLocal.data());
 			//float4x4 global_transform = float4x4(tracker->getGlobalTransform().data());
 			//global_transform.transpose();
 			fusionModule->integrate(global_transform, d_targetVerts, d_targetNormals);
