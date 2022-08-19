@@ -204,7 +204,7 @@ void CameraTracking::Align(float4*   d_inputVerts,   float4* d_inputNormals,
   int height = -1; //numRows;
 	float corresThres = distThres;
 	unsigned int numCorresPairs = 0;
-
+  m_deltaTransform.setIdentity();
 	//GaussianBlurPyramid();
   //for (int iter = 0; iter < maxIters; iter++) {
   for (int pyrLevel = pyramid_size-1; pyrLevel >= 0; --pyrLevel)
@@ -224,8 +224,8 @@ void CameraTracking::Align(float4*   d_inputVerts,   float4* d_inputNormals,
       std::cout << termcolor::underline << std::endl << termcolor::reset;
 
       //CUDA files cannot include any Eigen headers, don't know why. So convert eigen matrix to __device__ compatible float4x4.
-      cout << "deltaTransform = \n" << deltaTransform << std::endl;
-      float4x4 deltaT = float4x4(deltaTransform.data());
+      cout << "deltaTransform = \n" << m_deltaTransform << std::endl;
+      float4x4 deltaT = float4x4(m_deltaTransform.data());
       deltaT.transpose();
 
       //We now have all data we need. Find correspondence pairs.
@@ -251,17 +251,17 @@ void CameraTracking::Align(float4*   d_inputVerts,   float4* d_inputNormals,
       }
 
       std::cout<<termcolor::green<<"Global correspondence error = "<<globalCorrespondenceError<<termcolor::reset<<" \n"<<std::endl;
-      //Matrix4x4f deltaT = Matrix4x4f(deltaTransform.data());
+      //Matrix4x4f deltaT = Matrix4x4f(m_deltaTransform.data());
 
       solver.BuildLinearSystem(d_inputVerts_lvl, d_tmpCorrespondences, d_tmpCorrespondenceNormals, d_tmpResiduals, pyrLevel);
       Matrix4x4f intermediateT = solver.getTransform();
-      //Matrix4x4f intermediateT = rigidAlignment(d_input, d_inputNormals, deltaTransform);
-      deltaTransform = intermediateT;//intermediateT*deltaTransform; //TODO : Get the proper matrix! This is BLOCKING!
+      //Matrix4x4f intermediateT = rigidAlignment(d_input, d_inputNormals, m_deltaTransform);
+      m_deltaTransform = intermediateT;//intermediateT*deltaTransform; //TODO : Get the proper matrix! This is BLOCKING!
       //float4x4 transposed = deltaTransform.transpose(); //TODO : remove later
     }
   }
 
-	globalTransform = deltaTransform * globalTransform;
+	m_globalTransform = m_deltaTransform * m_globalTransform;
 	frameIdx++;
 }
 
@@ -335,7 +335,7 @@ CameraTracking::CameraTracking(int w, int h):
 	d_tmpCorrespondenceNormals(nullptr)
 {
 
-	deltaTransform = globalTransform = Matrix4x4f::Identity();
+	m_deltaTransform = m_globalTransform = Matrix4x4f::Identity();
   const size_t F4_ARRAY_SIZE = w*h*sizeof(float4);
   const size_t ARRAY_SIZE    = w*h*sizeof(float);
 
@@ -366,7 +366,7 @@ CameraTracking::CameraTracking(int w, int h):
 	//thrust::fill(d_residuals, d_residuals + (w*h), 0);
 	//init matrices
   float arr[16] = { 1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1 };
-  deltaTransform = Matrix4x4f(arr);
+  m_deltaTransform = Matrix4x4f(arr);
   //const float intrinsics[] = {525.0, 0, 319.5, 0, 525.0, 239.5, 0, 0, 1}; //TODO: read from file
   Matrix3x3f K{intrinsics}; //Camera intrinsic matrix
   Matrix3x3f K_inv = K.inverse();

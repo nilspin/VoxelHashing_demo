@@ -75,8 +75,8 @@ private:
   vector<vector<uint16_t>>             h_targetDepths_pyr;
 
   //----Matrices-----------------------
-  Matrix4x4f deltaTransform;
-  Matrix4x4f globalTransform;
+  Matrix4x4f m_deltaTransform;
+  Matrix4x4f m_globalTransform;
 	float k_GaussianKernel[9] = {1.0f, 0.0f, 0.0f,
 	          									 0.0f, 1.0f, 0.0f,
 	          									 0.0f, 0.0f, 1.0f};
@@ -106,8 +106,8 @@ public:
   void Align(float4*,  float4*,  float4*,  float4*,  uint16_t*,  uint16_t*);
 	void swapBuffers();
 	bool AllocImagePyramids(float4*, float4*, uint16_t*, float4*, float4*, uint16_t*);
-  Matrix4x4f getDeltaTransform() { return deltaTransform; }
-  Matrix4x4f getGlobalTransform() { return globalTransform; }
+  Matrix4x4f getDeltaTransform() { return m_deltaTransform; }
+  Matrix4x4f getGlobalTransform() { return m_globalTransform; }
 };
 
 #endif

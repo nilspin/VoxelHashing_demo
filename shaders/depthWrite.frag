@@ -88,10 +88,11 @@ void main()
 	//rayDir = normalize(rayDir); //notice the reversed direction!
 
 	float len = length(rayEnd - rayStart)/ sqrt(2.0);
-	vec4 cloud = 	vec4(1, 1, 1, 0.1*len);
+	vec4 cloud = 	vec4(1, 1, 1, 0.2*len);
 	//outColor = calculateColor(rayStart, rayEnd, rayDir, VoxelBlockID); //traverses the grid
 	outColor = calculateColor2(rayStart, rayEnd, VoxelBlockID); //traverses the grid
 	//outColor += cloud;
+	
 }
 
 

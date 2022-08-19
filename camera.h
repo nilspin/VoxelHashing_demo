@@ -48,7 +48,7 @@ private :
 	// Time difference
 	float timeDifference = 0;
 
-	float speed = 0.01f; // 3 units / second
+	float speed = 0.05f; // 3 units / second
 	float mouseSpeed = 0.01f;
 
 	int temp = 0;

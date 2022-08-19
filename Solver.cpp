@@ -215,5 +215,6 @@ Solver::~Solver()
   //checkCudaErrors(cudaFree(d_residual));
   checkCudaErrors(cudaFree(d_JTJ));
   checkCudaErrors(cudaFree(d_JTr));
+  d_Jac = d_JTJ = d_JTr = nullptr;
   cublasDestroy(cuB_handle);
 }
