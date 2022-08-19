@@ -18,7 +18,8 @@ using glm::vec4;
 using glm::mat4;
 //using namespace glm;
 
-int tempFramesToIntegrate = 10;
+int tempFramesToIntegrate = 3;
+static int initOnce           = 0;
 //Takes device pointers, calculates correct position and normals
 extern "C" void generatePositionAndNormals(float4 *positions, float4* normals, const std::uint16_t *depth);
 
@@ -90,7 +91,8 @@ void Application::run()
 	const std::string rootPath = std::string("assets/T");
 	const std::string format 	 = std::string(".png");
 	static int framesIntegrated = 0;
-	std::string inputFile1 = std::to_string(framesIntegrated);
+  static int        startFrameIdx    = 11;
+	std::string inputFile1 = std::to_string(startFrameIdx);
 	std::string inputPath1 = rootPath + inputFile1 + format;
 
 	if(!image1) {
@@ -129,97 +131,108 @@ void Application::run()
 	checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_inputVerts_resource, 0));
 	checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_inputNormals_resource, 0));
 	d_inputVerts = d_inputNormals = nullptr;
-
+	framesIntegrated++;
   while (!quit)
   {
     processEvents();  //Event loop
-		while(framesIntegrated < tempFramesToIntegrate)
-		{
-			std::string inputFile2 = std::to_string(framesIntegrated+1);
-			std::string inputPath2 = rootPath + inputFile2 + format;
-			//if(!image2) {
-				image2 = stbi_load_16(inputPath2.c_str(), &m_DepthWidth, &m_DepthHeight, &m_colorChannels, 0);
-				cout<<"Loaded image : "<<inputPath2<<"\n";
-			//}
-			if(image2 == nullptr)
-			{
-				cout<<"could not read second image file!"<<endl; exit(0);
+    while (startFrameIdx + framesIntegrated <= startFrameIdx + 1)
+    {
+      std::string inputFile2 = std::to_string(startFrameIdx + framesIntegrated);
+      std::string inputPath2 = rootPath + inputFile2 + format;
+      // if(!image2) {
+      image2 = stbi_load_16(inputPath2.c_str(), &m_DepthWidth, &m_DepthHeight, &m_colorChannels, 0);
+      cout << "Loaded image : " << inputPath2 << "\n";
+      //}
+      if (image2 == nullptr)
+      {
+        cout << "could not read second image file!" << endl;
+        exit(0);
+      }
+
+      // copy depth frame to GPU
+      checkCudaErrors(cudaMemcpy(d_targetDepths, image2, DEPTH_SIZE, cudaMemcpyHostToDevice));
+      checkCudaErrors(cudaDeviceSynchronize());
+
+      stbi_image_free(image2);
+      image2 = nullptr;
+
+      // Map GL resources to CUDA -- TODO : do I need to do this each frame?
+      size_t allocdDeviceBufSize_inputVerts;
+      size_t allocdDeviceBufSize_inputNormals;
+      size_t allocdDeviceBufSize_targetVerts;
+      size_t allocdDeviceBufSize_targetNormals;
+      // input-verts
+      checkCudaErrors(cudaGraphicsMapResources(1, &cuda_inputVerts_resource, 0));
+      checkCudaErrors(
+          cudaGraphicsResourceGetMappedPointer((void**)&d_inputVerts, &allocdDeviceBufSize_inputVerts, cuda_inputVerts_resource));
+
+      // input-normals
+      checkCudaErrors(cudaGraphicsMapResources(1, &cuda_inputNormals_resource, 0));
+      checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void**)&d_inputNormals, &allocdDeviceBufSize_inputNormals,
+                                                           cuda_inputNormals_resource));
+
+      // target-verts
+      checkCudaErrors(cudaGraphicsMapResources(1, &cuda_targetVerts_resource, 0));
+      checkCudaErrors(
+          cudaGraphicsResourceGetMappedPointer((void**)&d_targetVerts, &allocdDeviceBufSize_targetVerts, cuda_targetVerts_resource));
+
+      // target-normals
+      checkCudaErrors(cudaGraphicsMapResources(1, &cuda_targetNormals_resource, 0));
+      checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void**)&d_targetNormals, &allocdDeviceBufSize_targetNormals,
+                                                           cuda_targetNormals_resource));
+
+      // VBOs allocated
+      std::cout << "\nAllocated input VBO size: " << allocdDeviceBufSize << "\n";
+      generatePositionAndNormals(d_targetVerts, d_targetNormals, d_targetDepths);
+
+      //<HACKY, NON_ELEGANT SHIT> -- allocate the image pyramid device buffers
+      //(we don't do it before cus buffer size isn't known)
+      if (initOnce == 0)
+      {
+        bool allocStatus = tracker->AllocImagePyramids(d_inputVerts, d_inputNormals, d_inputDepths, d_targetVerts, d_targetNormals,
+                                                       d_targetDepths);
+        initOnce         = 1;
+      }
+      //</HACKY, NON_ELEGANT SHIT>
+
+      tracker->Align(d_inputVerts, d_inputNormals, d_targetVerts, d_targetNormals, d_inputDepths, d_targetDepths);
+      globalT = glm::make_mat4(tracker->getGlobalTransform().data());
+      deltaT  = glm::make_mat4(tracker->getDeltaTransform().data());
+
+      localTransforms.push_back(deltaT);
+      globalTransforms.push_back(globalT);
+      // globalT = glm::transpose(globalT);
+      std::cout << termcolor::on_blue << "Final global transform : \n" << termcolor::reset << glm::to_string(globalT) << "\n";
+      std::cout << termcolor::on_yellow << "Final delta  transform : \n" << termcolor::reset << glm::to_string(deltaT) << "\n";
+
+      // Depth integration into volume
+      auto transMatGlob  = tracker->getGlobalTransform();
+      auto transMatLocal = tracker->getDeltaTransform();
+      // transMat = transMat.inverse().eval();
+      float4x4 global_transform = float4x4(transMatGlob.data());
+      float4x4 local_transform  = float4x4(transMatLocal.data());
+      // float4x4 global_transform = float4x4(tracker->getGlobalTransform().data());
+      global_transform.transpose();
+
+      if ((framesIntegrated % (tempFramesToIntegrate))==0) //Todo : temp code. remove later
+      { 
+				fusionModule->integrate(global_transform, d_targetVerts, d_targetNormals);
 			}
-
-			//copy depth frame to GPU
-			checkCudaErrors(cudaMemcpy(d_targetDepths, image2, DEPTH_SIZE, cudaMemcpyHostToDevice));
-			checkCudaErrors(cudaDeviceSynchronize());
-
-			stbi_image_free(image2);
-			image2 = nullptr;
-
-			//Map GL resources to CUDA -- TODO : do I need to do this each frame?
-			size_t allocdDeviceBufSize_inputVerts;
-			size_t allocdDeviceBufSize_inputNormals;
-			size_t allocdDeviceBufSize_targetVerts;
-			size_t allocdDeviceBufSize_targetNormals;
-			//input-verts
-			checkCudaErrors(cudaGraphicsMapResources(1, &cuda_inputVerts_resource, 0));
-			checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void**)&d_inputVerts, &allocdDeviceBufSize_inputVerts, cuda_inputVerts_resource));
-
-			//input-normals
-			checkCudaErrors(cudaGraphicsMapResources(1, &cuda_inputNormals_resource, 0));
-			checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void**)&d_inputNormals, &allocdDeviceBufSize_inputNormals, cuda_inputNormals_resource));
-
-			//target-verts
-			checkCudaErrors(cudaGraphicsMapResources(1, &cuda_targetVerts_resource, 0));
-			checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void**)&d_targetVerts, &allocdDeviceBufSize_targetVerts, cuda_targetVerts_resource));
-
-			//target-normals
-			checkCudaErrors(cudaGraphicsMapResources(1, &cuda_targetNormals_resource, 0));
-			checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void**)&d_targetNormals, &allocdDeviceBufSize_targetNormals, cuda_targetNormals_resource));
-
-			//VBOs allocated
-			std::cout<<"\nAllocated input VBO size: "<<allocdDeviceBufSize<<"\n";
-			generatePositionAndNormals(d_targetVerts, d_targetNormals, d_targetDepths);
-
-			//<HACKY, NON_ELEGANT SHIT> -- allocate the image pyramid device buffers
-			//(we don't do it before cus buffer size isn't known)
-			if(framesIntegrated == 0)
-			{
-				bool allocStatus = tracker->AllocImagePyramids(d_inputVerts, d_inputNormals, d_inputDepths,
-																		d_targetVerts, d_targetNormals, d_targetDepths);
-			}
-			//</HACKY, NON_ELEGANT SHIT>
-
-			tracker->Align(d_inputVerts, d_inputNormals, d_targetVerts, d_targetNormals, d_inputDepths, d_targetDepths);
-			globalT = glm::make_mat4(tracker->getGlobalTransform().data());
-			deltaT  = glm::make_mat4(tracker->getDeltaTransform().data());
-
-			localTransforms.push_back(deltaT);
-			globalTransforms.push_back(globalT);
-			//globalT = glm::transpose(globalT);
-			std::cout << termcolor::on_blue  << "Final global transform : \n" << termcolor::reset<< glm::to_string(globalT) << "\n";
-			std::cout << termcolor::on_yellow<< "Final delta  transform : \n" << termcolor::reset<< glm::to_string(deltaT) << "\n";
-
-			//Depth integration into volume
-			auto transMatGlob = tracker->getGlobalTransform();
-			auto transMatLocal = tracker->getDeltaTransform();
-			//transMat = transMat.inverse().eval();
-			float4x4 global_transform = float4x4(transMatGlob.data());
-			float4x4 local_transform = float4x4(transMatLocal.data());
-			//float4x4 global_transform = float4x4(tracker->getGlobalTransform().data());
-			//global_transform.transpose();
-			fusionModule->integrate(global_transform, d_targetVerts, d_targetNormals);
 
 			//sdfRenderer->printSDFdata();
+   /**/
 			{
 				//Cleanup
-				checkCudaErrors(cudaMemset(d_inputVerts, 0, allocdDeviceBufSize_inputVerts));
+				//checkCudaErrors(cudaMemset(d_inputVerts, 0, allocdDeviceBufSize_inputVerts));
 				checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_inputVerts_resource, 0));
 
-				checkCudaErrors(cudaMemset(d_inputNormals, 0, allocdDeviceBufSize_inputNormals));
+				//checkCudaErrors(cudaMemset(d_inputNormals, 0, allocdDeviceBufSize_inputNormals));
 				checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_inputNormals_resource, 0));
 
-				checkCudaErrors(cudaMemset(d_targetVerts, 0, allocdDeviceBufSize_targetVerts));
+				//checkCudaErrors(cudaMemset(d_targetVerts, 0, allocdDeviceBufSize_targetVerts));
 				checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_targetVerts_resource, 0));
 
-				checkCudaErrors(cudaMemset(d_targetNormals, 0, allocdDeviceBufSize_targetNormals));
+				//checkCudaErrors(cudaMemset(d_targetNormals, 0, allocdDeviceBufSize_targetNormals));
 				checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_targetNormals_resource, 0));
 
 				checkCudaErrors(cudaDeviceSynchronize());
@@ -258,17 +271,17 @@ void Application::run()
 		mat4 MVP = proj*view*model;
 
 		//render TSDFs
-		glDisable(GL_DEPTH_TEST);
-		glDisable(GL_CULL_FACE);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		sdfRenderer->render(MV, proj, camPos); //MV, P
+		//glDisable(GL_DEPTH_TEST);
+		//glDisable(GL_CULL_FACE);
+		//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		//sdfRenderer->render(MV, proj, camPos); //MV, P
 
 		//or render input point-cloud
 		//glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		//glDepthFunc(GL_TRUE);
-		//glDisable(GL_DEPTH_TEST);
-		//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		//draw(VP);
+		glDisable(GL_DEPTH_TEST);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		draw(VP);
 
 		//dump SDF data
 		//sdfRenderer->printSDFdata();
@@ -296,13 +309,15 @@ void Application::draw(const glm::mat4& vp)
 
 
   glBindVertexArray(inputVAO);
-  glUniform3f(drawVertexMap->uniform("ShadeColor"), 0.258, 0.956, 0.560);
+  glUniform3f(drawVertexMap->uniform("ShadeColor"), 0.258, 0.956, 0.560); //old
+  //glUniform3f(drawVertexMap->uniform("ShadeColor"), 0.4335, 0.8358, 0.7774);
   glDrawArrays(GL_POINTS, 0, 640*480);
 
 
   glBindVertexArray(targetVAO);
   glUniformMatrix4fv(drawVertexMap->uniform("MVP"), 1, false, glm::value_ptr(MVP));
-  glUniform3f(drawVertexMap->uniform("ShadeColor"), 0.956, 0.721, 0.254);
+  glUniform3f(drawVertexMap->uniform("ShadeColor"), 0.956, 0.721, 0.254); //old
+  //glUniform3f(drawVertexMap->uniform("ShadeColor"), 0.6562, 0.1718, 0.2851);
   glDrawArrays(GL_POINTS, 0, 640*480);
   glBindVertexArray(0);
 
