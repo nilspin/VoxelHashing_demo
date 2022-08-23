@@ -91,7 +91,7 @@ void Application::run()
 	const std::string rootPath = std::string("assets/T");
 	const std::string format 	 = std::string(".png");
 	static int framesIntegrated = 0;
-  static int        startFrameIdx    = 11;
+  static int        startFrameIdx    = 0;
 	std::string inputFile1 = std::to_string(startFrameIdx);
 	std::string inputPath1 = rootPath + inputFile1 + format;
 

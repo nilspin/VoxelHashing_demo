@@ -11,8 +11,8 @@ const float fy =  516.5f;
 const float cx =  318.6f;
 const float cy =  255.3f;
 
-const float distThres = 0.2f; //2.5f;
-const float normalThres = 1.0f;
+const float distThres = 1.2f; //2.5f;
+const float normalThres = 0.707f; //0.707 = cos(45) i.e angle between two normals shouldn't exceed 45 degrees
 const float ZERO_FLOAT = 0.0f;
 const unsigned int ZERO_UINT = 0;
 const float intrinsics[] = {fx, 0.0f, cx, 0.0f, fy, cy, 0.0f, 0.0f, 1};

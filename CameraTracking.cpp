@@ -19,14 +19,18 @@
 using float4_pyramid = std::array<float4*, 3>;
 using uint16_pyramid = std::array<uint16_t*, 3>;
 
-extern "C" float computeCorrespondences(const float4* d_input, const float4* d_target, const float4* d_targetNormals, float4* corres, float4* corresNormals, float* residual, float4x4 deltaTransform, int width, int height, int pyrLevel, float corresThres, unsigned int& numCorresPairs);
+extern "C" float computeCorrespondences(const float4* d_input, const float4* d_inputNormals, 
+		const float4* d_target, const float4* d_targetNormals, float4* corres, float4* corresNormals,
+		float* residual, float4x4 deltaTransform, int width, int height, int pyrLevel, 
+		float corresThres, float normalThreshold,
+		unsigned int& numCorresPairs);
 
-extern "C" float gaussianBlur(const uint16_t* d_inputDepth, uint16_t* d_outputDepth, const int width, const int height);
+extern "C" float gaussianBlur(const uint16_t* d_inputDepth, uint16_t* d_outputDepth, const int width,
+		const int height);
+
 extern "C" bool  FillImagePyramids(vector<device_ptr<uint16_t>>& d_PyramidDepths,
-																			 vector<device_ptr<float4>>& d_PyramidVerts,
-																			 vector<device_ptr<float4>>& d_PyramidNormals);
-
-//extern "C" float computeCorrespondences_pyramid(const float4* d_input, const float4* d_target, const float4* d_targetNormals, float4* corres, float4* corresNormals, float* residual, const float4x4 deltaTransform, const int width, const int height);
+																	 vector<device_ptr<float4>>&	 d_PyramidVerts,
+																	 vector<device_ptr<float4>>&   d_PyramidNormals);
 
 extern "C" bool SetCameraIntrinsic(const float* intrinsic, const float* invIntrinsic);
 extern "C" bool SetGaussianKernel(const float* kernel);
@@ -203,6 +207,7 @@ void CameraTracking::Align(float4*   d_inputVerts,   float4* d_inputNormals,
 	int width  = -1; //numCols;
   int height = -1; //numRows;
 	float corresThres = distThres;
+  float        normalThreshold = normalThres;
 	unsigned int numCorresPairs = 0;
   m_deltaTransform.setIdentity();
 	//GaussianBlurPyramid();
@@ -234,13 +239,14 @@ void CameraTracking::Align(float4*   d_inputVerts,   float4* d_inputNormals,
 			float4* d_inputNormals_lvl = thrust::raw_pointer_cast(d_inputNormals_pyr[pyrLevel]);
 			float4* d_targetNormals_lvl = thrust::raw_pointer_cast(d_targetNormals_pyr[pyrLevel]);
 
-      globalCorrespondenceError = computeCorrespondences(d_inputVerts_lvl, d_targetVerts_lvl,
-																												 d_targetNormals_lvl,
+      globalCorrespondenceError = computeCorrespondences(d_inputVerts_lvl, d_inputNormals_lvl, 
+																												 d_targetVerts_lvl,d_targetNormals_lvl,
 																												 d_tmpCorrespondences,
 																												 d_tmpCorrespondenceNormals,
 																												 d_tmpResiduals, deltaT, width,
 																												 height, pyrLevel,
-																												 corresThres, numCorresPairs);
+																												 corresThres, normalThreshold,
+																												 numCorresPairs);
       std::cout << "\n" << termcolor::on_blue << termcolor::white << "numCorrespondencePairs = " << numCorresPairs << termcolor::reset << std::endl;
       std::cout << "\n" << termcolor::on_blue << termcolor::white << "globalCorrespondenceError = " << globalCorrespondenceError << termcolor::reset << std::endl;
 

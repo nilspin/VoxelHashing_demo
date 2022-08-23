@@ -356,10 +356,10 @@ static inline int2 cam2screenPos(float3 p, int offset)
 }
 
 __global__
-void FindCorrespondences(const float4* input,	const float4* target,
-    const float4* targetNormals, float4* correspondences, float4* correspondenceNormals,
-    float* residuals,	const float4x4 deltaT,
-    float corresThres, float normalThres, int width, int height, int pyrLevel)
+void FindCorrespondences(const float4* input,	const float4* inputNormals, 
+		const float4* target, const float4* targetNormals, float4* correspondences, 
+		float4* correspondenceNormals, float* residuals,	const float4x4 deltaT,
+    float corresThres, float normalThreshold, int width, int height, int pyrLevel)
 {
 	if (blockIdx.x == 0 && blockIdx.y == 0 && threadIdx.x == 0 && threadIdx.y == 0)
 	{
@@ -379,6 +379,7 @@ void FindCorrespondences(const float4* input,	const float4* target,
 	const int idx = (yidx*width) + xidx;
 
 	float4 pSrc = input[idx];
+  float4 nSrc = inputNormals[idx];
 
 	if (pSrc.z != 0)
 	{
@@ -409,7 +410,10 @@ void FindCorrespondences(const float4* input,	const float4* target,
       float4 nTar = targetNormals[targetIndex];
       float3 diff = make_float3(transPSrc - pTar);
       float d = dot(diff, make_float3(nTar));
-      if (d < corresThres)
+			
+			//how 'similarly-pointing' are the normals for src and target?
+      float  normalsDeviation = dot(nTar, nSrc); 
+      if ((d < corresThres) && ((normalsDeviation) > normalThreshold))
       {
         /*
         if (threadIdx.x ==0 && threadIdx.y ==0)
@@ -431,10 +435,12 @@ void FindCorrespondences(const float4* input,	const float4* target,
 	}
 }
 
-extern "C" float computeCorrespondences(const float4* d_input, const float4* d_target,
-    const float4* d_targetNormals, float4* corres,
-    float4* corresNormals, float* residuals,
-    float4x4 deltaTransform, int width, int height, int pyrLevel, float corresThres, unsigned int& h_numCorresPairs)
+extern "C" float computeCorrespondences(const float4* d_input, const float4* d_inputNormals, 
+		const float4* d_target, const float4* d_targetNormals, 
+		float4* corres, float4* corresNormals, float* residuals,
+    float4x4 deltaTransform, int width, int height, int pyrLevel, 
+	  float corresThres, float normalThreshold,
+		unsigned int& h_numCorresPairs)
 {
 	//First clear the previous correspondence calculation
   checkCudaErrors(cudaMemcpyToSymbol(d_globalError, &ZERO_FLOAT, sizeof(float)));
@@ -454,8 +460,9 @@ extern "C" float computeCorrespondences(const float4* d_input, const float4* d_t
 
   std::cerr<<"After clearing prev correspondences\n";
 
-	FindCorrespondences <<<blocks[pyrLevel], threads[pyrLevel]>>>(d_input, d_target, d_targetNormals,
-      corres, corresNormals, residuals,	deltaTransform, corresThres, normalThres, width, height, pyrLevel);
+	FindCorrespondences <<<blocks[pyrLevel], threads[pyrLevel]>>>(d_input, d_inputNormals, 
+			d_target, d_targetNormals, corres, corresNormals, residuals,	deltaTransform, corresThres, 
+			normalThreshold, width, height, pyrLevel);
   checkCudaErrors(cudaDeviceSynchronize());
 
   float globalErrorReadback = 0.0;
@@ -464,6 +471,7 @@ extern "C" float computeCorrespondences(const float4* d_input, const float4* d_t
   checkCudaErrors(cudaMemcpyFromSymbol(&h_numCorresPairs, d_numCorresPairs, sizeof(unsigned int)));
 	checkCudaErrors(cudaDeviceSynchronize());
   std::cerr<<"Total correspondence pairs = "<<h_numCorresPairs<<" \n\n";
+  std::cerr<<"Correspondence pair % = "<<((float)h_numCorresPairs)/((float)width*height)<<" \n\n";
   return globalErrorReadback;
 }
 
