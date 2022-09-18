@@ -471,7 +471,7 @@ extern "C" float computeCorrespondences(const float4* d_input, const float4* d_i
   checkCudaErrors(cudaMemcpyFromSymbol(&h_numCorresPairs, d_numCorresPairs, sizeof(unsigned int)));
 	checkCudaErrors(cudaDeviceSynchronize());
   std::cerr<<"Total correspondence pairs = "<<h_numCorresPairs<<" \n\n";
-  std::cerr<<"Correspondence pair % = "<<((float)h_numCorresPairs)/((float)width*height)<<" \n\n";
+  std::cerr<<"Correspondence pair % = "<<((float)h_numCorresPairs*100)/((float)width*height)<<"% \n\n";
   return globalErrorReadback;
 }
 

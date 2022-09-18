@@ -18,7 +18,7 @@ using glm::vec4;
 using glm::mat4;
 //using namespace glm;
 
-int tempFramesToIntegrate = 3;
+int tempFramesToIntegrate = 10;
 static int initOnce           = 0;
 //Takes device pointers, calculates correct position and normals
 extern "C" void generatePositionAndNormals(float4 *positions, float4* normals, const std::uint16_t *depth);
@@ -91,7 +91,7 @@ void Application::run()
 	const std::string rootPath = std::string("assets/T");
 	const std::string format 	 = std::string(".png");
 	static int framesIntegrated = 0;
-  static int        startFrameIdx    = 0;
+  static int        startFrameIdx    = 9;
 	std::string inputFile1 = std::to_string(startFrameIdx);
 	std::string inputPath1 = rootPath + inputFile1 + format;
 
@@ -135,7 +135,7 @@ void Application::run()
   while (!quit)
   {
     processEvents();  //Event loop
-    while (startFrameIdx + framesIntegrated <= startFrameIdx + 1)
+    while (startFrameIdx + framesIntegrated <= startFrameIdx + 1 /*tempFramesToIntegrate*/)
     {
       std::string inputFile2 = std::to_string(startFrameIdx + framesIntegrated);
       std::string inputPath2 = rootPath + inputFile2 + format;
@@ -277,8 +277,6 @@ void Application::run()
 		//sdfRenderer->render(MV, proj, camPos); //MV, P
 
 		//or render input point-cloud
-		//glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		//glDepthFunc(GL_TRUE);
 		glDisable(GL_DEPTH_TEST);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		draw(VP);
