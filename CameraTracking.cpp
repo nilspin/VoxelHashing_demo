@@ -13,15 +13,16 @@
 #include <type_traits>
 //#include <thrust/fill.h>
 #include "CameraTracking.h"
+#include "ImageProcessingUtils.h"
 #include "termcolor.hpp"
 #include "DebugHelper.hpp"
 
 using float4_pyramid = std::array<float4*, 3>;
 using uint16_pyramid = std::array<uint16_t*, 3>;
 
-extern "C" float computeCorrespondences(const float4* d_input, const float4* d_inputNormals, 
+extern "C" float computeCorrespondences(const float4* d_input, const float4* d_inputNormals,
 		const float4* d_target, const float4* d_targetNormals, float4* corres, float4* corresNormals,
-		float* residual, float4x4 deltaTransform, int width, int height, int pyrLevel, 
+		float* residual, float4x4 deltaTransform, int width, int height, int pyrLevel,
 		float corresThres, float normalThreshold,
 		unsigned int& numCorresPairs);
 
@@ -45,12 +46,15 @@ extern "C" bool SetGaussianKernel(const float* kernel);
 template <typename T>
 bool CameraTracking::AllocImagePyramid(T* baseLayer, std::vector<device_ptr<T>>& toFill_pyr)
 {
+	// Update Sept 2022: we need to compute a bilateral filter so we can't use the 
+	// input depth as it is
+
 	//[1] Set (already computed) input as 1st level of pyramid
-	device_ptr<T> imgLvl_0 = thrust::device_pointer_cast(baseLayer); //image level 0
-	toFill_pyr.push_back(imgLvl_0);
+	//device_ptr<T> imgLvl_0 = thrust::device_pointer_cast(baseLayer); //image level 0
+	//toFill_pyr.push_back(imgLvl_0);
 
 	//[2] Alloc other levels of pyramid
-	for(int pyrLevel=1; pyrLevel < pyramid_size; ++pyrLevel)
+	for(int pyrLevel=0; pyrLevel < pyramid_size; ++pyrLevel)
 	{
 		int width  = pyramid_resolution[pyrLevel][0];
 		int height = pyramid_resolution[pyrLevel][1];
@@ -186,9 +190,14 @@ void CameraTracking::Align(float4*   d_inputVerts,   float4* d_inputNormals,
 
 	if(frameIdx == 0) //first frame; need to fill the input pyramid as well
 	{
+    updateDeviceGaussian(8.0, 5);
 		std::cout << " \n\nGenerating Image Pyramid : Input frame"<<std::endl;
 		status &= FillImagePyramids(d_inputDepths_pyr, d_inputVerts_pyr, d_inputNormals_pyr);
 	}
+
+	//Apply bilateral filter on input depth frame to remove noise (while preserving edges)
+	std::cout << " \n\nApplying bilateral filter"<<std::endl;
+ bilateralFilterGrayscale(d_in)
 
 	std::cout << " \n\nGenerating Image Pyramid : Target frame"<<std::endl;
 	status &= FillImagePyramids(d_targetDepths_pyr, d_targetVerts_pyr, d_targetNormals_pyr);
@@ -239,7 +248,7 @@ void CameraTracking::Align(float4*   d_inputVerts,   float4* d_inputNormals,
 			float4* d_inputNormals_lvl = thrust::raw_pointer_cast(d_inputNormals_pyr[pyrLevel]);
 			float4* d_targetNormals_lvl = thrust::raw_pointer_cast(d_targetNormals_pyr[pyrLevel]);
 
-      globalCorrespondenceError = computeCorrespondences(d_inputVerts_lvl, d_inputNormals_lvl, 
+      globalCorrespondenceError = computeCorrespondences(d_inputVerts_lvl, d_inputNormals_lvl,
 																												 d_targetVerts_lvl,d_targetNormals_lvl,
 																												 d_tmpCorrespondences,
 																												 d_tmpCorrespondenceNormals,

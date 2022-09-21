@@ -500,10 +500,10 @@ extern "C" bool FillImagePyramids(vector<device_ptr<uint16_t>>& d_PyramidDepths,
 	int inPyrLvl  = -1;
 	int outPyrLvl = -1;
 	//for(int pyrLevel = pyramid_size-1; pyrLevel > 0; --pyrLevel)
-	for(int pyrLevel = 1; pyrLevel < pyramid_size; ++pyrLevel)
+	for(int pyrLevel = 0; pyrLevel < pyramid_size; ++pyrLevel)
 	{
-    inPyrLvl                    = pyrLevel - 1;
-    outPyrLvl                   = pyrLevel;
+    inPyrLvl                    = pyrLevel;
+    outPyrLvl                   = pyrLevel + 1;
 
 		inWidth 												= pyramid_resolution[inPyrLvl][0] ;
 		inHeight 												= pyramid_resolution[inPyrLvl][1] ;
@@ -519,8 +519,8 @@ extern "C" bool FillImagePyramids(vector<device_ptr<uint16_t>>& d_PyramidDepths,
 																			 << outWidth << ", " << outHeight << ")"<<std::endl;
 
 		int offset = pow(2, outPyrLvl);
-		downscaleKernel<<<blocks[pyrLevel], threads[pyrLevel]>>>(d_referenceVertexMap, d_toFillVertexMap, inWidth, inHeight, outWidth, outHeight, offset);
-		downscaleKernel<<<blocks[pyrLevel], threads[pyrLevel]>>>(d_referenceNormalMap, d_toFillNormalMap, inWidth, inHeight, outWidth, outHeight, offset);
+		downscaleKernel<<<blocks[outPyrLvl], threads[outPyrLvl]>>>(d_referenceVertexMap, d_toFillVertexMap, inWidth, inHeight, outWidth, outHeight, offset);
+		downscaleKernel<<<blocks[outPyrLvl], threads[outPyrLvl]>>>(d_referenceNormalMap, d_toFillNormalMap, inWidth, inHeight, outWidth, outHeight, offset);
 		checkCudaErrors(cudaDeviceSynchronize());
 	}
 

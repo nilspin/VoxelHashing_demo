@@ -82,7 +82,7 @@ set_target_properties(Solver PROPERTIES CUDA_ARCHITECTURES 61)
 set_target_properties(Solver PROPERTIES POSITION_INDEPENDENT_CODE ON)
 target_link_libraries(Solver ${CUDA_CUBLAS_LIBRARIES})
 
-add_library(CameraTrackingUtils STATIC CameraTracking.cpp CameraTrackingUtils.cu)  #SE3.hpp
+add_library(CameraTrackingUtils STATIC CameraTracking.cpp CameraTrackingUtils.cu ImageProcessingUtils.cu)  #SE3.hpp
 set_target_properties(CameraTrackingUtils PROPERTIES LINKER_LANGUAGE CUDA)
 set_target_properties(CameraTrackingUtils PROPERTIES CUDA_ARCHITECTURES 61)
 set_target_properties(CameraTrackingUtils PROPERTIES POSITION_INDEPENDENT_CODE ON)
