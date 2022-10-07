@@ -46,7 +46,7 @@ extern "C" bool SetGaussianKernel(const float* kernel);
 template <typename T>
 bool CameraTracking::AllocImagePyramid(T* baseLayer, std::vector<device_ptr<T>>& toFill_pyr)
 {
-	// Update Sept 2022: we need to compute a bilateral filter so we can't use the 
+	// Update Sept 2022: we need to compute a bilateral filter so we can't use the
 	// input depth as it is
 
 	//[1] Set (already computed) input as 1st level of pyramid
@@ -197,7 +197,9 @@ void CameraTracking::Align(float4*   d_inputVerts,   float4* d_inputNormals,
 
 	//Apply bilateral filter on input depth frame to remove noise (while preserving edges)
 	std::cout << " \n\nApplying bilateral filter"<<std::endl;
- bilateralFilterGrayscale(d_in)
+	int topLevelWidth  = pyramid_resolution[0][0];
+	int topLevelHeight = pyramid_resolution[0][1];
+  bilateralFilterGrayscale(d_inputDepthMap, d_inputDepthMapFiltered, topLevelWidth, topLevelHeight, m_euclideanDelta, m_filterRadius);
 
 	std::cout << " \n\nGenerating Image Pyramid : Target frame"<<std::endl;
 	status &= FillImagePyramids(d_targetDepths_pyr, d_targetVerts_pyr, d_targetNormals_pyr);

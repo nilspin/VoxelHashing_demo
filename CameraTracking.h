@@ -40,6 +40,9 @@ private:
 	int g_height = 0;
 	bool m_pyramid_alloced = false;
 
+	const float m_euclideanDelta = 0.61f;
+	const int   m_filterRadius   = 5;
+
   Solver solver;
 
 	//----raw handles to device_ptrs-----
