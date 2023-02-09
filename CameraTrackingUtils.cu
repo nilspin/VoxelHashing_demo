@@ -224,6 +224,69 @@ float bilinearInterpolate(int x, int y, const uint16_t* d_depthInput, uint32_t i
 
 }
 
+inline __device__
+float gaussR(float sigma, float dist)
+{
+	return exp(-(dist*dist)/(2.0*sigma*sigma));
+}
+
+inline __device__
+float  gaussD(float sigma, int x, int y)
+{
+	return exp(-((x*x+y*y)/(2.0f*sigma*sigma)));
+}
+
+inline __device__
+float bilinearInterpolateDepth(const uint16_t* d_depthInput, uint16_t* d_depthOutput, uint32_t inWidth, uint32_t inHeight)
+{
+	int xidx = blockDim.x*blockIdx.x + threadIdx.x;
+	int yidx = blockDim.y*blockIdx.y + threadIdx.y;
+	//trueDim is grid without halo cells
+	int trueDimx = blockDim.x - (3 - 1);
+	int trueDimy = blockDim.y - (3 - 1);
+
+  //if (threadIdx.x==0 && threadIdx.y ==0)  {
+  //  printf("Block is (%i, %i)\n",blockIdx.x, blockIdx.y);
+  //}
+	if (xidx >= outWidth || yidx >= outHeight)
+	{
+		return;
+	}
+	int kernelRadius = (int)ceil(2.0*sigmaD);
+
+	float sum = 0.0f;
+	float sumWeight = 0.0f;
+
+	float intCenter = input[dTid.xy];
+	if(intCenter != MINF)
+	{
+		for(int m = xidx-kernelRadius; m <= xidx+kernelRadius; m++)
+		{
+			for(int n = yidx-kernelRadius; n <= yidx+kernelRadius; n++)
+			{
+				if(m >= 0 && n >= 0 && m < inWidth && n < inHeight)
+				{
+					int pos = (yidx*inWidth) + xidx;
+					float intKerPos = d_depthInput[pos];
+
+					if(intKerPos != MINF)
+					{
+						float weight = gaussD(sigmaD, m-dTid.x, n-dTid.y)*gaussR(sigmaR, intKerPos-intCenter);
+
+						sumWeight += weight;
+						sum += weight*intKerPos;
+					}
+				}
+			}
+		}
+
+		if(sumWeight > 0.0f)
+		{
+			output[dTid.xy] = sum / sumWeight;
+		}
+	}
+}
+
 __global__
 void downscaleKernel(const float4* d_refVertexMap, float4* d_toFillVertexMap, int inWidth, int inHeight, int outWidth, int outHeight, int offset)
 {
@@ -356,8 +419,8 @@ static inline int2 cam2screenPos(float3 p, int offset)
 }
 
 __global__
-void FindCorrespondences(const float4* input,	const float4* inputNormals, 
-		const float4* target, const float4* targetNormals, float4* correspondences, 
+void FindCorrespondences(const float4* input,	const float4* inputNormals,
+		const float4* target, const float4* targetNormals, float4* correspondences,
 		float4* correspondenceNormals, float* residuals,	const float4x4 deltaT,
     float corresThres, float normalThreshold, int width, int height, int pyrLevel)
 {
@@ -410,9 +473,9 @@ void FindCorrespondences(const float4* input,	const float4* inputNormals,
       float4 nTar = targetNormals[targetIndex];
       float3 diff = make_float3(transPSrc - pTar);
       float d = dot(diff, make_float3(nTar));
-			
+
 			//how 'similarly-pointing' are the normals for src and target?
-      float  normalsDeviation = dot(nTar, nSrc); 
+      float  normalsDeviation = dot(nTar, nSrc);
       if ((d < corresThres) && ((normalsDeviation) > normalThreshold))
       {
         /*
@@ -435,10 +498,10 @@ void FindCorrespondences(const float4* input,	const float4* inputNormals,
 	}
 }
 
-extern "C" float computeCorrespondences(const float4* d_input, const float4* d_inputNormals, 
-		const float4* d_target, const float4* d_targetNormals, 
+extern "C" float computeCorrespondences(const float4* d_input, const float4* d_inputNormals,
+		const float4* d_target, const float4* d_targetNormals,
 		float4* corres, float4* corresNormals, float* residuals,
-    float4x4 deltaTransform, int width, int height, int pyrLevel, 
+    float4x4 deltaTransform, int width, int height, int pyrLevel,
 	  float corresThres, float normalThreshold,
 		unsigned int& h_numCorresPairs)
 {
@@ -460,8 +523,8 @@ extern "C" float computeCorrespondences(const float4* d_input, const float4* d_i
 
   std::cerr<<"After clearing prev correspondences\n";
 
-	FindCorrespondences <<<blocks[pyrLevel], threads[pyrLevel]>>>(d_input, d_inputNormals, 
-			d_target, d_targetNormals, corres, corresNormals, residuals,	deltaTransform, corresThres, 
+	FindCorrespondences <<<blocks[pyrLevel], threads[pyrLevel]>>>(d_input, d_inputNormals,
+			d_target, d_targetNormals, corres, corresNormals, residuals,	deltaTransform, corresThres,
 			normalThreshold, width, height, pyrLevel);
   checkCudaErrors(cudaDeviceSynchronize());
 
