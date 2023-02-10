@@ -1,0 +1,3395 @@
+{
+  "title" : "",
+  "description" : "",
+  "author" : "",
+  "width" : 1280.0,
+  "height" : 960.0,
+  "version" : "0.5",
+  "editRate" : 30,
+  "authoringClientName" :  {
+    "name" : "Camtasia Studio",
+    "platform" : "Windows",
+    "version" : "9.0"
+  },
+  "sourceBin" : [
+    {
+      "id" : 1,
+      "src" : "C:\\Users\\NER2\\Documents\\Camtasia Studio\\Rec 07-25-22 2.trec",
+      "rect" : [0, 0, 1276, 960],
+      "lastMod" : "20220724T215815",
+      "sourceTracks" : [
+        {
+          "range" : [0, 1768],
+          "type" : 0,
+          "editRate" : 30,
+          "trackRect" : [0, 0, 1276, 960],
+          "sampleRate" : 27,
+          "bitDepth" : 0,
+          "numChannels" : 0,
+          "metaData" : "Rec 07-25-22 2.trec;"
+        }
+      ]
+    },
+    {
+      "id" : 2,
+      "src" : "C:\\Users\\NER2\\Documents\\Camtasia Studio\\Rec 07-25-22 3.trec",
+      "rect" : [0, 0, 1276, 960],
+      "lastMod" : "20220724T230336",
+      "sourceTracks" : [
+        {
+          "range" : [0, 2013],
+          "type" : 0,
+          "editRate" : 30,
+          "trackRect" : [0, 0, 1276, 960],
+          "sampleRate" : 27,
+          "bitDepth" : 0,
+          "numChannels" : 0,
+          "metaData" : "Rec 07-25-22 3.trec;"
+        }
+      ]
+    },
+    {
+      "id" : 3,
+      "src" : "C:\\Users\\NER2\\Documents\\Camtasia Studio\\Rec 07-30-22.trec",
+      "rect" : [0, 0, 1276, 960],
+      "lastMod" : "20220729T222832",
+      "sourceTracks" : [
+        {
+          "range" : [0, 1316],
+          "type" : 0,
+          "editRate" : 30,
+          "trackRect" : [0, 0, 1276, 960],
+          "sampleRate" : 27,
+          "bitDepth" : 0,
+          "numChannels" : 0,
+          "metaData" : "Rec 07-30-22.trec;"
+        }
+      ]
+    }
+  ],
+  "timeline" : {
+    "id" : 4,
+    "sceneTrack" : {
+      "scenes" : [
+        {
+          "duration" : 112.066666666667,
+          "title" : "",
+          "type" : "",
+          "csml" : {
+            "tracks" : [
+              {
+                "trackIndex" : 0,
+                "medias" : [
+                  {
+                    "id" : 5,
+                    "_type" : "StitchedMedia",
+                    "minMediaStart" : 0,
+                    "attributes" : {
+                      "ident" : "Rec 07-25-22 2",
+                      "gain" : 1.0,
+                      "mixToMono" : false
+                    },
+                    "parameters" : {
+                      "cursorOpacity" : 1.0,
+                      "cursorScale" : 1.0
+                    },
+                    "medias" : [
+                        {
+                          "id" : 6,
+                          "_type" : "ScreenVMFile",
+                          "src" : 1,
+                          "trackNumber" : 0,
+                          "attributes" : {
+                            "ident" : "Rec 07-25-22 2"
+                          },
+                          "parameters" : {
+                            "cursorScale" : {
+                              "type" : "double",
+                              "defaultValue" : 0.0,
+                              "interp" : "linr"
+                            },
+                            "cursorOpacity" : {
+                              "type" : "double",
+                              "defaultValue" : 0.0,
+                              "interp" : "linr"
+                            }
+                          },
+                          "effects" : [
+
+                          ],
+                          "start" : 0,
+                          "duration" : 987,
+                          "mediaStart" : 0,
+                          "mediaDuration" : 987,
+                          "scalar" : 1,
+                          "metadata" : {
+                            "AutoAppliedSmartFocus" : "False",
+                            "WinSubProjectDisplayName" : "",
+                            "clipSpeedAttribute" : false
+                          },
+                          "animationTracks" : {
+
+                          }
+                        },
+                        {
+                          "id" : 7,
+                          "_type" : "ScreenIMFile",
+                          "src" : 1,
+                          "trackNumber" : 0,
+                          "trimStartSum" : 0,
+                          "attributes" : {
+                            "ident" : "Rec 07-25-22 2"
+                          },
+                          "parameters" : {
+                            "cursorOpacity" : {
+                              "type" : "double",
+                              "defaultValue" : 0.0,
+                              "interp" : "linr"
+                            },
+                            "cursorScale" : {
+                              "type" : "double",
+                              "defaultValue" : 0.0,
+                              "interp" : "linr"
+                            }
+                          },
+                          "effects" : [
+
+                          ],
+                          "start" : 987,
+                          "duration" : 75,
+                          "mediaStart" : 987,
+                          "mediaDuration" : 1,
+                          "scalar" : 1,
+                          "metadata" : {
+                            "AutoAppliedSmartFocus" : "False",
+                            "WinSubProjectDisplayName" : ""
+                          },
+                          "animationTracks" : {
+
+                          }
+                        },
+                        {
+                          "id" : 8,
+                          "_type" : "ScreenVMFile",
+                          "src" : 1,
+                          "trackNumber" : 0,
+                          "attributes" : {
+                            "ident" : "Rec 07-25-22 2"
+                          },
+                          "parameters" : {
+                            "cursorScale" : {
+                              "type" : "double",
+                              "defaultValue" : 0.0,
+                              "interp" : "linr"
+                            },
+                            "cursorOpacity" : {
+                              "type" : "double",
+                              "defaultValue" : 0.0,
+                              "interp" : "linr"
+                            }
+                          },
+                          "effects" : [
+
+                          ],
+                          "start" : 1062,
+                          "duration" : 1,
+                          "mediaStart" : 987,
+                          "mediaDuration" : 1,
+                          "scalar" : 1,
+                          "metadata" : {
+                            "AutoAppliedSmartFocus" : "False",
+                            "WinSubProjectDisplayName" : "",
+                            "clipSpeedAttribute" : false
+                          },
+                          "animationTracks" : {
+
+                          }
+                        },
+                        {
+                          "id" : 9,
+                          "_type" : "ScreenIMFile",
+                          "src" : 1,
+                          "trackNumber" : 0,
+                          "trimStartSum" : 0,
+                          "attributes" : {
+                            "ident" : "Rec 07-25-22 2"
+                          },
+                          "parameters" : {
+                            "cursorOpacity" : {
+                              "type" : "double",
+                              "defaultValue" : 0.0,
+                              "interp" : "linr"
+                            },
+                            "cursorScale" : {
+                              "type" : "double",
+                              "defaultValue" : 0.0,
+                              "interp" : "linr"
+                            }
+                          },
+                          "effects" : [
+
+                          ],
+                          "start" : 1063,
+                          "duration" : 90,
+                          "mediaStart" : 987,
+                          "mediaDuration" : 1,
+                          "scalar" : 1,
+                          "metadata" : {
+                            "AutoAppliedSmartFocus" : "False",
+                            "WinSubProjectDisplayName" : ""
+                          },
+                          "animationTracks" : {
+
+                          }
+                        },
+                        {
+                          "id" : 10,
+                          "_type" : "ScreenVMFile",
+                          "src" : 1,
+                          "trackNumber" : 0,
+                          "attributes" : {
+                            "ident" : "Rec 07-25-22 2"
+                          },
+                          "parameters" : {
+                            "cursorScale" : {
+                              "type" : "double",
+                              "defaultValue" : 0.0,
+                              "interp" : "linr"
+                            },
+                            "cursorOpacity" : {
+                              "type" : "double",
+                              "defaultValue" : 0.0,
+                              "interp" : "linr"
+                            }
+                          },
+                          "effects" : [
+
+                          ],
+                          "start" : 1153,
+                          "duration" : 86,
+                          "mediaStart" : 988,
+                          "mediaDuration" : 86,
+                          "scalar" : 1,
+                          "metadata" : {
+                            "AutoAppliedSmartFocus" : "False",
+                            "WinSubProjectDisplayName" : "",
+                            "clipSpeedAttribute" : false
+                          },
+                          "animationTracks" : {
+
+                          }
+                        },
+                        {
+                          "id" : 11,
+                          "_type" : "ScreenIMFile",
+                          "src" : 1,
+                          "trackNumber" : 0,
+                          "trimStartSum" : 0,
+                          "attributes" : {
+                            "ident" : "Rec 07-25-22 2"
+                          },
+                          "parameters" : {
+                            "cursorOpacity" : {
+                              "type" : "double",
+                              "defaultValue" : 0.0,
+                              "interp" : "linr"
+                            },
+                            "cursorScale" : {
+                              "type" : "double",
+                              "defaultValue" : 0.0,
+                              "interp" : "linr"
+                            }
+                          },
+                          "effects" : [
+
+                          ],
+                          "start" : 1239,
+                          "duration" : 150,
+                          "mediaStart" : 1074,
+                          "mediaDuration" : 1,
+                          "scalar" : 1,
+                          "metadata" : {
+                            "AutoAppliedSmartFocus" : "False",
+                            "WinSubProjectDisplayName" : ""
+                          },
+                          "animationTracks" : {
+
+                          }
+                        },
+                        {
+                          "id" : 12,
+                          "_type" : "ScreenVMFile",
+                          "src" : 1,
+                          "trackNumber" : 0,
+                          "attributes" : {
+                            "ident" : "Rec 07-25-22 2"
+                          },
+                          "parameters" : {
+                            "cursorScale" : {
+                              "type" : "double",
+                              "defaultValue" : 0.0,
+                              "interp" : "linr"
+                            },
+                            "cursorOpacity" : {
+                              "type" : "double",
+                              "defaultValue" : 0.0,
+                              "interp" : "linr"
+                            }
+                          },
+                          "effects" : [
+
+                          ],
+                          "start" : 1389,
+                          "duration" : 694,
+                          "mediaStart" : 1074,
+                          "mediaDuration" : 694,
+                          "scalar" : 1,
+                          "metadata" : {
+                            "AutoAppliedSmartFocus" : "False",
+                            "WinSubProjectDisplayName" : "",
+                            "clipSpeedAttribute" : false
+                          },
+                          "animationTracks" : {
+
+                          }
+                        }
+                    ],
+                    "effects" : [
+
+                    ],
+                    "start" : 0,
+                    "duration" : 594,
+                    "mediaStart" : 0,
+                    "mediaDuration" : 594,
+                    "scalar" : 1,
+                    "metadata" : {
+                      "AutoAppliedSmartFocus" : "False",
+                      "WinSubProjectDisplayName" : "",
+                      "clipSpeedAttribute" : false
+                    },
+                    "animationTracks" : {
+
+                    }
+                  },
+                  {
+                    "id" : 13,
+                    "_type" : "StitchedMedia",
+                    "minMediaStart" : 0,
+                    "attributes" : {
+                      "ident" : "Rec 07-25-22 2",
+                      "gain" : 1.0,
+                      "mixToMono" : false
+                    },
+                    "parameters" : {
+                      "cursorOpacity" : 1.0,
+                      "cursorScale" : 1.0
+                    },
+                    "medias" : [
+                        {
+                          "id" : 14,
+                          "_type" : "ScreenVMFile",
+                          "src" : 1,
+                          "trackNumber" : 0,
+                          "attributes" : {
+                            "ident" : "Rec 07-25-22 2"
+                          },
+                          "parameters" : {
+                            "cursorScale" : {
+                              "type" : "double",
+                              "defaultValue" : 0.0,
+                              "interp" : "linr"
+                            },
+                            "cursorOpacity" : {
+                              "type" : "double",
+                              "defaultValue" : 0.0,
+                              "interp" : "linr"
+                            }
+                          },
+                          "effects" : [
+
+                          ],
+                          "start" : 0,
+                          "duration" : 795,
+                          "mediaStart" : 0,
+                          "mediaDuration" : 795,
+                          "scalar" : 1,
+                          "metadata" : {
+                            "AutoAppliedSmartFocus" : "False",
+                            "WinSubProjectDisplayName" : "",
+                            "clipSpeedAttribute" : false
+                          },
+                          "animationTracks" : {
+
+                          }
+                        },
+                        {
+                          "id" : 15,
+                          "_type" : "ScreenVMFile",
+                          "src" : 1,
+                          "trackNumber" : 0,
+                          "attributes" : {
+                            "ident" : "Rec 07-25-22 2"
+                          },
+                          "parameters" : {
+                            "cursorScale" : {
+                              "type" : "double",
+                              "defaultValue" : 0.0,
+                              "interp" : "linr"
+                            },
+                            "cursorOpacity" : {
+                              "type" : "double",
+                              "defaultValue" : 0.0,
+                              "interp" : "linr"
+                            }
+                          },
+                          "effects" : [
+
+                          ],
+                          "start" : 795,
+                          "duration" : 87,
+                          "mediaStart" : 900,
+                          "mediaDuration" : 87,
+                          "scalar" : 1,
+                          "metadata" : {
+                            "AutoAppliedSmartFocus" : "False",
+                            "WinSubProjectDisplayName" : "",
+                            "clipSpeedAttribute" : false
+                          },
+                          "animationTracks" : {
+
+                          }
+                        },
+                        {
+                          "id" : 16,
+                          "_type" : "ScreenIMFile",
+                          "src" : 1,
+                          "trackNumber" : 0,
+                          "trimStartSum" : 0,
+                          "attributes" : {
+                            "ident" : "Rec 07-25-22 2"
+                          },
+                          "parameters" : {
+                            "cursorOpacity" : {
+                              "type" : "double",
+                              "defaultValue" : 0.0,
+                              "interp" : "linr"
+                            },
+                            "cursorScale" : {
+                              "type" : "double",
+                              "defaultValue" : 0.0,
+                              "interp" : "linr"
+                            }
+                          },
+                          "effects" : [
+
+                          ],
+                          "start" : 882,
+                          "duration" : 75,
+                          "mediaStart" : 987,
+                          "mediaDuration" : 1,
+                          "scalar" : 1,
+                          "metadata" : {
+                            "AutoAppliedSmartFocus" : "False",
+                            "WinSubProjectDisplayName" : ""
+                          },
+                          "animationTracks" : {
+
+                          }
+                        },
+                        {
+                          "id" : 17,
+                          "_type" : "ScreenVMFile",
+                          "src" : 1,
+                          "trackNumber" : 0,
+                          "attributes" : {
+                            "ident" : "Rec 07-25-22 2"
+                          },
+                          "parameters" : {
+                            "cursorScale" : {
+                              "type" : "double",
+                              "defaultValue" : 0.0,
+                              "interp" : "linr"
+                            },
+                            "cursorOpacity" : {
+                              "type" : "double",
+                              "defaultValue" : 0.0,
+                              "interp" : "linr"
+                            }
+                          },
+                          "effects" : [
+
+                          ],
+                          "start" : 957,
+                          "duration" : 1,
+                          "mediaStart" : 987,
+                          "mediaDuration" : 1,
+                          "scalar" : 1,
+                          "metadata" : {
+                            "AutoAppliedSmartFocus" : "False",
+                            "WinSubProjectDisplayName" : "",
+                            "clipSpeedAttribute" : false
+                          },
+                          "animationTracks" : {
+
+                          }
+                        },
+                        {
+                          "id" : 18,
+                          "_type" : "ScreenIMFile",
+                          "src" : 1,
+                          "trackNumber" : 0,
+                          "trimStartSum" : 0,
+                          "attributes" : {
+                            "ident" : "Rec 07-25-22 2"
+                          },
+                          "parameters" : {
+                            "cursorOpacity" : {
+                              "type" : "double",
+                              "defaultValue" : 0.0,
+                              "interp" : "linr"
+                            },
+                            "cursorScale" : {
+                              "type" : "double",
+                              "defaultValue" : 0.0,
+                              "interp" : "linr"
+                            }
+                          },
+                          "effects" : [
+
+                          ],
+                          "start" : 958,
+                          "duration" : 90,
+                          "mediaStart" : 987,
+                          "mediaDuration" : 1,
+                          "scalar" : 1,
+                          "metadata" : {
+                            "AutoAppliedSmartFocus" : "False",
+                            "WinSubProjectDisplayName" : ""
+                          },
+                          "animationTracks" : {
+
+                          }
+                        },
+                        {
+                          "id" : 19,
+                          "_type" : "ScreenVMFile",
+                          "src" : 1,
+                          "trackNumber" : 0,
+                          "attributes" : {
+                            "ident" : "Rec 07-25-22 2"
+                          },
+                          "parameters" : {
+                            "cursorScale" : {
+                              "type" : "double",
+                              "defaultValue" : 0.0,
+                              "interp" : "linr"
+                            },
+                            "cursorOpacity" : {
+                              "type" : "double",
+                              "defaultValue" : 0.0,
+                              "interp" : "linr"
+                            }
+                          },
+                          "effects" : [
+
+                          ],
+                          "start" : 1048,
+                          "duration" : 86,
+                          "mediaStart" : 988,
+                          "mediaDuration" : 86,
+                          "scalar" : 1,
+                          "metadata" : {
+                            "AutoAppliedSmartFocus" : "False",
+                            "WinSubProjectDisplayName" : "",
+                            "clipSpeedAttribute" : false
+                          },
+                          "animationTracks" : {
+
+                          }
+                        },
+                        {
+                          "id" : 20,
+                          "_type" : "ScreenIMFile",
+                          "src" : 1,
+                          "trackNumber" : 0,
+                          "trimStartSum" : 0,
+                          "attributes" : {
+                            "ident" : "Rec 07-25-22 2"
+                          },
+                          "parameters" : {
+                            "cursorOpacity" : {
+                              "type" : "double",
+                              "defaultValue" : 0.0,
+                              "interp" : "linr"
+                            },
+                            "cursorScale" : {
+                              "type" : "double",
+                              "defaultValue" : 0.0,
+                              "interp" : "linr"
+                            }
+                          },
+                          "effects" : [
+
+                          ],
+                          "start" : 1134,
+                          "duration" : 150,
+                          "mediaStart" : 1074,
+                          "mediaDuration" : 1,
+                          "scalar" : 1,
+                          "metadata" : {
+                            "AutoAppliedSmartFocus" : "False",
+                            "WinSubProjectDisplayName" : ""
+                          },
+                          "animationTracks" : {
+
+                          }
+                        },
+                        {
+                          "id" : 21,
+                          "_type" : "ScreenVMFile",
+                          "src" : 1,
+                          "trackNumber" : 0,
+                          "attributes" : {
+                            "ident" : "Rec 07-25-22 2"
+                          },
+                          "parameters" : {
+                            "cursorScale" : {
+                              "type" : "double",
+                              "defaultValue" : 0.0,
+                              "interp" : "linr"
+                            },
+                            "cursorOpacity" : {
+                              "type" : "double",
+                              "defaultValue" : 0.0,
+                              "interp" : "linr"
+                            }
+                          },
+                          "effects" : [
+
+                          ],
+                          "start" : 1284,
+                          "duration" : 694,
+                          "mediaStart" : 1074,
+                          "mediaDuration" : 694,
+                          "scalar" : 1,
+                          "metadata" : {
+                            "AutoAppliedSmartFocus" : "False",
+                            "WinSubProjectDisplayName" : "",
+                            "clipSpeedAttribute" : false
+                          },
+                          "animationTracks" : {
+
+                          }
+                        }
+                    ],
+                    "effects" : [
+
+                    ],
+                    "start" : 594,
+                    "duration" : 218,
+                    "mediaStart" : 594,
+                    "mediaDuration" : "1421/5",
+                    "scalar" : "1090/1421",
+                    "metadata" : {
+                      "AutoAppliedSmartFocus" : "False",
+                      "WinSubProjectDisplayName" : "",
+                      "clipSpeedAttribute" : true
+                    },
+                    "animationTracks" : {
+
+                    }
+                  },
+                  {
+                    "id" : 22,
+                    "_type" : "StitchedMedia",
+                    "minMediaStart" : 0,
+                    "attributes" : {
+                      "ident" : "Rec 07-25-22 2",
+                      "gain" : 1.0,
+                      "mixToMono" : false
+                    },
+                    "parameters" : {
+                      "cursorOpacity" : {
+                        "type" : "double",
+                        "defaultValue" : 1.0,
+                        "interp" : "linr"
+                      },
+                      "cursorScale" : {
+                        "type" : "double",
+                        "defaultValue" : 1.0,
+                        "interp" : "linr"
+                      }
+                    },
+                    "medias" : [
+                        {
+                          "id" : 23,
+                          "_type" : "ScreenVMFile",
+                          "src" : 1,
+                          "trackNumber" : 0,
+                          "attributes" : {
+                            "ident" : "Rec 07-25-22 2"
+                          },
+                          "parameters" : {
+                            "cursorScale" : {
+                              "type" : "double",
+                              "defaultValue" : 0.0,
+                              "interp" : "linr"
+                            },
+                            "cursorOpacity" : {
+                              "type" : "double",
+                              "defaultValue" : 0.0,
+                              "interp" : "linr"
+                            }
+                          },
+                          "effects" : [
+
+                          ],
+                          "start" : 0,
+                          "duration" : 987,
+                          "mediaStart" : 0,
+                          "mediaDuration" : 987,
+                          "scalar" : 1,
+                          "metadata" : {
+                            "AutoAppliedSmartFocus" : "False",
+                            "WinSubProjectDisplayName" : "",
+                            "clipSpeedAttribute" : false
+                          },
+                          "animationTracks" : {
+
+                          }
+                        },
+                        {
+                          "id" : 24,
+                          "_type" : "ScreenIMFile",
+                          "src" : 1,
+                          "trackNumber" : 0,
+                          "trimStartSum" : 0,
+                          "attributes" : {
+                            "ident" : "Rec 07-25-22 2"
+                          },
+                          "parameters" : {
+                            "cursorOpacity" : {
+                              "type" : "double",
+                              "defaultValue" : 0.0,
+                              "interp" : "linr"
+                            },
+                            "cursorScale" : {
+                              "type" : "double",
+                              "defaultValue" : 0.0,
+                              "interp" : "linr"
+                            }
+                          },
+                          "effects" : [
+
+                          ],
+                          "start" : 987,
+                          "duration" : 75,
+                          "mediaStart" : 987,
+                          "mediaDuration" : 1,
+                          "scalar" : 1,
+                          "metadata" : {
+                            "AutoAppliedSmartFocus" : "False",
+                            "WinSubProjectDisplayName" : ""
+                          },
+                          "animationTracks" : {
+
+                          }
+                        },
+                        {
+                          "id" : 25,
+                          "_type" : "ScreenVMFile",
+                          "src" : 1,
+                          "trackNumber" : 0,
+                          "attributes" : {
+                            "ident" : "Rec 07-25-22 2"
+                          },
+                          "parameters" : {
+                            "cursorScale" : {
+                              "type" : "double",
+                              "defaultValue" : 0.0,
+                              "interp" : "linr"
+                            },
+                            "cursorOpacity" : {
+                              "type" : "double",
+                              "defaultValue" : 0.0,
+                              "interp" : "linr"
+                            }
+                          },
+                          "effects" : [
+
+                          ],
+                          "start" : 1062,
+                          "duration" : 1,
+                          "mediaStart" : 987,
+                          "mediaDuration" : 1,
+                          "scalar" : 1,
+                          "metadata" : {
+                            "AutoAppliedSmartFocus" : "False",
+                            "WinSubProjectDisplayName" : "",
+                            "clipSpeedAttribute" : false
+                          },
+                          "animationTracks" : {
+
+                          }
+                        },
+                        {
+                          "id" : 26,
+                          "_type" : "ScreenIMFile",
+                          "src" : 1,
+                          "trackNumber" : 0,
+                          "trimStartSum" : 0,
+                          "attributes" : {
+                            "ident" : "Rec 07-25-22 2"
+                          },
+                          "parameters" : {
+                            "cursorOpacity" : {
+                              "type" : "double",
+                              "defaultValue" : 0.0,
+                              "interp" : "linr"
+                            },
+                            "cursorScale" : {
+                              "type" : "double",
+                              "defaultValue" : 0.0,
+                              "interp" : "linr"
+                            }
+                          },
+                          "effects" : [
+
+                          ],
+                          "start" : 1063,
+                          "duration" : 90,
+                          "mediaStart" : 987,
+                          "mediaDuration" : 1,
+                          "scalar" : 1,
+                          "metadata" : {
+                            "AutoAppliedSmartFocus" : "False",
+                            "WinSubProjectDisplayName" : ""
+                          },
+                          "animationTracks" : {
+
+                          }
+                        },
+                        {
+                          "id" : 27,
+                          "_type" : "ScreenVMFile",
+                          "src" : 1,
+                          "trackNumber" : 0,
+                          "attributes" : {
+                            "ident" : "Rec 07-25-22 2"
+                          },
+                          "parameters" : {
+                            "cursorScale" : {
+                              "type" : "double",
+                              "defaultValue" : 0.0,
+                              "interp" : "linr"
+                            },
+                            "cursorOpacity" : {
+                              "type" : "double",
+                              "defaultValue" : 0.0,
+                              "interp" : "linr"
+                            }
+                          },
+                          "effects" : [
+
+                          ],
+                          "start" : 1153,
+                          "duration" : 86,
+                          "mediaStart" : 988,
+                          "mediaDuration" : 86,
+                          "scalar" : 1,
+                          "metadata" : {
+                            "AutoAppliedSmartFocus" : "False",
+                            "WinSubProjectDisplayName" : "",
+                            "clipSpeedAttribute" : false
+                          },
+                          "animationTracks" : {
+
+                          }
+                        },
+                        {
+                          "id" : 28,
+                          "_type" : "ScreenIMFile",
+                          "src" : 1,
+                          "trackNumber" : 0,
+                          "trimStartSum" : 0,
+                          "attributes" : {
+                            "ident" : "Rec 07-25-22 2"
+                          },
+                          "parameters" : {
+                            "cursorOpacity" : {
+                              "type" : "double",
+                              "defaultValue" : 0.0,
+                              "interp" : "linr"
+                            },
+                            "cursorScale" : {
+                              "type" : "double",
+                              "defaultValue" : 0.0,
+                              "interp" : "linr"
+                            }
+                          },
+                          "effects" : [
+
+                          ],
+                          "start" : 1239,
+                          "duration" : 150,
+                          "mediaStart" : 1074,
+                          "mediaDuration" : 1,
+                          "scalar" : 1,
+                          "metadata" : {
+                            "AutoAppliedSmartFocus" : "False",
+                            "WinSubProjectDisplayName" : ""
+                          },
+                          "animationTracks" : {
+
+                          }
+                        },
+                        {
+                          "id" : 29,
+                          "_type" : "ScreenVMFile",
+                          "src" : 1,
+                          "trackNumber" : 0,
+                          "attributes" : {
+                            "ident" : "Rec 07-25-22 2"
+                          },
+                          "parameters" : {
+                            "cursorScale" : {
+                              "type" : "double",
+                              "defaultValue" : 0.0,
+                              "interp" : "linr"
+                            },
+                            "cursorOpacity" : {
+                              "type" : "double",
+                              "defaultValue" : 0.0,
+                              "interp" : "linr"
+                            }
+                          },
+                          "effects" : [
+
+                          ],
+                          "start" : 1389,
+                          "duration" : 694,
+                          "mediaStart" : 1074,
+                          "mediaDuration" : 694,
+                          "scalar" : 1,
+                          "metadata" : {
+                            "AutoAppliedSmartFocus" : "False",
+                            "WinSubProjectDisplayName" : "",
+                            "clipSpeedAttribute" : false
+                          },
+                          "animationTracks" : {
+
+                          }
+                        }
+                    ],
+                    "effects" : [
+
+                    ],
+                    "start" : 812,
+                    "duration" : 418,
+                    "mediaStart" : 984,
+                    "mediaDuration" : 418,
+                    "scalar" : 1,
+                    "metadata" : {
+                      "AutoAppliedSmartFocus" : "False",
+                      "WinSubProjectDisplayName" : "",
+                      "clipSpeedAttribute" : false
+                    },
+                    "animationTracks" : {
+
+                    }
+                  },
+                  {
+                    "id" : 30,
+                    "_type" : "StitchedMedia",
+                    "minMediaStart" : 0,
+                    "attributes" : {
+                      "ident" : "Rec 07-25-22 2",
+                      "gain" : 1.0,
+                      "mixToMono" : false
+                    },
+                    "parameters" : {
+                      "cursorOpacity" : {
+                        "type" : "double",
+                        "defaultValue" : 1.0,
+                        "interp" : "linr"
+                      },
+                      "cursorScale" : {
+                        "type" : "double",
+                        "defaultValue" : 1.0,
+                        "interp" : "linr"
+                      }
+                    },
+                    "medias" : [
+                        {
+                          "id" : 31,
+                          "_type" : "ScreenVMFile",
+                          "src" : 1,
+                          "trackNumber" : 0,
+                          "attributes" : {
+                            "ident" : "Rec 07-25-22 2"
+                          },
+                          "parameters" : {
+                            "cursorScale" : {
+                              "type" : "double",
+                              "defaultValue" : 0.0,
+                              "interp" : "linr"
+                            },
+                            "cursorOpacity" : {
+                              "type" : "double",
+                              "defaultValue" : 0.0,
+                              "interp" : "linr"
+                            }
+                          },
+                          "effects" : [
+
+                          ],
+                          "start" : 0,
+                          "duration" : 987,
+                          "mediaStart" : 0,
+                          "mediaDuration" : 987,
+                          "scalar" : 1,
+                          "metadata" : {
+                            "AutoAppliedSmartFocus" : "False",
+                            "WinSubProjectDisplayName" : "",
+                            "clipSpeedAttribute" : false
+                          },
+                          "animationTracks" : {
+
+                          }
+                        },
+                        {
+                          "id" : 32,
+                          "_type" : "ScreenIMFile",
+                          "src" : 1,
+                          "trackNumber" : 0,
+                          "trimStartSum" : 0,
+                          "attributes" : {
+                            "ident" : "Rec 07-25-22 2"
+                          },
+                          "parameters" : {
+                            "cursorOpacity" : {
+                              "type" : "double",
+                              "defaultValue" : 0.0,
+                              "interp" : "linr"
+                            },
+                            "cursorScale" : {
+                              "type" : "double",
+                              "defaultValue" : 0.0,
+                              "interp" : "linr"
+                            }
+                          },
+                          "effects" : [
+
+                          ],
+                          "start" : 987,
+                          "duration" : 75,
+                          "mediaStart" : 987,
+                          "mediaDuration" : 1,
+                          "scalar" : 1,
+                          "metadata" : {
+                            "AutoAppliedSmartFocus" : "False",
+                            "WinSubProjectDisplayName" : ""
+                          },
+                          "animationTracks" : {
+
+                          }
+                        },
+                        {
+                          "id" : 33,
+                          "_type" : "ScreenVMFile",
+                          "src" : 1,
+                          "trackNumber" : 0,
+                          "attributes" : {
+                            "ident" : "Rec 07-25-22 2"
+                          },
+                          "parameters" : {
+                            "cursorScale" : {
+                              "type" : "double",
+                              "defaultValue" : 0.0,
+                              "interp" : "linr"
+                            },
+                            "cursorOpacity" : {
+                              "type" : "double",
+                              "defaultValue" : 0.0,
+                              "interp" : "linr"
+                            }
+                          },
+                          "effects" : [
+
+                          ],
+                          "start" : 1062,
+                          "duration" : 1,
+                          "mediaStart" : 987,
+                          "mediaDuration" : 1,
+                          "scalar" : 1,
+                          "metadata" : {
+                            "AutoAppliedSmartFocus" : "False",
+                            "WinSubProjectDisplayName" : "",
+                            "clipSpeedAttribute" : false
+                          },
+                          "animationTracks" : {
+
+                          }
+                        },
+                        {
+                          "id" : 34,
+                          "_type" : "ScreenIMFile",
+                          "src" : 1,
+                          "trackNumber" : 0,
+                          "trimStartSum" : 0,
+                          "attributes" : {
+                            "ident" : "Rec 07-25-22 2"
+                          },
+                          "parameters" : {
+                            "cursorOpacity" : {
+                              "type" : "double",
+                              "defaultValue" : 0.0,
+                              "interp" : "linr"
+                            },
+                            "cursorScale" : {
+                              "type" : "double",
+                              "defaultValue" : 0.0,
+                              "interp" : "linr"
+                            }
+                          },
+                          "effects" : [
+
+                          ],
+                          "start" : 1063,
+                          "duration" : 90,
+                          "mediaStart" : 987,
+                          "mediaDuration" : 1,
+                          "scalar" : 1,
+                          "metadata" : {
+                            "AutoAppliedSmartFocus" : "False",
+                            "WinSubProjectDisplayName" : ""
+                          },
+                          "animationTracks" : {
+
+                          }
+                        },
+                        {
+                          "id" : 35,
+                          "_type" : "ScreenVMFile",
+                          "src" : 1,
+                          "trackNumber" : 0,
+                          "attributes" : {
+                            "ident" : "Rec 07-25-22 2"
+                          },
+                          "parameters" : {
+                            "cursorScale" : {
+                              "type" : "double",
+                              "defaultValue" : 0.0,
+                              "interp" : "linr"
+                            },
+                            "cursorOpacity" : {
+                              "type" : "double",
+                              "defaultValue" : 0.0,
+                              "interp" : "linr"
+                            }
+                          },
+                          "effects" : [
+
+                          ],
+                          "start" : 1153,
+                          "duration" : 86,
+                          "mediaStart" : 988,
+                          "mediaDuration" : 86,
+                          "scalar" : 1,
+                          "metadata" : {
+                            "AutoAppliedSmartFocus" : "False",
+                            "WinSubProjectDisplayName" : "",
+                            "clipSpeedAttribute" : false
+                          },
+                          "animationTracks" : {
+
+                          }
+                        },
+                        {
+                          "id" : 36,
+                          "_type" : "ScreenIMFile",
+                          "src" : 1,
+                          "trackNumber" : 0,
+                          "trimStartSum" : 0,
+                          "attributes" : {
+                            "ident" : "Rec 07-25-22 2"
+                          },
+                          "parameters" : {
+                            "cursorOpacity" : {
+                              "type" : "double",
+                              "defaultValue" : 0.0,
+                              "interp" : "linr"
+                            },
+                            "cursorScale" : {
+                              "type" : "double",
+                              "defaultValue" : 0.0,
+                              "interp" : "linr"
+                            }
+                          },
+                          "effects" : [
+
+                          ],
+                          "start" : 1239,
+                          "duration" : 150,
+                          "mediaStart" : 1074,
+                          "mediaDuration" : 1,
+                          "scalar" : 1,
+                          "metadata" : {
+                            "AutoAppliedSmartFocus" : "False",
+                            "WinSubProjectDisplayName" : ""
+                          },
+                          "animationTracks" : {
+
+                          }
+                        },
+                        {
+                          "id" : 37,
+                          "_type" : "ScreenVMFile",
+                          "src" : 1,
+                          "trackNumber" : 0,
+                          "attributes" : {
+                            "ident" : "Rec 07-25-22 2"
+                          },
+                          "parameters" : {
+                            "cursorScale" : {
+                              "type" : "double",
+                              "defaultValue" : 0.0,
+                              "interp" : "linr"
+                            },
+                            "cursorOpacity" : {
+                              "type" : "double",
+                              "defaultValue" : 0.0,
+                              "interp" : "linr"
+                            }
+                          },
+                          "effects" : [
+
+                          ],
+                          "start" : 1389,
+                          "duration" : 694,
+                          "mediaStart" : 1074,
+                          "mediaDuration" : 694,
+                          "scalar" : 1,
+                          "metadata" : {
+                            "AutoAppliedSmartFocus" : "False",
+                            "WinSubProjectDisplayName" : "",
+                            "clipSpeedAttribute" : false
+                          },
+                          "animationTracks" : {
+
+                          }
+                        }
+                    ],
+                    "effects" : [
+
+                    ],
+                    "start" : 1230,
+                    "duration" : 119,
+                    "mediaStart" : 1771,
+                    "mediaDuration" : 167,
+                    "scalar" : "119/167",
+                    "metadata" : {
+                      "AutoAppliedSmartFocus" : "False",
+                      "WinSubProjectDisplayName" : "",
+                      "clipSpeedAttribute" : true
+                    },
+                    "animationTracks" : {
+
+                    }
+                  },
+                  {
+                    "id" : 38,
+                    "_type" : "StitchedMedia",
+                    "minMediaStart" : -108000,
+                    "attributes" : {
+                      "ident" : "Rec 07-25-22 2",
+                      "gain" : 1.0,
+                      "mixToMono" : false
+                    },
+                    "parameters" : {
+                      "cursorOpacity" : 1.0,
+                      "cursorScale" : 1.0
+                    },
+                    "medias" : [
+                        {
+                          "id" : 39,
+                          "_type" : "ScreenIMFile",
+                          "src" : 1,
+                          "trackNumber" : 0,
+                          "trimStartSum" : -108000,
+                          "attributes" : {
+                            "ident" : "Rec 07-25-22 2"
+                          },
+                          "parameters" : {
+                            "cursorOpacity" : {
+                              "type" : "double",
+                              "defaultValue" : 0.0,
+                              "interp" : "linr"
+                            },
+                            "cursorScale" : {
+                              "type" : "double",
+                              "defaultValue" : 0.0,
+                              "interp" : "linr"
+                            }
+                          },
+                          "effects" : [
+
+                          ],
+                          "start" : -108000,
+                          "duration" : 108090,
+                          "mediaStart" : 1623,
+                          "mediaDuration" : 1,
+                          "scalar" : 1,
+                          "metadata" : {
+                            "AutoAppliedSmartFocus" : "False",
+                            "WinSubProjectDisplayName" : "",
+                            "clipSpeedAttribute" : false
+                          },
+                          "animationTracks" : {
+
+                          }
+                        },
+                        {
+                          "id" : 40,
+                          "_type" : "ScreenIMFile",
+                          "src" : 1,
+                          "trackNumber" : 0,
+                          "trimStartSum" : 0,
+                          "attributes" : {
+                            "ident" : "Rec 07-25-22 2"
+                          },
+                          "parameters" : {
+                            "cursorOpacity" : {
+                              "type" : "double",
+                              "defaultValue" : 0.0,
+                              "interp" : "linr"
+                            },
+                            "cursorScale" : {
+                              "type" : "double",
+                              "defaultValue" : 0.0,
+                              "interp" : "linr"
+                            }
+                          },
+                          "effects" : [
+
+                          ],
+                          "start" : 90,
+                          "duration" : 60,
+                          "mediaStart" : 1623,
+                          "mediaDuration" : 1,
+                          "scalar" : 1,
+                          "metadata" : {
+                            "AutoAppliedSmartFocus" : "False",
+                            "WinSubProjectDisplayName" : ""
+                          },
+                          "animationTracks" : {
+
+                          }
+                        },
+                        {
+                          "id" : 41,
+                          "_type" : "ScreenVMFile",
+                          "src" : 1,
+                          "trackNumber" : 0,
+                          "attributes" : {
+                            "ident" : "Rec 07-25-22 2"
+                          },
+                          "parameters" : {
+                            "cursorScale" : {
+                              "type" : "double",
+                              "defaultValue" : 0.0,
+                              "interp" : "linr"
+                            },
+                            "cursorOpacity" : {
+                              "type" : "double",
+                              "defaultValue" : 0.0,
+                              "interp" : "linr"
+                            }
+                          },
+                          "effects" : [
+
+                          ],
+                          "start" : 150,
+                          "duration" : 145,
+                          "mediaStart" : 1623,
+                          "mediaDuration" : 145,
+                          "scalar" : 1,
+                          "metadata" : {
+                            "AutoAppliedSmartFocus" : "False",
+                            "WinSubProjectDisplayName" : "",
+                            "clipSpeedAttribute" : false
+                          },
+                          "animationTracks" : {
+
+                          }
+                        }
+                    ],
+                    "effects" : [
+
+                    ],
+                    "start" : 1349,
+                    "duration" : 202,
+                    "mediaStart" : 0,
+                    "mediaDuration" : 202,
+                    "scalar" : 1,
+                    "metadata" : {
+                      "AutoAppliedSmartFocus" : "False",
+                      "WinSubProjectDisplayName" : "",
+                      "clipSpeedAttribute" : false
+                    },
+                    "animationTracks" : {
+
+                    }
+                  },
+                  {
+                    "id" : 42,
+                    "_type" : "StitchedMedia",
+                    "minMediaStart" : 0,
+                    "attributes" : {
+                      "ident" : "Rec 07-30-22",
+                      "gain" : 1.0,
+                      "mixToMono" : false
+                    },
+                    "parameters" : {
+                      "translation0" : 1.99999999996221,
+                      "cursorOpacity" : 1.0,
+                      "cursorScale" : 1.0
+                    },
+                    "medias" : [
+                        {
+                          "id" : 43,
+                          "_type" : "ScreenVMFile",
+                          "src" : 3,
+                          "trackNumber" : 0,
+                          "attributes" : {
+                            "ident" : "Rec 07-30-22"
+                          },
+                          "parameters" : {
+                            "cursorScale" : {
+                              "type" : "double",
+                              "defaultValue" : 0.0,
+                              "interp" : "linr"
+                            },
+                            "cursorOpacity" : {
+                              "type" : "double",
+                              "defaultValue" : 0.0,
+                              "interp" : "linr"
+                            }
+                          },
+                          "effects" : [
+
+                          ],
+                          "start" : 0,
+                          "duration" : 743,
+                          "mediaStart" : 0,
+                          "mediaDuration" : 743,
+                          "scalar" : 1,
+                          "metadata" : {
+                            "AutoAppliedSmartFocus" : "False",
+                            "WinSubProjectDisplayName" : "",
+                            "clipSpeedAttribute" : false,
+                            "default-translation0" : 0.0
+                          },
+                          "animationTracks" : {
+
+                          }
+                        },
+                        {
+                          "id" : 44,
+                          "_type" : "ScreenIMFile",
+                          "src" : 3,
+                          "trackNumber" : 0,
+                          "trimStartSum" : 0,
+                          "attributes" : {
+                            "ident" : "Rec 07-30-22"
+                          },
+                          "parameters" : {
+                            "cursorOpacity" : {
+                              "type" : "double",
+                              "defaultValue" : 0.0,
+                              "interp" : "linr"
+                            },
+                            "cursorScale" : {
+                              "type" : "double",
+                              "defaultValue" : 0.0,
+                              "interp" : "linr"
+                            }
+                          },
+                          "effects" : [
+
+                          ],
+                          "start" : 743,
+                          "duration" : 150,
+                          "mediaStart" : 742,
+                          "mediaDuration" : 1,
+                          "scalar" : 1,
+                          "metadata" : {
+                            "AutoAppliedSmartFocus" : "False",
+                            "WinSubProjectDisplayName" : ""
+                          },
+                          "animationTracks" : {
+
+                          }
+                        },
+                        {
+                          "id" : 45,
+                          "_type" : "ScreenVMFile",
+                          "src" : 3,
+                          "trackNumber" : 0,
+                          "attributes" : {
+                            "ident" : "Rec 07-30-22"
+                          },
+                          "parameters" : {
+                            "cursorScale" : {
+                              "type" : "double",
+                              "defaultValue" : 0.0,
+                              "interp" : "linr"
+                            },
+                            "cursorOpacity" : {
+                              "type" : "double",
+                              "defaultValue" : 0.0,
+                              "interp" : "linr"
+                            }
+                          },
+                          "effects" : [
+
+                          ],
+                          "start" : 893,
+                          "duration" : 573,
+                          "mediaStart" : 743,
+                          "mediaDuration" : 573,
+                          "scalar" : 1,
+                          "metadata" : {
+                            "AutoAppliedSmartFocus" : "False",
+                            "WinSubProjectDisplayName" : "",
+                            "clipSpeedAttribute" : false,
+                            "default-translation0" : 0.0
+                          },
+                          "animationTracks" : {
+
+                          }
+                        }
+                    ],
+                    "effects" : [
+
+                    ],
+                    "start" : 2391,
+                    "duration" : 894,
+                    "mediaStart" : 0,
+                    "mediaDuration" : 894,
+                    "scalar" : 1,
+                    "metadata" : {
+                      "AutoAppliedSmartFocus" : "False",
+                      "WinSubProjectDisplayName" : "",
+                      "clipSpeedAttribute" : false
+                    },
+                    "animationTracks" : {
+
+                    }
+                  }
+                ]
+              },
+              {
+                "trackIndex" : 1,
+                "medias" : [
+                  {
+                    "id" : 46,
+                    "_type" : "Callout",
+                    "def" : {
+                      "kind" : "remix",
+                      "shape" : "text-rectangle",
+                      "style" : "basic",
+                      "fill-color-blue" : 1.0,
+                      "fill-color-green" : 1.0,
+                      "fill-color-opacity" : 1.0,
+                      "fill-color-red" : 1.0,
+                      "height" : 61.4754098360314,
+                      "stroke-color-blue" : 0.56078431372549,
+                      "stroke-color-green" : 0.686274509803922,
+                      "stroke-color-opacity" : 1.0,
+                      "stroke-color-red" : 0.0196078431372549,
+                      "stroke-width" : 2.0,
+                      "tail-x" : 0.0,
+                      "tail-y" : 24.2622950819843,
+                      "width" : 350.0,
+                      "word-wrap" : 1.0,
+                      "fill-style" : "solid",
+                      "horizontal-alignment" : "center",
+                      "stroke-style" : "solid",
+                      "text" : "Point clouds from two depth frames",
+                      "vertical-alignment" : "center",
+                      "font" : {
+                        "color-blue" : 0.266666666666667,
+                        "color-green" : 0.231372549019608,
+                        "color-opacity" : 1.0,
+                        "color-red" : 0.184313725490196,
+                        "size" : 64.0,
+                        "tracking" : 0.0,
+                        "name" : "Montserrat",
+                        "weight" : "Regular"
+                      },
+                      "textAttributes" : {
+                        "type" : "textAttributeList",
+                        "keyframes" : [
+                          {
+                            "time" : 0,
+                            "value" : [{"name":"fontName","rangeEnd":34,"rangeStart":0,"value":"Montserrat","valueType":"string"},{"name":"fontWeight","rangeEnd":34,"rangeStart":0,"value":400,"valueType":"int"},{"name":"fontSize","rangeEnd":34,"rangeStart":0,"value":64,"valueType":"double"},{"name":"underline","rangeEnd":34,"rangeStart":0,"value":0,"valueType":"int"},{"name":"fontItalic","rangeEnd":34,"rangeStart":0,"value":0,"valueType":"int"},{"name":"fgColor","rangeEnd":34,"rangeStart":0,"value":"(47,59,68,255)","valueType":"color"},{"name":"strikethrough","rangeEnd":34,"rangeStart":0,"value":0,"valueType":"int"}],
+                            "duration" : 0
+                          }
+                        ]
+                      }
+                    },
+                    "attributes" : {
+                      "autoRotateText" : true
+                    },
+                    "parameters" : {
+                      "translation0" : -3.01660918466951e-11,
+                      "translation1" : -403.278688524614
+                    },
+                    "effects" : [
+                        {
+                          "effectName" : "DropShadow",
+                          "category" : "categoryVisualEffects",
+                          "parameters" : {
+                            "angle" : 5.49778714378214,
+                            "blur" : 10.0,
+                            "color-alpha" : 1.0,
+                            "color-blue" : 0.1216,
+                            "color-green" : 0.1216,
+                            "color-red" : 0.1216,
+                            "enabled" : 1,
+                            "offset" : 10.0,
+                            "opacity" : 0.4
+                          }
+                        }
+                    ],
+                    "start" : 68,
+                    "duration" : 389,
+                    "mediaStart" : 0,
+                    "mediaDuration" : 389,
+                    "scalar" : 1,
+                    "metadata" : {
+                      "WinSubProjectDisplayName" : "",
+                      "clipSpeedAttribute" : false,
+                      "default-HAlign" : "center",
+                      "default-VAlign" : "center",
+                      "default-text-attributes" : null,
+                      "default-translation0" : 0.0,
+                      "default-translation1" : 0.0
+                    },
+                    "animationTracks" : {
+
+                    }
+                  },
+                  {
+                    "id" : 47,
+                    "_type" : "Callout",
+                    "def" : {
+                      "kind" : "remix",
+                      "shape" : "text-rectangle",
+                      "style" : "basic",
+                      "fill-color-blue" : {
+                        "type" : "double",
+                        "defaultValue" : 1.0,
+                        "interp" : "linr"
+                      },
+                      "fill-color-green" : {
+                        "type" : "double",
+                        "defaultValue" : 1.0,
+                        "interp" : "linr"
+                      },
+                      "fill-color-opacity" : {
+                        "type" : "double",
+                        "defaultValue" : 1.0,
+                        "interp" : "linr"
+                      },
+                      "fill-color-red" : {
+                        "type" : "double",
+                        "defaultValue" : 1.0,
+                        "interp" : "linr"
+                      },
+                      "height" : {
+                        "type" : "double",
+                        "defaultValue" : 61.4754098360314,
+                        "interp" : "linr"
+                      },
+                      "stroke-color-blue" : {
+                        "type" : "double",
+                        "defaultValue" : 0.56078431372549,
+                        "interp" : "linr"
+                      },
+                      "stroke-color-green" : {
+                        "type" : "double",
+                        "defaultValue" : 0.686274509803922,
+                        "interp" : "linr"
+                      },
+                      "stroke-color-opacity" : {
+                        "type" : "double",
+                        "defaultValue" : 1.0,
+                        "interp" : "linr"
+                      },
+                      "stroke-color-red" : {
+                        "type" : "double",
+                        "defaultValue" : 0.0196078431372549,
+                        "interp" : "linr"
+                      },
+                      "stroke-width" : {
+                        "type" : "double",
+                        "defaultValue" : 2.0,
+                        "interp" : "linr"
+                      },
+                      "tail-x" : {
+                        "type" : "double",
+                        "defaultValue" : 0.0,
+                        "interp" : "linr"
+                      },
+                      "tail-y" : {
+                        "type" : "double",
+                        "defaultValue" : 24.2622950819843,
+                        "interp" : "linr"
+                      },
+                      "width" : {
+                        "type" : "double",
+                        "defaultValue" : 350.0,
+                        "interp" : "linr"
+                      },
+                      "word-wrap" : {
+                        "type" : "double",
+                        "defaultValue" : 1.0,
+                        "interp" : "linr"
+                      },
+                      "fill-style" : "solid",
+                      "horizontal-alignment" : "center",
+                      "stroke-style" : "solid",
+                      "text" : "The ICP solver seems to be working correctly",
+                      "vertical-alignment" : "center",
+                      "font" : {
+                        "color-blue" : {
+                          "type" : "double",
+                          "defaultValue" : 0.266666666666667,
+                          "interp" : "linr"
+                        },
+                        "color-green" : {
+                          "type" : "double",
+                          "defaultValue" : 0.231372549019608,
+                          "interp" : "linr"
+                        },
+                        "color-opacity" : {
+                          "type" : "double",
+                          "defaultValue" : 1.0,
+                          "interp" : "linr"
+                        },
+                        "color-red" : {
+                          "type" : "double",
+                          "defaultValue" : 0.184313725490196,
+                          "interp" : "linr"
+                        },
+                        "size" : {
+                          "type" : "double",
+                          "defaultValue" : 64.0,
+                          "interp" : "linr"
+                        },
+                        "tracking" : {
+                          "type" : "double",
+                          "defaultValue" : 0.0,
+                          "interp" : "linr"
+                        },
+                        "name" : "Montserrat",
+                        "weight" : "Regular"
+                      },
+                      "textAttributes" : {
+                        "type" : "textAttributeList",
+                        "keyframes" : [
+                          {
+                            "time" : 0,
+                            "value" : [{"name":"fontItalic","rangeEnd":44,"rangeStart":0,"value":0,"valueType":"int"},{"name":"fontName","rangeEnd":44,"rangeStart":0,"value":"Montserrat","valueType":"string"},{"name":"fontWeight","rangeEnd":44,"rangeStart":0,"value":400,"valueType":"int"},{"name":"fontSize","rangeEnd":44,"rangeStart":0,"value":64,"valueType":"double"},{"name":"fgColor","rangeEnd":44,"rangeStart":0,"value":"(47,59,68,255)","valueType":"color"},{"name":"underline","rangeEnd":44,"rangeStart":0,"value":0,"valueType":"int"},{"name":"strikethrough","rangeEnd":44,"rangeStart":0,"value":0,"valueType":"int"}],
+                            "duration" : 0
+                          }
+                        ]
+                      }
+                    },
+                    "attributes" : {
+                      "autoRotateText" : true
+                    },
+                    "parameters" : {
+                      "translation0" : {
+                        "type" : "double",
+                        "defaultValue" : -3.01660918466951e-11,
+                        "interp" : "eioe"
+                      },
+                      "translation1" : {
+                        "type" : "double",
+                        "defaultValue" : -403.278688524614,
+                        "interp" : "eioe"
+                      }
+                    },
+                    "effects" : [
+                        {
+                          "effectName" : "DropShadow",
+                          "category" : "categoryVisualEffects",
+                          "parameters" : {
+                            "angle" : {
+                              "type" : "double",
+                              "defaultValue" : 5.49778714378214,
+                              "interp" : "linr",
+                              "uiHints" : {
+                                "userInterfaceType" : 0,
+                                "unitType" : 0
+                              }
+                            },
+                            "blur" : {
+                              "type" : "double",
+                              "defaultValue" : 10.0,
+                              "interp" : "linr",
+                              "uiHints" : {
+                                "userInterfaceType" : 0,
+                                "unitType" : 0
+                              }
+                            },
+                            "color-alpha" : {
+                              "type" : "double",
+                              "defaultValue" : 1.0,
+                              "interp" : "linr",
+                              "uiHints" : {
+                                "userInterfaceType" : 0,
+                                "unitType" : 0
+                              }
+                            },
+                            "color-blue" : {
+                              "type" : "double",
+                              "defaultValue" : 0.1216,
+                              "interp" : "linr",
+                              "uiHints" : {
+                                "userInterfaceType" : 0,
+                                "unitType" : 0
+                              }
+                            },
+                            "color-green" : {
+                              "type" : "double",
+                              "defaultValue" : 0.1216,
+                              "interp" : "linr",
+                              "uiHints" : {
+                                "userInterfaceType" : 0,
+                                "unitType" : 0
+                              }
+                            },
+                            "color-red" : {
+                              "type" : "double",
+                              "defaultValue" : 0.1216,
+                              "interp" : "linr",
+                              "uiHints" : {
+                                "userInterfaceType" : 0,
+                                "unitType" : 0
+                              }
+                            },
+                            "enabled" : 1,
+                            "offset" : {
+                              "type" : "double",
+                              "defaultValue" : 10.0,
+                              "interp" : "linr",
+                              "uiHints" : {
+                                "userInterfaceType" : 0,
+                                "unitType" : 0
+                              }
+                            },
+                            "opacity" : {
+                              "type" : "double",
+                              "defaultValue" : 0.4,
+                              "interp" : "linr",
+                              "uiHints" : {
+                                "userInterfaceType" : 0,
+                                "unitType" : 0
+                              }
+                            }
+                          }
+                        }
+                    ],
+                    "start" : 817,
+                    "duration" : 165,
+                    "mediaStart" : 0,
+                    "mediaDuration" : 165,
+                    "scalar" : 1,
+                    "metadata" : {
+                      "WinSubProjectDisplayName" : "",
+                      "clipSpeedAttribute" : false,
+                      "default-HAlign" : "center",
+                      "default-VAlign" : "center",
+                      "default-text-attributes" : "[{\"name\":\"fontName\",\"rangeEnd\":34,\"rangeStart\":0,\"value\":\"Montserrat\",\"valueType\":\"string\"},{\"name\":\"fontWeight\",\"rangeEnd\":34,\"rangeStart\":0,\"value\":400,\"valueType\":\"int\"},{\"name\":\"fontSize\",\"rangeEnd\":34,\"rangeStart\":0,\"value\":64,\"valueType\":\"double\"},{\"name\":\"underline\",\"rangeEnd\":34,\"rangeStart\":0,\"value\":0,\"valueType\":\"int\"},{\"name\":\"fontItalic\",\"rangeEnd\":34,\"rangeStart\":0,\"value\":0,\"valueType\":\"int\"},{\"name\":\"fgColor\",\"rangeEnd\":34,\"rangeStart\":0,\"value\":\"(47,59,68,255)\",\"valueType\":\"color\"},{\"name\":\"strikethrough\",\"rangeEnd\":34,\"rangeStart\":0,\"value\":0,\"valueType\":\"int\"}]",
+                      "default-translation0" : 0.0,
+                      "default-translation1" : 0.0
+                    },
+                    "animationTracks" : {
+
+                    }
+                  },
+                  {
+                    "id" : 48,
+                    "_type" : "Callout",
+                    "def" : {
+                      "kind" : "remix",
+                      "shape" : "text-rectangle",
+                      "style" : "basic",
+                      "fill-color-blue" : 1.0,
+                      "fill-color-green" : 1.0,
+                      "fill-color-opacity" : 1.0,
+                      "fill-color-red" : 1.0,
+                      "height" : 60.109289617432,
+                      "stroke-color-blue" : 0.56078431372549,
+                      "stroke-color-green" : 0.686274509803922,
+                      "stroke-color-opacity" : 1.0,
+                      "stroke-color-red" : 0.0196078431372549,
+                      "stroke-width" : 2.0,
+                      "tail-x" : 0.0,
+                      "tail-y" : 24.945355191284,
+                      "width" : 350.0,
+                      "word-wrap" : 1.0,
+                      "fill-style" : "solid",
+                      "horizontal-alignment" : "center",
+                      "stroke-style" : "solid",
+                      "text" : "Looking closer, the edges align :)",
+                      "vertical-alignment" : "center",
+                      "font" : {
+                        "color-blue" : 0.266666666666667,
+                        "color-green" : 0.231372549019608,
+                        "color-opacity" : 1.0,
+                        "color-red" : 0.184313725490196,
+                        "size" : 64.0,
+                        "tracking" : 0.0,
+                        "name" : "Montserrat",
+                        "weight" : "Regular"
+                      },
+                      "textAttributes" : {
+                        "type" : "textAttributeList",
+                        "keyframes" : [
+                          {
+                            "time" : 0,
+                            "value" : [{"name":"fontWeight","rangeEnd":34,"rangeStart":0,"value":400,"valueType":"int"},{"name":"fontItalic","rangeEnd":34,"rangeStart":0,"value":0,"valueType":"int"},{"name":"fgColor","rangeEnd":34,"rangeStart":0,"value":"(47,59,68,255)","valueType":"color"},{"name":"strikethrough","rangeEnd":34,"rangeStart":0,"value":0,"valueType":"int"},{"name":"underline","rangeEnd":34,"rangeStart":0,"value":0,"valueType":"int"},{"name":"fontSize","rangeEnd":34,"rangeStart":0,"value":64,"valueType":"double"},{"name":"fontName","rangeEnd":34,"rangeStart":0,"value":"Montserrat","valueType":"string"}],
+                            "duration" : 0
+                          }
+                        ]
+                      }
+                    },
+                    "attributes" : {
+                      "autoRotateText" : true
+                    },
+                    "parameters" : {
+                      "translation0" : 1.06865627458319e-10,
+                      "translation1" : -395.765027322434
+                    },
+                    "effects" : [
+                        {
+                          "effectName" : "DropShadow",
+                          "category" : "categoryVisualEffects",
+                          "parameters" : {
+                            "angle" : 5.49778714378214,
+                            "blur" : 10.0,
+                            "color-alpha" : 1.0,
+                            "color-blue" : 0.1216,
+                            "color-green" : 0.1216,
+                            "color-red" : 0.1216,
+                            "enabled" : 1,
+                            "offset" : 10.0,
+                            "opacity" : 0.4
+                          }
+                        }
+                    ],
+                    "start" : 1067,
+                    "duration" : 150,
+                    "mediaStart" : 0,
+                    "mediaDuration" : 150,
+                    "scalar" : 1,
+                    "metadata" : {
+                      "WinSubProjectDisplayName" : "",
+                      "clipSpeedAttribute" : false,
+                      "default-HAlign" : "center",
+                      "default-VAlign" : "center",
+                      "default-text-attributes" : null,
+                      "default-translation0" : 0.0,
+                      "default-translation1" : 0.0
+                    },
+                    "animationTracks" : {
+
+                    }
+                  },
+                  {
+                    "id" : 49,
+                    "_type" : "Callout",
+                    "def" : {
+                      "kind" : "remix",
+                      "shape" : "text-rectangle",
+                      "style" : "basic",
+                      "fill-color-blue" : 1.0,
+                      "fill-color-green" : 1.0,
+                      "fill-color-opacity" : 1.0,
+                      "fill-color-red" : 1.0,
+                      "height" : 53.2786885245005,
+                      "stroke-color-blue" : 0.56078431372549,
+                      "stroke-color-green" : 0.686274509803922,
+                      "stroke-color-opacity" : 1.0,
+                      "stroke-color-red" : 0.0196078431372549,
+                      "stroke-width" : 2.0,
+                      "tail-x" : 0.0,
+                      "tail-y" : 28.3606557377497,
+                      "width" : 350.0,
+                      "word-wrap" : 1.0,
+                      "fill-style" : "solid",
+                      "horizontal-alignment" : "center",
+                      "stroke-style" : "solid",
+                      "text" : "Final 4x4 rigid-rigid body transform",
+                      "vertical-alignment" : "center",
+                      "font" : {
+                        "color-blue" : 0.266666666666667,
+                        "color-green" : 0.231372549019608,
+                        "color-opacity" : 1.0,
+                        "color-red" : 0.184313725490196,
+                        "size" : 64.0,
+                        "tracking" : 0.0,
+                        "name" : "Montserrat",
+                        "weight" : "Regular"
+                      },
+                      "textAttributes" : {
+                        "type" : "textAttributeList",
+                        "keyframes" : [
+                          {
+                            "time" : 0,
+                            "value" : [{"name":"fgColor","rangeEnd":36,"rangeStart":0,"value":"(47,59,68,255)","valueType":"color"},{"name":"strikethrough","rangeEnd":36,"rangeStart":0,"value":0,"valueType":"int"},{"name":"fontSize","rangeEnd":36,"rangeStart":0,"value":64,"valueType":"double"},{"name":"underline","rangeEnd":36,"rangeStart":0,"value":0,"valueType":"int"},{"name":"fontWeight","rangeEnd":36,"rangeStart":0,"value":400,"valueType":"int"},{"name":"fontName","rangeEnd":36,"rangeStart":0,"value":"Montserrat","valueType":"string"},{"name":"fontItalic","rangeEnd":36,"rangeStart":0,"value":0,"valueType":"int"}],
+                            "duration" : 0
+                          }
+                        ]
+                      }
+                    },
+                    "attributes" : {
+                      "autoRotateText" : true
+                    },
+                    "parameters" : {
+                      "translation0" : 8.07904854127628e-11,
+                      "translation1" : -412.295081967278
+                    },
+                    "effects" : [
+                        {
+                          "effectName" : "DropShadow",
+                          "category" : "categoryVisualEffects",
+                          "parameters" : {
+                            "angle" : 5.49778714378214,
+                            "blur" : 10.0,
+                            "color-alpha" : 1.0,
+                            "color-blue" : 0.1216,
+                            "color-green" : 0.1216,
+                            "color-red" : 0.1216,
+                            "enabled" : 1,
+                            "offset" : 10.0,
+                            "opacity" : 0.4
+                          }
+                        }
+                    ],
+                    "start" : 1349,
+                    "duration" : 150,
+                    "mediaStart" : 0,
+                    "mediaDuration" : 150,
+                    "scalar" : 1,
+                    "metadata" : {
+                      "WinSubProjectDisplayName" : "",
+                      "clipSpeedAttribute" : false,
+                      "default-HAlign" : "center",
+                      "default-VAlign" : "center",
+                      "default-text-attributes" : null,
+                      "default-translation0" : 0.0,
+                      "default-translation1" : 0.0
+                    },
+                    "animationTracks" : {
+
+                    }
+                  },
+                  {
+                    "id" : 50,
+                    "_type" : "Callout",
+                    "def" : {
+                      "kind" : "remix",
+                      "shape" : "text-rectangle",
+                      "style" : "basic",
+                      "fill-color-blue" : {
+                        "type" : "double",
+                        "defaultValue" : 1.0,
+                        "interp" : "linr"
+                      },
+                      "fill-color-green" : {
+                        "type" : "double",
+                        "defaultValue" : 1.0,
+                        "interp" : "linr"
+                      },
+                      "fill-color-opacity" : {
+                        "type" : "double",
+                        "defaultValue" : 1.0,
+                        "interp" : "linr"
+                      },
+                      "fill-color-red" : {
+                        "type" : "double",
+                        "defaultValue" : 1.0,
+                        "interp" : "linr"
+                      },
+                      "height" : {
+                        "type" : "double",
+                        "defaultValue" : 160.0,
+                        "interp" : "linr"
+                      },
+                      "stroke-color-blue" : {
+                        "type" : "double",
+                        "defaultValue" : 0.56078431372549,
+                        "interp" : "linr"
+                      },
+                      "stroke-color-green" : {
+                        "type" : "double",
+                        "defaultValue" : 0.686274509803922,
+                        "interp" : "linr"
+                      },
+                      "stroke-color-opacity" : {
+                        "type" : "double",
+                        "defaultValue" : 1.0,
+                        "interp" : "linr"
+                      },
+                      "stroke-color-red" : {
+                        "type" : "double",
+                        "defaultValue" : 0.0196078431372549,
+                        "interp" : "linr"
+                      },
+                      "stroke-width" : {
+                        "type" : "double",
+                        "defaultValue" : 2.0,
+                        "interp" : "linr"
+                      },
+                      "tail-x" : {
+                        "type" : "double",
+                        "defaultValue" : -98.9583333335653,
+                        "interp" : "linr"
+                      },
+                      "tail-y" : {
+                        "type" : "double",
+                        "defaultValue" : -1.7793715847265,
+                        "interp" : "linr"
+                      },
+                      "width" : {
+                        "type" : "double",
+                        "defaultValue" : 679.35381465411,
+                        "interp" : "linr"
+                      },
+                      "word-wrap" : {
+                        "type" : "double",
+                        "defaultValue" : 1.0,
+                        "interp" : "linr"
+                      },
+                      "fill-style" : "solid",
+                      "horizontal-alignment" : "center",
+                      "stroke-style" : "solid",
+                      "text" : "Subsequent frames fail to fuse correctly",
+                      "vertical-alignment" : "center",
+                      "font" : {
+                        "color-blue" : {
+                          "type" : "double",
+                          "defaultValue" : 0.266666666666667,
+                          "interp" : "linr"
+                        },
+                        "color-green" : {
+                          "type" : "double",
+                          "defaultValue" : 0.231372549019608,
+                          "interp" : "linr"
+                        },
+                        "color-opacity" : {
+                          "type" : "double",
+                          "defaultValue" : 1.0,
+                          "interp" : "linr"
+                        },
+                        "color-red" : {
+                          "type" : "double",
+                          "defaultValue" : 0.184313725490196,
+                          "interp" : "linr"
+                        },
+                        "size" : {
+                          "type" : "double",
+                          "defaultValue" : 64.0,
+                          "interp" : "linr"
+                        },
+                        "tracking" : {
+                          "type" : "double",
+                          "defaultValue" : 0.0,
+                          "interp" : "linr"
+                        },
+                        "name" : "Montserrat",
+                        "weight" : "Regular"
+                      },
+                      "textAttributes" : {
+                        "type" : "textAttributeList",
+                        "keyframes" : [
+                          {
+                            "time" : 0,
+                            "value" : [{"name":"fontWeight","rangeEnd":40,"rangeStart":0,"value":400,"valueType":"int"},{"name":"fontName","rangeEnd":40,"rangeStart":0,"value":"Montserrat","valueType":"string"},{"name":"fontItalic","rangeEnd":40,"rangeStart":0,"value":0,"valueType":"int"},{"name":"strikethrough","rangeEnd":40,"rangeStart":0,"value":0,"valueType":"int"},{"name":"underline","rangeEnd":40,"rangeStart":0,"value":0,"valueType":"int"},{"name":"fontSize","rangeEnd":22,"rangeStart":18,"value":33,"valueType":"double"},{"name":"fontSize","rangeEnd":40,"rangeStart":22,"value":23,"valueType":"double"},{"name":"fgColor","rangeEnd":40,"rangeStart":22,"value":"(47,59,68,255)","valueType":"color"},{"name":"fgColor","rangeEnd":18,"rangeStart":0,"value":"(47,59,68,255)","valueType":"color"},{"name":"fontSize","rangeEnd":18,"rangeStart":0,"value":23,"valueType":"double"},{"name":"fgColor","rangeEnd":22,"rangeStart":18,"value":"(252,66,66,255)","valueType":"color"}],
+                            "duration" : 0
+                          }
+                        ]
+                      }
+                    },
+                    "attributes" : {
+                      "autoRotateText" : true
+                    },
+                    "parameters" : {
+                      "translation0" : {
+                        "type" : "double",
+                        "defaultValue" : 23.9583333334692,
+                        "interp" : "eioe"
+                      },
+                      "translation1" : {
+                        "type" : "double",
+                        "defaultValue" : -375.153688524527,
+                        "interp" : "eioe"
+                      }
+                    },
+                    "effects" : [
+                        {
+                          "effectName" : "DropShadow",
+                          "category" : "categoryVisualEffects",
+                          "parameters" : {
+                            "angle" : {
+                              "type" : "double",
+                              "defaultValue" : 5.49778714378214,
+                              "interp" : "linr",
+                              "uiHints" : {
+                                "userInterfaceType" : 0,
+                                "unitType" : 0
+                              }
+                            },
+                            "blur" : {
+                              "type" : "double",
+                              "defaultValue" : 10.0,
+                              "interp" : "linr",
+                              "uiHints" : {
+                                "userInterfaceType" : 0,
+                                "unitType" : 0
+                              }
+                            },
+                            "color-alpha" : {
+                              "type" : "double",
+                              "defaultValue" : 1.0,
+                              "interp" : "linr",
+                              "uiHints" : {
+                                "userInterfaceType" : 0,
+                                "unitType" : 0
+                              }
+                            },
+                            "color-blue" : {
+                              "type" : "double",
+                              "defaultValue" : 0.1216,
+                              "interp" : "linr",
+                              "uiHints" : {
+                                "userInterfaceType" : 0,
+                                "unitType" : 0
+                              }
+                            },
+                            "color-green" : {
+                              "type" : "double",
+                              "defaultValue" : 0.1216,
+                              "interp" : "linr",
+                              "uiHints" : {
+                                "userInterfaceType" : 0,
+                                "unitType" : 0
+                              }
+                            },
+                            "color-red" : {
+                              "type" : "double",
+                              "defaultValue" : 0.1216,
+                              "interp" : "linr",
+                              "uiHints" : {
+                                "userInterfaceType" : 0,
+                                "unitType" : 0
+                              }
+                            },
+                            "enabled" : 1,
+                            "offset" : {
+                              "type" : "double",
+                              "defaultValue" : 10.0,
+                              "interp" : "linr",
+                              "uiHints" : {
+                                "userInterfaceType" : 0,
+                                "unitType" : 0
+                              }
+                            },
+                            "opacity" : {
+                              "type" : "double",
+                              "defaultValue" : 0.4,
+                              "interp" : "linr",
+                              "uiHints" : {
+                                "userInterfaceType" : 0,
+                                "unitType" : 0
+                              }
+                            }
+                          }
+                        }
+                    ],
+                    "start" : 2413,
+                    "duration" : 228,
+                    "mediaStart" : 0,
+                    "mediaDuration" : 228,
+                    "scalar" : 1,
+                    "metadata" : {
+                      "WinSubProjectDisplayName" : "",
+                      "clipSpeedAttribute" : false,
+                      "default-HAlign" : "center",
+                      "default-VAlign" : "center",
+                      "default-text-attributes" : "[{\"name\":\"fontName\",\"rangeEnd\":34,\"rangeStart\":0,\"value\":\"Montserrat\",\"valueType\":\"string\"},{\"name\":\"fontWeight\",\"rangeEnd\":34,\"rangeStart\":0,\"value\":400,\"valueType\":\"int\"},{\"name\":\"fontSize\",\"rangeEnd\":34,\"rangeStart\":0,\"value\":64,\"valueType\":\"double\"},{\"name\":\"underline\",\"rangeEnd\":34,\"rangeStart\":0,\"value\":0,\"valueType\":\"int\"},{\"name\":\"fontItalic\",\"rangeEnd\":34,\"rangeStart\":0,\"value\":0,\"valueType\":\"int\"},{\"name\":\"fgColor\",\"rangeEnd\":34,\"rangeStart\":0,\"value\":\"(47,59,68,255)\",\"valueType\":\"color\"},{\"name\":\"strikethrough\",\"rangeEnd\":34,\"rangeStart\":0,\"value\":0,\"valueType\":\"int\"}]",
+                      "default-translation0" : 0.0,
+                      "default-translation1" : 0.0
+                    },
+                    "animationTracks" : {
+
+                    }
+                  },
+                  {
+                    "id" : 51,
+                    "_type" : "Callout",
+                    "def" : {
+                      "kind" : "remix",
+                      "shape" : "text",
+                      "style" : "abstract",
+                      "height" : 250.0,
+                      "width" : 400.0,
+                      "word-wrap" : 1.0,
+                      "horizontal-alignment" : "center",
+                      "text" : "tSDF Visualization :\rPositive isovals = Green\rNegative isovals = White",
+                      "vertical-alignment" : "center",
+                      "font" : {
+                        "color-blue" : 1.0,
+                        "color-green" : 1.0,
+                        "color-red" : 1.0,
+                        "size" : 96.0,
+                        "tracking" : 0.0,
+                        "name" : "Lato",
+                        "weight" : "Regular"
+                      },
+                      "textAttributes" : {
+                        "type" : "textAttributeList",
+                        "keyframes" : [
+                          {
+                            "time" : 0,
+                            "value" : [{"name":"fontSize","rangeEnd":70,"rangeStart":0,"value":30,"valueType":"double"},{"name":"fgColor","rangeEnd":40,"rangeStart":39,"value":"(255,255,255,255)","valueType":"color"},{"name":"underline","rangeEnd":70,"rangeStart":0,"value":0,"valueType":"int"},{"name":"fontWeight","rangeEnd":70,"rangeStart":0,"value":400,"valueType":"int"},{"name":"fgColor","rangeEnd":64,"rangeStart":45,"value":"(68,68,68,255)","valueType":"color"},{"name":"strikethrough","rangeEnd":70,"rangeStart":0,"value":0,"valueType":"int"},{"name":"fgColor","rangeEnd":70,"rangeStart":64,"value":"(255,255,255,255)","valueType":"color"},{"name":"fgColor","rangeEnd":39,"rangeStart":20,"value":"(68,68,68,255)","valueType":"color"},{"name":"fgColor","rangeEnd":45,"rangeStart":40,"value":"(27,157,44,255)","valueType":"color"},{"name":"fontItalic","rangeEnd":70,"rangeStart":0,"value":0,"valueType":"int"},{"name":"fontName","rangeEnd":70,"rangeStart":0,"value":"Lato","valueType":"string"},{"name":"fgColor","rangeEnd":20,"rangeStart":0,"value":"(66,92,251,255)","valueType":"color"}],
+                            "duration" : 0
+                          }
+                        ]
+                      }
+                    },
+                    "attributes" : {
+                      "autoRotateText" : true
+                    },
+                    "parameters" : {
+                      "translation0" : 439.999999999916,
+                      "translation1" : 243.750000000054
+                    },
+                    "effects" : [
+                        {
+                          "effectName" : "DropShadow",
+                          "category" : "categoryVisualEffects",
+                          "parameters" : {
+                            "angle" : 5.49778714378214,
+                            "blur" : 10.0,
+                            "color-alpha" : 1.0,
+                            "color-blue" : 0.1216,
+                            "color-green" : 0.1216,
+                            "color-red" : 0.1216,
+                            "enabled" : 1,
+                            "offset" : 10.0,
+                            "opacity" : 0.4
+                          }
+                        }
+                    ],
+                    "start" : 2702,
+                    "duration" : 249,
+                    "mediaStart" : 0,
+                    "mediaDuration" : 249,
+                    "scalar" : 1,
+                    "metadata" : {
+                      "WinSubProjectDisplayName" : "",
+                      "clipSpeedAttribute" : false,
+                      "default-HAlign" : "center",
+                      "default-VAlign" : "center",
+                      "default-text-attributes" : null,
+                      "default-translation0" : 0.0,
+                      "default-translation1" : 0.0
+                    },
+                    "animationTracks" : {
+
+                    }
+                  },
+                  {
+                    "id" : 52,
+                    "_type" : "Callout",
+                    "def" : {
+                      "kind" : "remix",
+                      "shape" : "text-rectangle",
+                      "style" : "abstract",
+                      "fill-color-blue" : 0.8,
+                      "fill-color-green" : 0.874509803921569,
+                      "fill-color-opacity" : 1.0,
+                      "fill-color-red" : 0.898039215686275,
+                      "height" : 150.0,
+                      "stroke-color-blue" : 1.0,
+                      "stroke-color-green" : 1.0,
+                      "stroke-color-opacity" : 1.0,
+                      "stroke-color-red" : 1.0,
+                      "stroke-width" : 0.0,
+                      "tail-x" : 0.0,
+                      "tail-y" : -20.0,
+                      "width" : 350.0,
+                      "word-wrap" : 1.0,
+                      "fill-style" : "solid",
+                      "horizontal-alignment" : "center",
+                      "stroke-style" : "solid",
+                      "text" : "Thanks for watching",
+                      "vertical-alignment" : "center",
+                      "font" : {
+                        "color-blue" : 0.266666666666667,
+                        "color-green" : 0.231372549019608,
+                        "color-opacity" : 1.0,
+                        "color-red" : 0.184313725490196,
+                        "size" : 64.0,
+                        "tracking" : 0.0,
+                        "name" : "Lato",
+                        "weight" : "Regular"
+                      },
+                      "textAttributes" : {
+                        "type" : "textAttributeList",
+                        "keyframes" : [
+                          {
+                            "time" : 0,
+                            "value" : [{"name":"fontItalic","rangeEnd":19,"rangeStart":0,"value":0,"valueType":"int"},{"name":"underline","rangeEnd":19,"rangeStart":0,"value":0,"valueType":"int"},{"name":"fontWeight","rangeEnd":19,"rangeStart":0,"value":400,"valueType":"int"},{"name":"fgColor","rangeEnd":19,"rangeStart":0,"value":"(47,59,68,255)","valueType":"color"},{"name":"fontSize","rangeEnd":19,"rangeStart":0,"value":64,"valueType":"double"},{"name":"fontName","rangeEnd":19,"rangeStart":0,"value":"Lato","valueType":"string"},{"name":"strikethrough","rangeEnd":19,"rangeStart":0,"value":0,"valueType":"int"}],
+                            "duration" : 0
+                          }
+                        ]
+                      }
+                    },
+                    "attributes" : {
+                      "autoRotateText" : true
+                    },
+                    "effects" : [
+                        {
+                          "effectName" : "DropShadow",
+                          "category" : "categoryVisualEffects",
+                          "parameters" : {
+                            "angle" : 5.49778714378214,
+                            "blur" : 10.0,
+                            "color-alpha" : 1.0,
+                            "color-blue" : 0.1216,
+                            "color-green" : 0.1216,
+                            "color-red" : 0.1216,
+                            "enabled" : 1,
+                            "offset" : 10.0,
+                            "opacity" : 0.4
+                          }
+                        }
+                    ],
+                    "start" : 3285,
+                    "duration" : 77,
+                    "mediaStart" : 0,
+                    "mediaDuration" : 77,
+                    "scalar" : 1,
+                    "metadata" : {
+                      "WinSubProjectDisplayName" : "",
+                      "clipSpeedAttribute" : false,
+                      "default-HAlign" : "center",
+                      "default-VAlign" : "center",
+                      "default-text-attributes" : null
+                    },
+                    "animationTracks" : {
+
+                    }
+                  }
+                ]
+              },
+              {
+                "trackIndex" : 2,
+                "medias" : [
+                  {
+                    "id" : 53,
+                    "_type" : "Callout",
+                    "def" : {
+                      "kind" : "remix",
+                      "shape" : "shape-ellipse",
+                      "style" : "basic",
+                      "fill-color-blue" : 1.0,
+                      "fill-color-green" : 1.0,
+                      "fill-color-opacity" : 0.0,
+                      "fill-color-red" : 1.0,
+                      "height" : 317.704918032747,
+                      "stroke-color-blue" : 0.258823529411765,
+                      "stroke-color-green" : 0.258823529411765,
+                      "stroke-color-opacity" : 1.0,
+                      "stroke-color-red" : 0.988235294117647,
+                      "stroke-width" : 6.0,
+                      "width" : 548.360655737775,
+                      "fill-style" : "solid",
+                      "horizontal-alignment" : "center",
+                      "stroke-style" : "solid",
+                      "vertical-alignment" : "center",
+                      "textAttributes" : {
+                        "type" : "textAttributeList",
+                        "keyframes" : [
+                          {
+                            "time" : 0,
+                            "value" : null,
+                            "duration" : 0
+                          }
+                        ]
+                      }
+                    },
+                    "attributes" : {
+                      "autoRotateText" : true
+                    },
+                    "parameters" : {
+                      "translation0" : -72.2622950818456,
+                      "translation1" : -86.8852459015842
+                    },
+                    "effects" : [
+                        {
+                          "effectName" : "DropShadow",
+                          "category" : "categoryVisualEffects",
+                          "parameters" : {
+                            "angle" : 5.49778714378214,
+                            "blur" : 10.0,
+                            "color-alpha" : 1.0,
+                            "color-blue" : 0.1216,
+                            "color-green" : 0.1216,
+                            "color-red" : 0.1216,
+                            "enabled" : 1,
+                            "offset" : 10.0,
+                            "opacity" : 0.4
+                          }
+                        }
+                    ],
+                    "start" : 817,
+                    "duration" : 165,
+                    "mediaStart" : 0,
+                    "mediaDuration" : 165,
+                    "scalar" : 1,
+                    "metadata" : {
+                      "WinSubProjectDisplayName" : "",
+                      "clipSpeedAttribute" : false,
+                      "default-fill-color-opacity" : 1.0,
+                      "default-fill-style" : "solid",
+                      "default-stroke-color-blue" : 0.537254901960784,
+                      "default-stroke-color-green" : 0.133333333333333,
+                      "default-stroke-color-red" : 0.388235294117647,
+                      "default-translation0" : 0.0,
+                      "default-translation1" : 0.0
+                    },
+                    "animationTracks" : {
+
+                    }
+                  },
+                  {
+                    "id" : 54,
+                    "_type" : "Callout",
+                    "def" : {
+                      "kind" : "remix",
+                      "shape" : "arrow",
+                      "style" : "basic",
+                      "stroke-color-blue" : 0.56078431372549,
+                      "stroke-color-green" : 0.686274509803922,
+                      "stroke-color-opacity" : 1.0,
+                      "stroke-color-red" : 0.0196078431372549,
+                      "stroke-width" : 14.0,
+                      "tail-x" : {
+                        "type" : "double",
+                        "defaultValue" : 237.499999999905,
+                        "interp" : "eioe"
+                      },
+                      "tail-y" : {
+                        "type" : "double",
+                        "defaultValue" : 54.1666666667138,
+                        "interp" : "eioe"
+                      },
+                      "horizontal-alignment" : "center",
+                      "shape-anchor" : "none",
+                      "shape-tail" : "arrow",
+                      "stroke-style" : "solid",
+                      "vertical-alignment" : "center",
+                      "textAttributes" : {
+                        "type" : "textAttributeList",
+                        "keyframes" : [
+                          {
+                            "time" : 0,
+                            "value" : null,
+                            "duration" : 0
+                          }
+                        ]
+                      }
+                    },
+                    "attributes" : {
+                      "autoRotateText" : true
+                    },
+                    "parameters" : {
+                      "translation0" : -237.499999999915,
+                      "translation1" : 304.166666666633
+                    },
+                    "effects" : [
+                        {
+                          "effectName" : "DropShadow",
+                          "category" : "categoryVisualEffects",
+                          "parameters" : {
+                            "angle" : 5.49778714378214,
+                            "blur" : 10.0,
+                            "color-alpha" : 1.0,
+                            "color-blue" : 0.1216,
+                            "color-green" : 0.1216,
+                            "color-red" : 0.1216,
+                            "enabled" : 1,
+                            "offset" : 10.0,
+                            "opacity" : 0.4
+                          }
+                        }
+                    ],
+                    "start" : 1067,
+                    "duration" : 150,
+                    "mediaStart" : 0,
+                    "mediaDuration" : 150,
+                    "scalar" : 1,
+                    "metadata" : {
+                      "WinSubProjectDisplayName" : "",
+                      "clipSpeedAttribute" : false,
+                      "default-stroke-width" : 8.0,
+                      "default-translation0" : 0.0,
+                      "default-translation1" : 0.0
+                    },
+                    "animationTracks" : {
+
+                    }
+                  },
+                  {
+                    "id" : 55,
+                    "_type" : "Callout",
+                    "def" : {
+                      "kind" : "remix",
+                      "shape" : "shape-rectangle",
+                      "style" : "basic",
+                      "fill-color-blue" : 0.0,
+                      "fill-color-green" : 0.0,
+                      "fill-color-opacity" : 0.0,
+                      "fill-color-red" : 0.0,
+                      "height" : 83.2786885246508,
+                      "stroke-color-blue" : 1.0,
+                      "stroke-color-green" : 1.0,
+                      "stroke-color-opacity" : 1.0,
+                      "stroke-color-red" : 1.0,
+                      "stroke-width" : 8.0,
+                      "width" : 1108.85245901649,
+                      "fill-style" : "solid",
+                      "horizontal-alignment" : "center",
+                      "stroke-style" : "solid",
+                      "vertical-alignment" : "center",
+                      "textAttributes" : {
+                        "type" : "textAttributeList",
+                        "keyframes" : [
+                          {
+                            "time" : 0,
+                            "value" : null,
+                            "duration" : 0
+                          }
+                        ]
+                      }
+                    },
+                    "attributes" : {
+                      "autoRotateText" : true
+                    },
+                    "parameters" : {
+                      "translation0" : -50.8196721310545,
+                      "translation1" : 187.70491803282
+                    },
+                    "effects" : [
+                        {
+                          "effectName" : "DropShadow",
+                          "category" : "categoryVisualEffects",
+                          "parameters" : {
+                            "angle" : 5.49778714378214,
+                            "blur" : 10.0,
+                            "color-alpha" : 1.0,
+                            "color-blue" : 0.1216,
+                            "color-green" : 0.1216,
+                            "color-red" : 0.1216,
+                            "enabled" : 1,
+                            "offset" : 10.0,
+                            "opacity" : 0.4
+                          }
+                        }
+                    ],
+                    "start" : 1349,
+                    "duration" : 150,
+                    "mediaStart" : 0,
+                    "mediaDuration" : 150,
+                    "scalar" : 1,
+                    "metadata" : {
+                      "WinSubProjectDisplayName" : "",
+                      "clipSpeedAttribute" : false,
+                      "default-stroke-width" : 6.0
+                    },
+                    "animationTracks" : {
+
+                    }
+                  }
+                ]
+              },
+              {
+                "trackIndex" : 3,
+                "medias" : [
+                  {
+                    "id" : 56,
+                    "_type" : "Callout",
+                    "def" : {
+                      "kind" : "remix",
+                      "shape" : "arrow",
+                      "style" : "basic",
+                      "stroke-color-blue" : {
+                        "type" : "double",
+                        "defaultValue" : 0.56078431372549,
+                        "interp" : "linr"
+                      },
+                      "stroke-color-green" : {
+                        "type" : "double",
+                        "defaultValue" : 0.686274509803922,
+                        "interp" : "linr"
+                      },
+                      "stroke-color-opacity" : {
+                        "type" : "double",
+                        "defaultValue" : 1.0,
+                        "interp" : "linr"
+                      },
+                      "stroke-color-red" : {
+                        "type" : "double",
+                        "defaultValue" : 0.0196078431372549,
+                        "interp" : "linr"
+                      },
+                      "stroke-width" : {
+                        "type" : "double",
+                        "defaultValue" : 14.0,
+                        "interp" : "linr"
+                      },
+                      "tail-x" : {
+                        "type" : "double",
+                        "defaultValue" : 237.499999999905,
+                        "interp" : "eioe"
+                      },
+                      "tail-y" : {
+                        "type" : "double",
+                        "defaultValue" : 54.1666666667138,
+                        "interp" : "eioe"
+                      },
+                      "horizontal-alignment" : "center",
+                      "shape-anchor" : "none",
+                      "shape-tail" : "arrow",
+                      "stroke-style" : "solid",
+                      "vertical-alignment" : "center",
+                      "textAttributes" : {
+                        "type" : "textAttributeList",
+                        "keyframes" : [
+                          {
+                            "time" : 0,
+                            "value" : null,
+                            "duration" : 0
+                          }
+                        ]
+                      }
+                    },
+                    "attributes" : {
+                      "autoRotateText" : true
+                    },
+                    "parameters" : {
+                      "translation0" : {
+                        "type" : "double",
+                        "defaultValue" : -302.083333333243,
+                        "interp" : "eioe"
+                      },
+                      "translation1" : {
+                        "type" : "double",
+                        "defaultValue" : -147.916666666703,
+                        "interp" : "eioe"
+                      }
+                    },
+                    "effects" : [
+                        {
+                          "effectName" : "DropShadow",
+                          "category" : "categoryVisualEffects",
+                          "parameters" : {
+                            "angle" : {
+                              "type" : "double",
+                              "defaultValue" : 5.49778714378214,
+                              "interp" : "linr",
+                              "uiHints" : {
+                                "userInterfaceType" : 0,
+                                "unitType" : 0
+                              }
+                            },
+                            "blur" : {
+                              "type" : "double",
+                              "defaultValue" : 10.0,
+                              "interp" : "linr",
+                              "uiHints" : {
+                                "userInterfaceType" : 0,
+                                "unitType" : 0
+                              }
+                            },
+                            "color-alpha" : {
+                              "type" : "double",
+                              "defaultValue" : 1.0,
+                              "interp" : "linr",
+                              "uiHints" : {
+                                "userInterfaceType" : 0,
+                                "unitType" : 0
+                              }
+                            },
+                            "color-blue" : {
+                              "type" : "double",
+                              "defaultValue" : 0.1216,
+                              "interp" : "linr",
+                              "uiHints" : {
+                                "userInterfaceType" : 0,
+                                "unitType" : 0
+                              }
+                            },
+                            "color-green" : {
+                              "type" : "double",
+                              "defaultValue" : 0.1216,
+                              "interp" : "linr",
+                              "uiHints" : {
+                                "userInterfaceType" : 0,
+                                "unitType" : 0
+                              }
+                            },
+                            "color-red" : {
+                              "type" : "double",
+                              "defaultValue" : 0.1216,
+                              "interp" : "linr",
+                              "uiHints" : {
+                                "userInterfaceType" : 0,
+                                "unitType" : 0
+                              }
+                            },
+                            "enabled" : 1,
+                            "offset" : {
+                              "type" : "double",
+                              "defaultValue" : 10.0,
+                              "interp" : "linr",
+                              "uiHints" : {
+                                "userInterfaceType" : 0,
+                                "unitType" : 0
+                              }
+                            },
+                            "opacity" : {
+                              "type" : "double",
+                              "defaultValue" : 0.4,
+                              "interp" : "linr",
+                              "uiHints" : {
+                                "userInterfaceType" : 0,
+                                "unitType" : 0
+                              }
+                            }
+                          }
+                        }
+                    ],
+                    "start" : 1067,
+                    "duration" : 150,
+                    "mediaStart" : 0,
+                    "mediaDuration" : 150,
+                    "scalar" : 1,
+                    "metadata" : {
+                      "WinSubProjectDisplayName" : "",
+                      "clipSpeedAttribute" : false,
+                      "default-stroke-width" : 8.0,
+                      "default-translation0" : 0.0,
+                      "default-translation1" : 0.0
+                    },
+                    "animationTracks" : {
+
+                    }
+                  },
+                  {
+                    "id" : 57,
+                    "_type" : "ScreenVMFile",
+                    "src" : 2,
+                    "trackNumber" : 0,
+                    "attributes" : {
+                      "ident" : "Rec 07-25-22 3"
+                    },
+                    "parameters" : {
+                      "cursorScale" : {
+                        "type" : "double",
+                        "defaultValue" : 1.0,
+                        "interp" : "linr"
+                      },
+                      "cursorOpacity" : {
+                        "type" : "double",
+                        "defaultValue" : 1.0,
+                        "interp" : "linr"
+                      }
+                    },
+                    "effects" : [
+
+                    ],
+                    "start" : 1746,
+                    "duration" : 645,
+                    "mediaStart" : 0,
+                    "mediaDuration" : 645,
+                    "scalar" : 1,
+                    "metadata" : {
+                      "AutoAppliedSmartFocus" : "False",
+                      "WinSubProjectDisplayName" : "",
+                      "clipSpeedAttribute" : false
+                    },
+                    "animationTracks" : {
+
+                    }
+                  }
+                ]
+              },
+              {
+                "trackIndex" : 4,
+                "medias" : [
+                  {
+                    "id" : 58,
+                    "_type" : "Callout",
+                    "def" : {
+                      "kind" : "remix",
+                      "shape" : "text-rectangle",
+                      "style" : "basic",
+                      "fill-color-blue" : 1.0,
+                      "fill-color-green" : 1.0,
+                      "fill-color-opacity" : 1.0,
+                      "fill-color-red" : 1.0,
+                      "height" : 150.0,
+                      "stroke-color-blue" : 0.56078431372549,
+                      "stroke-color-green" : 0.686274509803922,
+                      "stroke-color-opacity" : 1.0,
+                      "stroke-color-red" : 0.0196078431372549,
+                      "stroke-width" : 2.0,
+                      "tail-x" : 0.0,
+                      "tail-y" : -20.0,
+                      "width" : 350.0,
+                      "word-wrap" : 1.0,
+                      "fill-style" : "solid",
+                      "horizontal-alignment" : "center",
+                      "stroke-style" : "solid",
+                      "text" : "Now let's look at fused TSDF volume chunks..",
+                      "vertical-alignment" : "center",
+                      "font" : {
+                        "color-blue" : 0.266666666666667,
+                        "color-green" : 0.231372549019608,
+                        "color-opacity" : 1.0,
+                        "color-red" : 0.184313725490196,
+                        "size" : 64.0,
+                        "tracking" : 0.0,
+                        "name" : "Montserrat",
+                        "weight" : "Regular"
+                      },
+                      "textAttributes" : {
+                        "type" : "textAttributeList",
+                        "keyframes" : [
+                          {
+                            "time" : 0,
+                            "value" : [{"name":"underline","rangeEnd":44,"rangeStart":0,"value":0,"valueType":"int"},{"name":"fontSize","rangeEnd":44,"rangeStart":0,"value":64,"valueType":"double"},{"name":"strikethrough","rangeEnd":44,"rangeStart":0,"value":0,"valueType":"int"},{"name":"fontItalic","rangeEnd":44,"rangeStart":0,"value":0,"valueType":"int"},{"name":"fgColor","rangeEnd":44,"rangeStart":0,"value":"(47,59,68,255)","valueType":"color"},{"name":"fontName","rangeEnd":44,"rangeStart":0,"value":"Montserrat","valueType":"string"},{"name":"fontWeight","rangeEnd":44,"rangeStart":0,"value":400,"valueType":"int"}],
+                            "duration" : 0
+                          }
+                        ]
+                      }
+                    },
+                    "attributes" : {
+                      "autoRotateText" : true
+                    },
+                    "parameters" : {
+                      "translation0" : 1.75766956544976e-10,
+                      "translation1" : 5.9586113820842e-11
+                    },
+                    "effects" : [
+                        {
+                          "effectName" : "DropShadow",
+                          "category" : "categoryVisualEffects",
+                          "parameters" : {
+                            "angle" : 5.49778714378214,
+                            "blur" : 10.0,
+                            "color-alpha" : 1.0,
+                            "color-blue" : 0.1216,
+                            "color-green" : 0.1216,
+                            "color-red" : 0.1216,
+                            "enabled" : 1,
+                            "offset" : 10.0,
+                            "opacity" : 0.4
+                          }
+                        }
+                    ],
+                    "start" : 1626,
+                    "duration" : 150,
+                    "mediaStart" : 0,
+                    "mediaDuration" : 150,
+                    "scalar" : 1,
+                    "metadata" : {
+                      "WinSubProjectDisplayName" : "",
+                      "clipSpeedAttribute" : false,
+                      "default-HAlign" : "center",
+                      "default-VAlign" : "center",
+                      "default-text-attributes" : null,
+                      "default-translation0" : 0.0,
+                      "default-translation1" : 0.0
+                    },
+                    "animationTracks" : {
+
+                    }
+                  },
+                  {
+                    "id" : 59,
+                    "_type" : "Callout",
+                    "def" : {
+                      "kind" : "remix",
+                      "shape" : "text-rectangle",
+                      "style" : "basic",
+                      "fill-color-blue" : {
+                        "type" : "double",
+                        "defaultValue" : 1.0,
+                        "interp" : "linr"
+                      },
+                      "fill-color-green" : {
+                        "type" : "double",
+                        "defaultValue" : 1.0,
+                        "interp" : "linr"
+                      },
+                      "fill-color-opacity" : {
+                        "type" : "double",
+                        "defaultValue" : 1.0,
+                        "interp" : "linr"
+                      },
+                      "fill-color-red" : {
+                        "type" : "double",
+                        "defaultValue" : 1.0,
+                        "interp" : "linr"
+                      },
+                      "height" : {
+                        "type" : "double",
+                        "defaultValue" : 160.0,
+                        "interp" : "linr"
+                      },
+                      "stroke-color-blue" : {
+                        "type" : "double",
+                        "defaultValue" : 0.56078431372549,
+                        "interp" : "linr"
+                      },
+                      "stroke-color-green" : {
+                        "type" : "double",
+                        "defaultValue" : 0.686274509803922,
+                        "interp" : "linr"
+                      },
+                      "stroke-color-opacity" : {
+                        "type" : "double",
+                        "defaultValue" : 1.0,
+                        "interp" : "linr"
+                      },
+                      "stroke-color-red" : {
+                        "type" : "double",
+                        "defaultValue" : 0.0196078431372549,
+                        "interp" : "linr"
+                      },
+                      "stroke-width" : {
+                        "type" : "double",
+                        "defaultValue" : 2.0,
+                        "interp" : "linr"
+                      },
+                      "tail-x" : {
+                        "type" : "double",
+                        "defaultValue" : -98.9583333335653,
+                        "interp" : "linr"
+                      },
+                      "tail-y" : {
+                        "type" : "double",
+                        "defaultValue" : -1.7793715847265,
+                        "interp" : "linr"
+                      },
+                      "width" : {
+                        "type" : "double",
+                        "defaultValue" : 679.35381465411,
+                        "interp" : "linr"
+                      },
+                      "word-wrap" : {
+                        "type" : "double",
+                        "defaultValue" : 1.0,
+                        "interp" : "linr"
+                      },
+                      "fill-style" : "solid",
+                      "horizontal-alignment" : "center",
+                      "stroke-style" : "solid",
+                      "text" : "First frame \r1)converted from point cloud to voxel chunks \rand then \r2)fused into global volume\rlooks okay",
+                      "vertical-alignment" : "center",
+                      "font" : {
+                        "color-blue" : {
+                          "type" : "double",
+                          "defaultValue" : 0.266666666666667,
+                          "interp" : "linr"
+                        },
+                        "color-green" : {
+                          "type" : "double",
+                          "defaultValue" : 0.231372549019608,
+                          "interp" : "linr"
+                        },
+                        "color-opacity" : {
+                          "type" : "double",
+                          "defaultValue" : 1.0,
+                          "interp" : "linr"
+                        },
+                        "color-red" : {
+                          "type" : "double",
+                          "defaultValue" : 0.184313725490196,
+                          "interp" : "linr"
+                        },
+                        "size" : {
+                          "type" : "double",
+                          "defaultValue" : 64.0,
+                          "interp" : "linr"
+                        },
+                        "tracking" : {
+                          "type" : "double",
+                          "defaultValue" : 0.0,
+                          "interp" : "linr"
+                        },
+                        "name" : "Montserrat",
+                        "weight" : "Regular"
+                      },
+                      "textAttributes" : {
+                        "type" : "textAttributeList",
+                        "keyframes" : [
+                          {
+                            "time" : 0,
+                            "value" : [{"name":"fontItalic","rangeEnd":106,"rangeStart":0,"value":0,"valueType":"int"},{"name":"fgColor","rangeEnd":102,"rangeStart":0,"value":"(47,59,68,255)","valueType":"color"},{"name":"fgColor","rangeEnd":106,"rangeStart":102,"value":"(27,157,44,255)","valueType":"color"},{"name":"strikethrough","rangeEnd":106,"rangeStart":0,"value":0,"valueType":"int"},{"name":"underline","rangeEnd":106,"rangeStart":0,"value":0,"valueType":"int"},{"name":"fontName","rangeEnd":106,"rangeStart":0,"value":"Montserrat","valueType":"string"},{"name":"fontSize","rangeEnd":106,"rangeStart":102,"value":31,"valueType":"double"},{"name":"fontWeight","rangeEnd":106,"rangeStart":0,"value":400,"valueType":"int"},{"name":"fontSize","rangeEnd":102,"rangeStart":0,"value":23,"valueType":"double"}],
+                            "duration" : 0
+                          }
+                        ]
+                      }
+                    },
+                    "attributes" : {
+                      "autoRotateText" : true
+                    },
+                    "parameters" : {
+                      "translation0" : {
+                        "type" : "double",
+                        "defaultValue" : 23.9583333334692,
+                        "interp" : "eioe"
+                      },
+                      "translation1" : {
+                        "type" : "double",
+                        "defaultValue" : -375.153688524527,
+                        "interp" : "eioe"
+                      }
+                    },
+                    "effects" : [
+                        {
+                          "effectName" : "DropShadow",
+                          "category" : "categoryVisualEffects",
+                          "parameters" : {
+                            "angle" : {
+                              "type" : "double",
+                              "defaultValue" : 5.49778714378214,
+                              "interp" : "linr",
+                              "uiHints" : {
+                                "userInterfaceType" : 0,
+                                "unitType" : 0
+                              }
+                            },
+                            "blur" : {
+                              "type" : "double",
+                              "defaultValue" : 10.0,
+                              "interp" : "linr",
+                              "uiHints" : {
+                                "userInterfaceType" : 0,
+                                "unitType" : 0
+                              }
+                            },
+                            "color-alpha" : {
+                              "type" : "double",
+                              "defaultValue" : 1.0,
+                              "interp" : "linr",
+                              "uiHints" : {
+                                "userInterfaceType" : 0,
+                                "unitType" : 0
+                              }
+                            },
+                            "color-blue" : {
+                              "type" : "double",
+                              "defaultValue" : 0.1216,
+                              "interp" : "linr",
+                              "uiHints" : {
+                                "userInterfaceType" : 0,
+                                "unitType" : 0
+                              }
+                            },
+                            "color-green" : {
+                              "type" : "double",
+                              "defaultValue" : 0.1216,
+                              "interp" : "linr",
+                              "uiHints" : {
+                                "userInterfaceType" : 0,
+                                "unitType" : 0
+                              }
+                            },
+                            "color-red" : {
+                              "type" : "double",
+                              "defaultValue" : 0.1216,
+                              "interp" : "linr",
+                              "uiHints" : {
+                                "userInterfaceType" : 0,
+                                "unitType" : 0
+                              }
+                            },
+                            "enabled" : 1,
+                            "offset" : {
+                              "type" : "double",
+                              "defaultValue" : 10.0,
+                              "interp" : "linr",
+                              "uiHints" : {
+                                "userInterfaceType" : 0,
+                                "unitType" : 0
+                              }
+                            },
+                            "opacity" : {
+                              "type" : "double",
+                              "defaultValue" : 0.4,
+                              "interp" : "linr",
+                              "uiHints" : {
+                                "userInterfaceType" : 0,
+                                "unitType" : 0
+                              }
+                            }
+                          }
+                        }
+                    ],
+                    "start" : 1860,
+                    "duration" : 228,
+                    "mediaStart" : 0,
+                    "mediaDuration" : 228,
+                    "scalar" : 1,
+                    "metadata" : {
+                      "WinSubProjectDisplayName" : "",
+                      "clipSpeedAttribute" : false,
+                      "default-HAlign" : "center",
+                      "default-VAlign" : "center",
+                      "default-text-attributes" : "[{\"name\":\"fontName\",\"rangeEnd\":34,\"rangeStart\":0,\"value\":\"Montserrat\",\"valueType\":\"string\"},{\"name\":\"fontWeight\",\"rangeEnd\":34,\"rangeStart\":0,\"value\":400,\"valueType\":\"int\"},{\"name\":\"fontSize\",\"rangeEnd\":34,\"rangeStart\":0,\"value\":64,\"valueType\":\"double\"},{\"name\":\"underline\",\"rangeEnd\":34,\"rangeStart\":0,\"value\":0,\"valueType\":\"int\"},{\"name\":\"fontItalic\",\"rangeEnd\":34,\"rangeStart\":0,\"value\":0,\"valueType\":\"int\"},{\"name\":\"fgColor\",\"rangeEnd\":34,\"rangeStart\":0,\"value\":\"(47,59,68,255)\",\"valueType\":\"color\"},{\"name\":\"strikethrough\",\"rangeEnd\":34,\"rangeStart\":0,\"value\":0,\"valueType\":\"int\"}]",
+                      "default-translation0" : 0.0,
+                      "default-translation1" : 0.0
+                    },
+                    "animationTracks" : {
+
+                    }
+                  }
+                ],
+                "transitions" : [
+                  {
+                    "name" : "CubeRotate",
+                    "duration" : 30,
+                    "useAudioPreRoll" : true,
+                    "useVisualPreRoll" : true,
+                    "rightMedia" : 58
+                  },
+                  {
+                    "name" : "CubeRotate",
+                    "duration" : 30,
+                    "useAudioPreRoll" : true,
+                    "useVisualPreRoll" : true,
+                    "leftMedia" : 58
+                  }
+                ]
+              },
+              {
+                "trackIndex" : 5,
+                "medias" : [
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "trackAttributes" : [
+      {
+        "ident" : "",
+        "audioMuted" : false,
+        "videoHidden" : false,
+        "metadata" : {
+          "IsLocked" : "False",
+          "WinTrackHeight" : "56"
+        }
+      },
+      {
+        "ident" : "",
+        "audioMuted" : false,
+        "videoHidden" : false,
+        "metadata" : {
+          "IsLocked" : "False",
+          "WinTrackHeight" : "56"
+        }
+      },
+      {
+        "ident" : "",
+        "audioMuted" : false,
+        "videoHidden" : false,
+        "metadata" : {
+          "IsLocked" : "False",
+          "WinTrackHeight" : "56"
+        }
+      },
+      {
+        "ident" : "",
+        "audioMuted" : false,
+        "videoHidden" : false,
+        "metadata" : {
+          "IsLocked" : "False",
+          "WinTrackHeight" : "56"
+        }
+      },
+      {
+        "ident" : "",
+        "audioMuted" : false,
+        "videoHidden" : false,
+        "metadata" : {
+          "IsLocked" : "False",
+          "WinTrackHeight" : "56"
+        }
+      },
+      {
+        "ident" : "",
+        "audioMuted" : false,
+        "videoHidden" : false,
+        "metadata" : {
+          "IsLocked" : "False",
+          "WinTrackHeight" : "56"
+        }
+      }
+    ],
+    "captionAttributes" : {
+      "enabled" : true,
+      "fontName" : "Arial",
+      "fontSize" : 47,
+      "backgroundColor" : [ 0, 0, 0, 191],
+      "foregroundColor" : [ 255, 255, 255, 255],
+      "lang" : "en",
+      "alignment" : 0,
+      "defaultFontSize" : true,
+      "opacity" : 0.5,
+      "backgroundEnabled" : true,
+      "backgroundOnlyAroundText" : true
+    },
+    "backgroundColor" : [ 0, 0, 0, 255]
+  },
+  "metadata" : {
+    "AutoSaveFile" : "C:\\Users\\NER2\\AppData\\Local\\TechSmith\\Camtasia Studio\\9.0\\Auto-Saves\\Untitled Projectd2f516b.autosave.tscproj",
+    "CanvasZoom" : 86,
+    "Date" : "2022-07-25 03:10:11 AM",
+    "IsAutoSave" : "0",
+    "Language" : "ENU",
+    "ProfileName" : "",
+    "ProjectDimensionsChanged" : "1",
+    "audioNarrationNotes" : "",
+    "calloutStyle" : "Abstract",
+    "canvasDetached" : "False",
+    "canvasPositionHeight" : "0",
+    "canvasPositionLeft" : "0",
+    "canvasPositionTop" : "0",
+    "canvasPositionWidth" : "0"
+  }
+}
